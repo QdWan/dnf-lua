@@ -1,0 +1,34 @@
+What do the licenses mean? I'm a commercial (closed-source) game developer. Can I use this art?
+------------------------------------------------------------------------------------------------
+
+    It depends on the license(s) the art is released under. Technicallyall of the art on this site is legal for use in commercial projects -- however, some of the licenses require you to distribute the source code of your entire project for free, and allow others to distribute the source for free as well. Here is a quick overview of the licenses and what they mean for commercial, closed-source developers. Disclaimer: I AM NOT A LAWYER, AND THIS IS NOT LEGAL ADVICE. THE FOLLOWING ANSWERS ARE BASED ON MY CURRENT BEST UNDERSTANDING OF THE WAY THESE LICENSES WORK. COMPLIANCE WITH LICENSING REQUIREMENTS IS YOUR RESPONSIBILITY, EVEN IF THIS INFORMATION IS INCORRECT.
+
+    Creative Commons Attribution-Share Alike 3.0
+    ============================================
+        This license requires you to release any modifications you make to the art work in question under the same license.
+        
+    Creative Commons Attribution 3.0
+    ================================
+        This license requires you to attribute the author of the content in the way that they specify. Provided the author is properly credited, it is generally safe to use this content in a commercial work.
+        
+    GNU GPL 3
+    =========
+        This license requires you to release any modifications you make to the art work under the same license.
+        
+    GNU LGPL 3
+    ==========
+        This license requires you to release any modifications you make to the art work under the same license. Since the FSF has clarified that use of art does not trigger the GPL's linking requirement, the LGPL is effectively the same as the GPL when used for art.
+        
+    GNU GPL 2
+    =========
+        This license, requires you to release any modifications you make to the art work under the same license.
+        
+    GNU LGPL 2
+    ==========
+        This license requires you to release any modifications you make to the art work under the same license. Since the FSF has clarified that use of art does not trigger the GPL's linking requirement, the LGPL is effectively the same as the GPL when used for art.
+        
+    Copyright-Only Dedication (Public Domain)
+    =========================================
+        This license is equivalent to the Public Domain. There are therefore no legal concerns with using it, and it is safe to use in any project.
+        Just to reiterate, these notes are based on my understanding of these licenses, and should be taken with a grain of salt. If you notice anything incorrect here, please contact me.
+

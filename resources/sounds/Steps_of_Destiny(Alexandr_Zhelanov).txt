@@ -1,0 +1,11 @@
+Title:
+    Steps of Destiny
+
+Author:
+    Alexandr Zhelanov
+
+URL:
+    http://opengameart.org/content/steeps-of-destiny
+	
+License(s):
+    CC-BY 3.0 (http://creativecommons.org/licenses/by/3.0/)
