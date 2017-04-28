@@ -4,7 +4,6 @@ class = require('middleclass')
 local AudioManager = require("audio_manager")
 beholder = require('beholder')
 local inspect = require("inspect")
-local utf8 = require("utf8")
 -- local Shaders = require("shaders")
 local Resources = require("resources")
 local time = require("time")
@@ -32,7 +31,6 @@ function Manager:set_manager_watchers()
         end)
     beholder.observe('UPDATE', self, function(dt) return self:update(dt) end)
     beholder.observe('SCENE_DRAWN', function() return self:draw() end)
-    beholder.observe('KEYRELEASED', 'escape', function() self:quit() end)
     beholder.observe('QUIT', function() self:quit() end)
 end
 
@@ -70,8 +68,10 @@ function Manager:set_triggers()
     love.mousemoved = function(x, y, dx, dy, istouch)
         beholder.trigger('MOUSEMOVED', self, x, y, dx, dy, istouch)
     end
-    love.wheelmoved = function(x, y)
-        beholder.trigger('WHEELMOVED', self, x, y)
+    love.wheelmoved = function(dx, dy)
+     -- get the position of the mouse
+        local x, y = love.mouse.getPosition()
+        beholder.trigger('WHEELMOVED', self, x, y, dx, dy)
     end
 end
 
@@ -135,61 +135,6 @@ function Manager:draw()
         return
     end
     love.timer.sleep(self.next_time - cur_time)
-end
-
-function Manager:textinput(t)
-    text_input = text_input .. t
-end
-
-function Manager:keypressed(key, scancode, isrepeat)
-    --[[  Triggered when a key is pressed
-
-    Args:
-        key(KeyConstant): Character of the pressed key.
-        scancode(Scancode): The scancode representing the pressed key.
-        isrepeat(boolean): Whether this keypress event is a repeat. The delay
-            between key repeats depends on the user's system settings.
-    ]]--
-    if key == "backspace" then
-        -- get the byte offset to the last UTF-8 character in the string.
-        local byteoffset = utf8.offset(text_input, -1)
-
-        if byteoffset then
-            -- remove the last UTF-8 character.
-            -- string.sub operates on bytes rather than UTF-8 characters, so we couldn't do string.sub(text, 1, -2).
-            text_input = string.sub(text_input, 1, byteoffset - 1)
-        end
-    end
-end
-
-function Manager:keyreleased(key, scancode)
-    --[[  Triggered when a keyboard key is released.
-
-    Args:
-        key(KeyConstant): Character of the released key.
-        scancode(Scancode): The scancode representing the released key.
-    ]]--
-   if key == "escape" then
-      self:quit()
-   end
-end
-
-function Manager:mousepressed(x, y, button, istouch)
-    --[[  Triggered when a mouse button is pressed.
-
-    Args:
-        x(number): Mouse x position, in pixels.
-        y(number): Mouse y position, in pixels.
-        button(number): Pressed mouse button index. 1 is the primary mouse
-            button, 2 is the secondary mouse button and 3 is the middle
-            button. Further buttons are mouse dependent.
-
-    ]]
-    if self.scene then self.scene:mousepressed(x,y,button) end
-end
-
-function Manager:wheelmoved(x,y)
-    if self.scene then self.scene:wheelmoved(x,y) end
 end
 
 function Manager:quit()

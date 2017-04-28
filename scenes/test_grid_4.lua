@@ -10,47 +10,111 @@ function SceneGridTest:initialize()
         parent=self,
         rect=self.rect,
         z = 1,
-        bg_color = {255, 255, 255, 255}
+        bg_color = {255, 255, 255, 255},
+        expand=true -- set all col/row weights to 1
 
     })
-    self.frame:row_configure(1, 1)  -- row=1, weight=1
-    self.frame:col_configure(1, 1)  -- col=1, weight=1
-    self.frame:row_configure(2, 1)  -- row=2, weight=1
-    self.frame:col_configure(2, 1)  -- col=2, weight=1
 
-    self.f_nw = widgets.Menu({
+    self.f_11 = widgets.List({
         parent=self.frame,
-        bg_color = {0, 255, 0, 127},
-        z=2
+        bg_color = {255, 0, 0, 255},
+        z=2,
+        col=1, row=1, sticky="NW", align="W"
     })
-    self.f_nw:grid_config{col=1, row=1}
-    self.f_nw:insert("New Game")
-    self.f_nw:insert("Options")
-    self.f_nw:insert("Quit")
+    self.f_11:insert("New Game")
+    self.f_11:insert("Options")
+    self.f_11:insert("Quit")
 
-    self.f_ne = widgets.Frame({
-        parent=self.frame,
-        bg_color = {0, 0, 255, 127},
-        z=2
-    })
-    self.f_ne:grid_config{col=2, row=1, sticky="NSWE"}
 
-    self.f_sw = widgets.Frame({
+    self.f_21 = widgets.List({
         parent=self.frame,
-        bg_color = {255, 0, 0, 127},
-        z=2
+        bg_color = {0, 0, 255, 255},
+        z=2,
+        col=2, row=1, sticky="N", align="W"
     })
-    self.f_sw:grid_config{col=1, row=2, sticky="NSWE"}
+    self.f_21:insert("New Game")
+    self.f_21:insert("Options")
+    self.f_21:insert("Quit")
 
-    self.f_se = widgets.Frame({
+
+    self.f_31 = widgets.List({
         parent=self.frame,
-        bg_color = {255, 255, 0, 127},
-        z=2
+        bg_color = {0, 255, 0, 255},
+        z=2,
+        col=3, row=1, sticky="NE", align="L"
     })
-    self.f_se:grid_config{col=2, row=2, sticky="NSWE"}
+    self.f_31:insert("New Game")
+    self.f_31:insert("Options")
+    self.f_31:insert("Quit")
+
+
+    self.f_12 = widgets.List({
+        parent=self.frame,
+        bg_color = {255, 0, 0, 255},
+        z=2,
+        col=1, row=2, sticky="W"
+    })
+    self.f_12:insert("New Game")
+    self.f_12:insert("Options")
+    self.f_12:insert("Quit")
+
+
+    self.f_22 = widgets.List({
+        parent=self.frame,
+        bg_color = {0, 0, 255, 255},
+        z=2,
+        col=2, row=2
+    })
+    self.f_22:insert("New Game")
+    self.f_22:insert("Options")
+    self.f_22:insert("Quit")
+
+
+    self.f_32 = widgets.List({
+        parent=self.frame,
+        bg_color = {0, 255, 0, 255},
+        z=2,
+        col=3, row=2, sticky="R"
+    })
+    self.f_32:insert("New Game")
+    self.f_32:insert("Options")
+    self.f_32:insert("Quit")
+
+
+    self.f_13 = widgets.List({
+        parent=self.frame,
+        bg_color = {255, 0, 0, 255},
+        z=2,
+        col=1, row=3, align="E", sticky="SW"
+    })
+    self.f_13:insert("New Game")
+    self.f_13:insert("Options")
+    self.f_13:insert("Quit")
+
+
+    self.f_23 = widgets.List({
+        parent=self.frame,
+        bg_color = {0, 0, 255, 255},
+        z=2,
+        col=2, row=3, sticky="S", align="R"
+    })
+    self.f_23:insert("New Game")
+    self.f_23:insert("Options")
+    self.f_23:insert("Quit")
+
+
+    self.f_33 = widgets.List({
+        parent=self.frame,
+        bg_color = {0, 255, 0, 255},
+        z=2,
+        col=3, row=3, sticky="SR", align="R"
+    })
+    self.f_33:insert("New Game")
+    self.f_33:insert("Options")
+    self.f_33:insert("Quit")
+
 
     self.frame:grid()
-
 
 end
 

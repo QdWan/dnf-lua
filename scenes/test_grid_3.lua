@@ -11,25 +11,25 @@ function SceneGridTest:initialize()
         rect=self.rect,
         z = 1
     })
-    self.frame:row_configure(1, 1)  -- row=1, weight=1
-    self.frame:col_configure(1, 1)  -- col=1, weight=1
-    self.frame:row_configure(2, 2)  -- row=2, weight=1
+    self.frame:row_config(1, 1)  -- row=1, weight=1
+    self.frame:col_config(1, 1)  -- col=1, weight=1
+    self.frame:row_config(2, 2)  -- row=2, weight=1
 
     self.r0 = widgets.RectWidget({
         parent=self.frame,
         w=1,
         h=1,
-        bg_color = {0, 255, 0, 255}
+        bg_color = {0, 255, 0, 255},
+        col=1, row=1, sticky="NSWE"
     })
-    self.r0:grid_config{col=1, row=1, sticky="NSWE"}
 
     self.r1 = widgets.RectWidget({
         parent=self.frame,
         w=1,
         h=1,
-        bg_color = {0, 0, 255, 255}
+        bg_color = {0, 0, 255, 255},
+        col=1, row=2, sticky="NSWE"
     })
-    self.r1:grid_config{col=1, row=2, sticky="NSWE"}
 
     self.frame:grid()
 end

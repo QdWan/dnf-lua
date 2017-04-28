@@ -3,7 +3,7 @@ local widgets = require("widgets")
 local SceneMainMenu = class("SceneMainMenu", SceneBase)
 
 function SceneMainMenu:initialize()
-    self.class.super.initialize(self)
+    SceneBase.initialize(self)
     self.time = 0
 
     self:set_music()
@@ -37,10 +37,10 @@ function SceneMainMenu:set_menu()
         rect=self.rect,
         z = 2
     })
-    self.frame:row_configure(1, 2)  -- row=1, weight=1
-    self.frame:col_configure(1, 2)  -- col=1, weight=1
-    self.frame:row_configure(2, 1)  -- row=2, weight=1
-    self.frame:row_configure(3, 4)  -- row=2, weight=1
+    self.frame:row_config(1, 2)  -- row=1, weight=1
+    self.frame:col_config(1, 2)  -- col=1, weight=1
+    self.frame:row_config(2, 1)  -- row=2, weight=1
+    self.frame:row_config(3, 4)  -- row=2, weight=1
 
     self.title = widgets.Label({
         hover=false,
@@ -54,17 +54,20 @@ function SceneMainMenu:set_menu()
         text="Dungeons & Fiends",
         -- text="Dungeons & Fiends",
         font_obj=manager.resources:font("EG_Dragon_Caps.ttf", 44),
+        col=1,
+        row=1,
+        sticky="S"
     })
-    self.title:grid_config{col=1, row=1, sticky="S"}
-    print("title", self.title)
 
     self.body = widgets.Label({
         parent=self.frame,
         text="Options",
         font_obj=manager.resources:font("caladea-regular.ttf", 54),
-        color={223, 223, 223, 255}
+        color={223, 223, 223, 255},
+        col=1,
+        row=3,
+        sticky="N"
     })
-    self.body:grid_config{col=1, row=3, sticky="N"}
 
     self.frame:grid()
 end

@@ -44,8 +44,8 @@ function SceneBase:_set_observers()
 
     self.observers["WHEELMOVED"] = beholder.observe(
         'WHEELMOVED', manager,
-        function(x, y)
-            return self:wheelmoved(x, y)
+        function(x, y, dx, dy)
+            return self:wheelmoved(x, y, dx, dy)
         end)
 
     self.observers["MOUSEPRESSED"] = beholder.observe(
@@ -59,9 +59,19 @@ function SceneBase:_set_observers()
         function(x, y, button, istouch)
             return self:mousereleased(x, y, button, istouch)
         end)
+
+    self.observers["TEXTINPUT"] = beholder.observe(
+        'TEXTINPUT', manager,
+        function(t)
+            return self:textinput(t)
+        end)
+
+
 end
 
-function SceneBase:update(dt) end
+function SceneBase:update(dt)
+    beholder.trigger('UPDATE', self, dt)
+end
 
 function SceneBase:draw(z)
     for i = 1, self.z do
@@ -75,21 +85,56 @@ function SceneBase:_register_widget(frame)
     self.z = math.max(self.z, frame.z)
 end
 
-function SceneBase:textinput(t) end
+function SceneBase:textinput(t)
+    beholder.trigger('TEXTINPUT', self, t)
+end
 
-function SceneBase:keypressed(key, scancode, isrepeat) end
+function SceneBase:keypressed(key, scancode, isrepeat)
+    beholder.trigger('KEYPRESSED', self, key, scancode, isrepeat)
+end
 
-function SceneBase:keyreleased(key, scancode) end
+function SceneBase:keyreleased(key, scancode)
+    --[[  Triggered when a keyboard key is released.
+
+    Args:
+        key(KeyConstant): Character of the released key.
+        scancode(Scancode): The scancode representing the released key.
+    ]]--
+   if key == "escape" then
+      self:quit()
+   end
+   beholder.trigger('KEYRELEASED', self, key, scancode)
+end
 
 function SceneBase:mousemoved(x, y, dx, dy, istouch)
     beholder.trigger('MOUSEMOVED', self, x, y, dx, dy, istouch)
 end
 
-function SceneBase:wheelmoved(x, y)
-    beholder.trigger('WHEELMOVED', self, x, y)
+function SceneBase:wheelmoved(x, y, dx, dy)
+    --[[ Triggered when the mouse wheel is moved.
+
+    Args:
+        x(number): Mouse x position, in pixels.
+        y(number): Mouse y position, in pixels.
+        dx(number): Amount of horizontal mouse wheel movement. Positive
+            values indicate movement to the right.
+        dy(number): Amount of vertical mouse wheel movement. Positive values
+            indicate upward movement.
+    ]]--
+    beholder.trigger('WHEELMOVED', self, x, y, dx, dy)
 end
 
 function SceneBase:mousepressed(x, y, button, istouch)
+    --[[  Triggered when a mouse button is pressed.
+
+    Args:
+        x(number): Mouse x position, in pixels.
+        y(number): Mouse y position, in pixels.
+        button(number): Pressed mouse button index. 1 is the primary mouse
+            button, 2 is the secondary mouse button and 3 is the middle
+            button. Further buttons are mouse dependent.
+
+    ]]
     beholder.trigger('MOUSEPRESSED', self, x, y, button, istouch)
 end
 
@@ -97,7 +142,9 @@ function SceneBase:mousereleased(x, y, button, istouch)
     beholder.trigger('MOUSERELEASED', self, x, y, button, istouch)
 end
 
-function SceneBase:quit() end
+function SceneBase:quit()
+    manager:quit()
+end
 
 --[[
 local SceneMultiLayer = class("SceneMultiLayer", SceneBase)

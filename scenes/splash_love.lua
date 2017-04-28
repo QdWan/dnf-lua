@@ -19,13 +19,14 @@ function SceneSplash:set_img()
         rect=self.rect,
         z=1
         })
-    self.frame:row_configure(1, 1)
-    self.frame:col_configure(1, 1)
+    self.frame:row_config(1, 1)
+    self.frame:col_config(1, 1)
     self.img = widgets.Image({
         parent=self.frame,
-        path='love-logo.png'
+        path='love-logo.png',
+        col=1,
+        row=1
         })
-    self.img:grid_config{col=1, row=1}
     self.frame:grid()
 end
 

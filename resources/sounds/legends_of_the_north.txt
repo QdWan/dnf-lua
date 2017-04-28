@@ -1,0 +1,4 @@
+title: Legends of the North
+artist: Mattias Westlund
+album: The Battle of Wesnoth OST
+license: GPL2

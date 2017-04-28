@@ -2,6 +2,7 @@ local Widget = require("widgets.base")
 
 local Frame = class("Frame", Widget)
 
+local inspect = require("inspect")
 
 function Frame:initialize(args)
     --[[ Basic unit of organization for complex layouts.
@@ -13,8 +14,8 @@ function Frame:initialize(args)
     self._cols = 0
 
     Widget.initialize(self, args)  --  super
-    self._rows_h = {}
-    self._cols_w = {}
+    self._row_size = {}
+    self._col_size = {}
     self.row_weight = {}
     self.col_weight = {}
 end
@@ -35,108 +36,96 @@ function Frame:_update_grid_size()
     local children = self._children
     self._rows = 0
     self._cols = 0
-    self._rows_h = {}
-    self._cols_w = {}
+    self._row_size = {}
+    self._col_size = {}
     local max = math.max
     for i = 1, #children do
         local child = children[i]
         child:_ungrid()
-        local _grid_args = child._grid_args
-        _grid_args.row = _grid_args.row or self._rows + 1
-        local row = _grid_args.row
-        local rowspan = _grid_args.rowspan
-        local col = _grid_args.col
-        local colspan = _grid_args.colspan
+        child.row = child.row or self._rows + 1
+        local row = child.row
+        local rowspan = child.rowspan
+        local col = child.col
+        local colspan = child.colspan
         self._rows = max(self._rows, row + rowspan - 1)
         self:_row_adjust(row, rowspan, child)
         self._cols = max(self._cols, col + colspan - 1)
         self:_col_adjust(col, colspan, child)
     end
+    for i = 1, self._rows do
+        self._row_size[i] = self._row_size[i] or 0
+    end
+    for i = 1, self._cols do
+        self._col_size[i] = self._col_size[i] or 0
+    end
+end
+
+function Frame:_expand_weights(weights, dim_size)
+    for i = 1, dim_size do
+        weights[i] = weights[i] or 1
+    end
 end
 
 function Frame:_adjust_weight()
-    self:_adjust_width_weight()
-    self:_adjust_height_weight()
-end
-
-function Frame:_adjust_width_weight()
-    local frame_w = self.w
     local floor = math.floor
 
-    -- check total weight
-    local total_weight = 0
-    for _, v in pairs(self.col_weight) do
-        total_weight = total_weight + v
-    end
+    local dimension_key
+    local coord
 
-    local width = 0
-    for i = 1, self._cols do
-        width = width + self._cols_w[i]
-    end
+    for _, param in pairs({{"w", "col"}, {"h", "row"}}) do
+        dimension_key = param[1]
+        coord = param[2]
 
-    -- percentual weight
-    local space = math.max((frame_w - width) / total_weight, 0)
-    local new_w_sum = 0
-
-    if space == 0 or total_weight == 0 then
-        print("Frame:_adjust_width_weight() space == 0 or total_weight == 0")
-        new_w_sum = width
-    else
-        for i = 1, self._cols do
-            local new_w = floor(self._cols_w[i] +
-                                (self.col_weight[i] or 0) * space)
-            self._cols_w[i] = new_w
-            new_w_sum = new_w_sum + new_w
+        local frame_size = self[dimension_key]  --  self.w, self.h
+        local weights = self[coord .. "_weight"]  --  col_weight, row_weight
+        local dim_size = self["_" .. coord .. "s"]  --  _cols, _rows
+        local cell_sizes = self[
+            "_".. coord .. "_size"]--  _col_size, _row_size
+        if self.expand then
+            self:_expand_weights(weights, dim_size)
         end
+
+        -- check total weight
+        local total_weight = 0
+        for _, v in pairs(weights) do
+            total_weight = total_weight + v
+        end
+
+        local size = 0
+        for i = 1, dim_size do
+            size = size + cell_sizes[i]
+        end
+
+        -- percentual weight
+        local space = math.max((frame_size - size) / total_weight, 0)
+        local new_size_sum = 0
+
+        if space == 0 or total_weight == 0 then
+            new_size_sum = size
+        else
+            for i = 1, dim_size do
+                local new_size = floor(cell_sizes[i] +
+                                    (weights[i] or 0) * space)
+                cell_sizes[i] = new_size
+                new_size_sum = new_size_sum + new_size
+            end
+        end
+        self[dimension_key] = new_size_sum
     end
-    self.w = new_w_sum
 end
 
-function Frame:_adjust_height_weight()
-    local frame_h = self.h
-    local floor = math.floor
-
-    -- check total weight
-    local total_weight = 0
-    for _, v in pairs(self.row_weight) do
-        total_weight = total_weight + v
-    end
-
-    -- check current size
-    local height = 0
-    for i = 1, self._rows do
-        self._rows_h[i] = (self._rows_h[i] or 0)
-        height = height + self._rows_h[i]
-    end
-
-    -- percentual weight
-    local space = math.max((frame_h - height) / total_weight, 0)
-    local new_h_sum
-    if space == 0 or total_weight == 0 then
-        new_h_sum = height
-    else
-        new_h_sum = 0
-        for i = 1, self._rows do
-            local new_h = math.floor(self._rows_h[i] +
-                                     (self.row_weight[i] or 0) * space)
-            self._rows_h[i] = new_h
-            new_h_sum = new_h_sum + new_h
-        end
-    end
-    self.h = new_h_sum
-end
 
 function Frame:_row_adjust(row, span, widget)
-    local size = math.floor((widget.h + widget._grid_args.padx * 2) / span)
+    local widget_size = math.floor((widget.h + widget.pady * 2) / span)
     for i = row, row + span - 1 do
-        self._rows_h[i] = math.max(self._rows_h[i] or 1, size)
+        self._row_size[i] = math.max(self._row_size[i] or 1, widget_size)
     end
 end
 
 function Frame:_col_adjust(col, span, widget)
-    local size = math.floor((widget.w + widget._grid_args.pady * 2) / span)
+    local size = math.floor((widget.w + widget.padx * 2) / span)
     for i = col, col + span - 1 do
-        self._cols_w[i] = math.max(self._cols_w[i] or 1, size)
+        self._col_size[i] = math.max(self._col_size[i] or 1, size)
     end
 end
 
@@ -148,12 +137,11 @@ function Frame:_update_children()
 end
 
 function Frame:_update_child(child)
-    local _grid_args = child._grid_args
-    local col = _grid_args.col
-    local colspan = _grid_args.colspan
-    local row = _grid_args.row
-    local rowspan = _grid_args.rowspan
-    local sticky = _grid_args.sticky
+    local col = child.col
+    local colspan = child.colspan
+    local row = child.row
+    local rowspan = child.rowspan
+    local sticky = child.sticky
     local string = string
 
     local N, S, W, E
@@ -173,16 +161,17 @@ function Frame:_update_child(child)
         vertical = "C"
     end
 
+    if child.grid then child:grid("soft") end
+
     local resized = false
     if horizontal == "C" then
-        if child.grid then child:grid("soft") end
         child.centerx = self.x + (self:get_cell_width(1, col - 1) +
                                   self:get_cell_width(col, colspan) / 2)
     else
         resized = true
         if W == nil and E ~= nil then
             child.right = (self:get_cell_width(1, col) -
-                           _grid_args.padx +
+                           child.padx +
                            self.x)
         else
             if E ~= nil and W ~= nil then
@@ -190,20 +179,19 @@ function Frame:_update_child(child)
                 child.w = self:get_cell_width(col, colspan)
             end
             child.x = (self:get_cell_width(1, col - 1) +
-                       _grid_args.padx +
+                       child.padx +
                        self.x)
         end
     end
 
     if vertical == "C" then
-        if child.grid then child:grid("soft") end
         child.centery = self.y + (self:get_cell_height(1, row - 1) +
                                   self:get_cell_height(row, rowspan) / 2)
     else
         resized = true
         if N == nil and S ~= nil then
             child.bottom = (self:get_cell_height(1, row) -
-                       _grid_args.pady +
+                       child.pady +
                        self.y)
         else
             if S ~= nil and N ~= nil then
@@ -211,10 +199,11 @@ function Frame:_update_child(child)
                 child.h = self:get_cell_height(row, rowspan)
             end
             child.y = (self:get_cell_height(1, row - 1) +
-                       _grid_args.pady +
+                       child.pady +
                        self.y)
         end
     end
+
     if child.grid then
         child:grid("soft")
     end
@@ -224,7 +213,7 @@ end
 function Frame:get_cell_width(col, colspan)
     local size = 0
     for i = col, col + colspan - 1 do
-        size = size + (self._cols_w[i] or 2)
+        size = size + (self._col_size[i] or 2)
     end
     return size
 end
@@ -232,17 +221,28 @@ end
 function Frame:get_cell_height(row, rowspan)
     local size = 0
     for i = row, row + rowspan - 1 do
-        size = size + (self._rows_h[i] or 2)
+        size = size + (self._row_size[i] or 2)
     end
     return size
 end
 
-function Frame:row_configure(row, weight)
+function Frame:row_config(row, weight)
     self.row_weight[row] = weight
 end
 
-function Frame:col_configure(col, weight)
+function Frame:col_config(col, weight)
     self.col_weight[col] = weight
+end
+
+function Frame:stopPropagation(str)
+    local evt = self.observers[str]
+    if evt ~= nil then
+        beholder.stopPropagation(evt)
+    end
+    local parent_evt = self.parent.observers[str]
+    if parent_evt ~= nil then
+        beholder.stopPropagation(parent_evt)
+    end
 end
 
 function Frame:update(dt)
@@ -259,27 +259,38 @@ function Frame:draw(z)
 end
 
 function Frame:keypressed(key, scancode, isrepeat)
+    Widget.keypressed(self, key, scancode, isrepeat)
     beholder.trigger('KEYPRESSED', self, key, scancode, isrepeat)
 end
 
-function Frame:keyreleased(key, scancode, isrepeat)
-    beholder.trigger('KEYRELEASED', self, key, scancode, isrepeat)
+function Frame:keyreleased(key, scancode)
+    Widget.keyreleased(self, key, scancode)
+    beholder.trigger('KEYRELEASED', self, key, scancode)
 end
 
 function Frame:mousemoved(x, y, dx, dy, istouch)
+    Widget.mousemoved(self, x, y, dx, dy, istouch)
     beholder.trigger('MOUSEMOVED', self, x, y, dx, dy, istouch)
 end
 
-function Frame:wheelmoved(x, y)
-    beholder.trigger('WHEELMOVED', self, x, y)
+function Frame:wheelmoved(x, y, dx, dy)
+    Widget.wheelmoved(self, x, y, dx, dy)
+    beholder.trigger('WHEELMOVED', self, x, y, dx, dy)
 end
 
 function Frame:mousepressed(x, y, button, istouch)
+    Widget.mousepressed(self, x, y, button, istouch)
     beholder.trigger('MOUSEPRESSED', self, x, y, button, istouch)
 end
 
 function Frame:mousereleased(x, y, button, istouch)
+    Widget.mousereleased(self, x, y, button, istouch)
     beholder.trigger('MOUSERELEASED', self, x, y, button, istouch)
+end
+
+function Frame:textinput(t)
+    Widget.textinput(self, t)
+    beholder.trigger('TEXTINPUT', self, t)
 end
 
 return Frame

@@ -54,15 +54,36 @@ local GRID_DEFAULTS = {
     ]]--
 }
 
+local COMMANDS = {
+    "KEYPRESSED", "KEYRELEASED", "MOUSERELEASED", "MOUSEPRESSED",
+    "WHEELMOVED", "HOVERED", "UNHOVERED", "TEXTINPUT"
+}
+
+local function call_bound_commands(args, ...)
+    local iterables = {...}
+    if #iterables == 0 then
+        return
+    end
+    for _, it in ipairs(iterables) do
+        if #it ~= 0 then
+            for _, cmd in ipairs(it) do
+                cmd(args)
+            end
+            break
+        end
+    end
+end
 
 local Widget = class("Widget", Rect)
 
 function Widget:initialize(args)
     -- print("Widget:initialize", self)
+    self.active = true
+    self.visible = true
     self.states = self.states or {}
-    self._commands = self._commands or {}
-    self.state = "normal"
     self:get_args(args)
+    self.commands = self.commands or {}
+    self.state = "normal" or self.state
     self:_cache()
     self:_set_rect()
     self._children = {}
@@ -72,18 +93,37 @@ function Widget:initialize(args)
     self:_set_observers()
 end
 
+function Widget:copy_style()
+    return {
+        font_size = self.font_size,
+        color = util.copy_depth(self.color, 1),
+        font_name = self.font_name,
+        hover = self.hover,
+        font_obj = self.font_obj
+    }
+end
+
 function Widget:get_args(t)
     local default_style = self.default_style
+
+    local args
 
     local style, new_style
     if default_style ~= nil then
         style = util.copy_depth(default_style, 2)
-        new_style = util.merge_tables(style, t)
+        args = util.merge_tables(style, t)
     else
-        new_style = t
+        args = t
     end
+    local commands = {}
+    args.commands = args.commands or {}
+    for _, cmd in ipairs(COMMANDS) do
+        commands[cmd] = args.commands[cmd] or {}
+    end
+    args.commands = commands
+    args = util.merge_tables(GRID_DEFAULTS, args)
 
-    for k, v in pairs(new_style) do
+    for k, v in pairs(args) do
         self[k] = v
     end
 end
@@ -93,15 +133,15 @@ function Widget:getter_default_style() end
 function Widget:_cache() end
 
 function Widget:_set_rect()
-    if self.rect ~= nil then
+    if self.rect == nil then
+        Rect.initialize(self, self.x or 0, self.y or 0,
+                        self.w or 1, self.h or 1)
+    else
         Rect.initialize(self,
             self.rect.x or self.rect[1],
             self.rect.y or self.rect[2],
             self.rect.w or self.rect[3],
             self.rect.h or self.rect[4])
-    else
-        Rect.initialize(self, self.x or 0, self.y or 0,
-                        self.w or 1, self.h or 1)
     end
     self._start_size = {w=self.w, h=self.h}
     self.default_rect = self:copy()
@@ -120,91 +160,178 @@ function Widget:_set_observers()
     self.observers["UPDATE"] = beholder.observe(
         'UPDATE', parent,
         function(dt)
-            return self:update(dt)
+            if self.visible then
+                return self:update(dt)
+            end
         end)
 
     self.observers["DRAW"] = beholder.observe(
         'DRAW', parent, self.z, function()
-            return self:draw(self.z)
+            if self.visible then
+                return self:draw(self.z)
+            end
         end)
 
     self.observers["KEYPRESSED"] = beholder.observe(
         'KEYPRESSED', parent,
         function(key, scancode, isrepeat)
-            return self:keypressed(key, scancode, isrepeat)
+            if not self.disabled then
+                return self:keypressed(key, scancode, isrepeat)
+            end
         end)
 
     self.observers["KEYRELEASED"] = beholder.observe(
         'KEYRELEASED', parent,
         function(key, scancode)
-            return self:keyreleased(key, scancode)
+            if not self.disabled then
+                return self:keyreleased(key, scancode)
+            end
         end)
 
     self.observers["MOUSEMOVED"] = beholder.observe(
         'MOUSEMOVED', parent,
         function(x, y, dx, dy, istouch)
-            return self:mousemoved(x, y, dx, dy, istouch)
+            if not self.disabled then
+                return self:mousemoved(x, y, dx, dy, istouch)
+            end
         end)
 
     self.observers["WHEELMOVED"] = beholder.observe(
         'WHEELMOVED', parent,
-        function(x, y)
-            return self:wheelmoved(x, y)
+        function(x, y, dx, dy)
+            if not self.disabled and self:collidepoint(x, y) then
+                return self:wheelmoved(x, y, dx, dy)
+            end
         end)
 
     self.observers["MOUSEPRESSED"] = beholder.observe(
         'MOUSEPRESSED', parent,
         function(x, y, button, istouch)
-            return self:mousepressed(x, y, button, istouch)
+            if not self.disabled and self:collidepoint(x, y) then
+                return self:mousepressed(x, y, button, istouch)
+            end
         end)
 
     self.observers["MOUSERELEASED"] = beholder.observe(
         'MOUSERELEASED', parent,
         function(x, y, button, istouch)
-            return self:mousereleased(x, y, button, istouch)
+            if not self.disabled and self:collidepoint(x, y) then
+                return self:mousereleased(x, y, button, istouch)
+            end
         end)
-end
 
-function Widget:grid_config(args)
-    self._grid_args = util.merge_tables(GRID_DEFAULTS, args or {})
+    self.observers["TEXTINPUT"] = beholder.observe(
+        'TEXTINPUT', parent,
+        function(t)
+            return self:textinput(t)
+        end)
+
+    self.observers["UPDATE"] = beholder.observe(
+        "UPDATE", parent,
+        function(dt)
+            return self:update(dt)
+        end
+    )
 end
 
 function Widget:bind(tag, cmd)
-    self._commands[tag] = cmd
+    local commands = self.commands
+    if type(tag) == "table" and type(cmd) == "function" then
+        for _, str in ipairs(tag) do
+            commands[str] = commands[str] or {}
+            local new_cmds
+            if type(cmd) ~= "table" then
+                new_cmds = {cmd}
+            else
+                new_cmds = cmd
+            end
+            for _, new_cmd in ipairs(new_cmds) do
+                table.insert(commands[str], new_cmd)
+            end
+        end
+    else
+        commands[tag] = commands[tag] or {}
+        table.insert(commands[tag], cmd)
+    end
 end
 
 function Widget:update(dt) end
 
 function Widget:draw() end
 
-function Widget:textinput(t) end
+function Widget:textinput(t)
+    local std = "TEXTINPUT"
+    local args = {widget=self, t=t}
+    local commands = self.commands
 
-function Widget:keypressed(key, scancode, isrepeat) end
+    call_bound_commands(args, commands[std])
+end
 
-function Widget:keyreleased(key, scancode) end
+function Widget:keypressed(key, scancode, isrepeat)
+    local std = "KEYPRESSED"
+    local str = std .. "." .. key
+    local args = {widget=self, key=key, scancode=scancode, isrepeat=isrepeat}
+    local commands = self.commands
+
+    call_bound_commands(args, commands[str], commands[std])
+end
+
+function Widget:keyreleased(key, scancode)
+    local std = "KEYRELEASED"
+    local str = std .. "." .. key
+    local args = {widget=self, key=key, scancode=scancode}
+    local commands = self.commands
+
+    call_bound_commands(args, commands[str], commands[std])
+end
 
 function Widget:mousemoved(x, y, dx, dy, istouch)
+    local previous_state = self.state
     if self:collidepoint(x, y) then
-        self.state = "hover"
+        self:on_hover()
     else
-        self.state = "normal"
+        self:on_unhover()
     end
+end
+
+function Widget:on_hover()
+    self.state = "hover"
+
+    local std = "HOVERED"
+    local commands = self.commands
+    local args = {widget=self}
+
+    call_bound_commands(args, commands[std])
+end
+
+function Widget:on_unhover()
+    self.state = "normal"
+
+    local std = "UNHOVERED"
+    local commands = self.commands
+    local args = {widget=self}
+
+    call_bound_commands(args, commands[std])
 end
 
 function Widget:mousepressed(x, y, button, istouch) end
 
 function Widget:mousereleased(x, y, button, istouch)
-    if self:collidepoint(x, y) then
-        local cmd = self._commands["MOUSERELEASED." .. button]
-        if cmd ~= nil then
-            cmd()
-        else
-            print("no cmd", manager.time())
-        end
-    end
+    local std = "MOUSERELEASED"
+    local str = std .. "." .. button
+    local args = {widget=self, x=x, y=y, button=button, istouch=istouch}
+    local commands = self.commands
+
+    call_bound_commands(args, commands[str], commands[std])
 end
 
-function Widget:wheelmoved(x,y) end
+function Widget:wheelmoved(x, y, dx, dy)
+    local str = "WHEELMOVED"
+    local args = {widget=self, x=x, y=y, dx=dx, dy=dy}
+    local commands = self.commands
+
+    call_bound_commands(args, commands[str])
+end
 
 function Widget:quit() end
 

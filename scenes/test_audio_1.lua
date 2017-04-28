@@ -14,10 +14,10 @@ function AudioTestScene:set_bgm()
     self.audio = AudioManager()
     self.tracks = {
         self.audio:load(
-            "resources/sound/music_win.ogg",
+            "resources/sounds/music_win.ogg",
             "stream", false),
         self.audio:load(
-            "resources/sound/Steps_of_Destiny(Alexandr_Zhelanov).ogg",
+            "resources/sounds/Steps_of_Destiny(Alexandr_Zhelanov).ogg",
             "stream", false)
     }
     self:next_track()
@@ -69,7 +69,7 @@ function AudioTestScene:keypressed(key, scancode, isrepeat)
             self:next_track()
         end
     else
-        self.audio:play_s("resources/sound/sound.wav") -- play explosion sound once
+        self.audio:play_s("resources/sounds/sound.wav") -- play explosion sound once
     end
 end
 
