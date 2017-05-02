@@ -24,6 +24,7 @@
 local Properties = require('properties')
 local inspect = require("inspect")
 local PriorityQueue = require("priority_queue")
+local map_entities = require("dnf.map_entities")
 
 local Rect = require("rect")
 local shuffle = require("shuffle")
@@ -48,11 +49,15 @@ local COST = {
     wall = 12
 }
 
-local function create_map(header)
+local map_gen = {creators = {}}
+
+local function get_creator(header)
     -- Utility method to create by mode/name.
-    -- creator = require()
-    return creator(header)
+    return map_gen.creators[header.creator]()
 end
+
+map_gen.get_creator = get_creator
+
 
 local function heapsort(t, cmp)
     local pq = PriorityQueue()
@@ -401,7 +406,8 @@ function RndMap2:initialize()
     self.halls = {}
 end
 
-function RndMap2:create()
+function RndMap2:create(header)
+    self.header = header
     local cols, rows = self:create_sectors()
     MapCreator.create(self, cols, rows) -- super
 
@@ -409,9 +415,7 @@ function RndMap2:create()
 
     self:create_halls()
 
-    -- self.map.rooms = self.rooms
-
-    return self.map
+    return self:standard_map()
 end
 
 function RndMap2:create_sectors()
@@ -759,6 +763,35 @@ function RndMap2:cost(a, b)
 
     return main * 8 + nc
 end
+
+function RndMap2:standard_map()
+    local map = {
+        header = self.header,
+        rooms = self.rooms,
+        halls = self.halls,
+        doors = self.doors,
+        w = self.map.w,
+        h = self.map.h,
+        tile_fx = {},
+        links = {},
+        _start = self.start_pos,
+        _end = self.end_pos,
+        nodes = self.map.nodes,
+        get = self.map.get,
+    }
+    for i = 1, #map.nodes do
+        local tile = map_entities.TileEntity({
+            name = map.nodes[i].template
+        })
+        map.nodes[i] = {
+            tile = tile,
+            features = {},
+            items = {},
+            creatures = {}
+        }
+    end
+    return map
+end
 -- ##########
 
 --[[
@@ -774,4 +807,6 @@ local map = rnd_map:create()
 print_graph(map)
 ]]--
 
-return RndMap2
+map_gen.creators["RndMap2"] = RndMap2
+
+return map_gen
