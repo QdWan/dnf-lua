@@ -1,3 +1,6 @@
+local util = require("lib.util")
+local extend = util.extend_array
+
 local OUTFILE = "log.log"
 
 local Log = {old_print = print}
@@ -15,12 +18,6 @@ setmetatable(
         end
     }
 )
-
-local function extend(table1, table2)
-    for _, v in ipairs(table2) do
-        table.insert(table1, v)
-    end
-end
 
 function Log:initialize(param)
     param = param or {}

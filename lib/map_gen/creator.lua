@@ -86,13 +86,12 @@ function MapCreator:standard_map(graph)
     local TileEntity = map_entities.TileEntity
     local NodeGroup = map_containers.NodeGroup
     local nodes = map.nodes
-    for i = 1, #nodes do
-        local tile = TileEntity({
-            name = assert(nodes[i].template),
-            color = nodes[i].color
-        })
+    for i, node in ipairs(nodes) do
         nodes[i] = NodeGroup{
-            tile = tile
+            tile = TileEntity({
+                name = node.template,
+                color = node.color
+            })
         }
     end
     return map

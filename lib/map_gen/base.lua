@@ -1,6 +1,8 @@
 local PriorityQueue = require("lib.collections.priority_queue")
 local shuffle = require("lib.shuffle")
 local Rect = require("lib.rect")
+local util = require("lib.util")
+local time = love.timer.getTime
 
 local COST = {
     hall = 6,
@@ -87,6 +89,63 @@ local function print_graph(graph)
     end
 end
 
+local function east_neighbor(i, w, h, r)
+    r = r or 1
+    return (i  + r - 1) % w ~= 0 and i + r or nil
+end
+map_gen.east_neighbor = east_neighbor
+
+local function west_neighbor(i, w, h, r)
+    r = r or 1
+    return (i - r) % w ~= 0 and i - r or nil
+end
+map_gen.west_neighbor = west_neighbor
+
+local function north_neighbor(i, w, h, r)
+    r = r or 1
+    return i - (w * r) > 0 and i - (w * r) or nil
+end
+map_gen.north_neighbor = north_neighbor
+
+local function south_neighbor(i, w, h, r)
+    r = r or 1
+    return i + (w * r) and i + (w * r) or nil
+end
+map_gen.south_neighbor = south_neighbor
+
+local function northeast_neighbor(i, w, r)
+    r = r or 1
+    local ne = (i - w * r + r)
+    return ne > 0 and (i % (w * r) ~= 0) and ne or nil
+end
+map_gen.northeast_neighbor = northeast_neighbor
+
+local function northwest_neighbor(i, w, h, r)
+    r = r or 1
+    local nw = (i - w * r - r)
+    return nw > 0 and ((i - r) % w ~= 0) and nw or nil
+end
+map_gen.northwest_neighbor = northwest_neighbor
+
+local function southeast_neighbor(i, w, h, r)
+    r = r or 1
+    local size = w * h
+    local se = (i + w * r + r)
+    return se <= size and (i % (w * r) ~= 0) and se or nil
+end
+map_gen.southeast_neighbor = southeast_neighbor
+
+local function southwest_neighbor(i, w, h, r)
+    r = r or 1
+    local size = w * h
+    local sw = i + w * r - r
+    return sw <= size and ((i - r) % w ~= 0) and sw or nil
+end
+map_gen.southwest_neighbor = southwest_neighbor
+
+
+-- ##########
+-- Room class
 local Room = class("Room", Rect)
 
 function Room:random_pos(_map, templates, ignore)
@@ -178,17 +237,21 @@ function Graph:initialize(w, h, map_file)
     self:set_neighbors()
 end
 
-function Graph:create_node(x, y)
+function Graph:create_node(x, y, i)
     return GraphNode{x = x, y = y}
 end
 
 function Graph:fill()
+    local t0 = time()
+    log:warn("Graph:fill: start")
     local w, h = self.w, self.h
     local nodes = self.nodes
     for i  = 1, w * h do
+        -- WARNING: Graph:fill: done, 2.6598110933094
         local x, y  = to_2d(i, w, h)
-        nodes[i] = self:create_node(x, y)
+        nodes[i] = self:create_node(x, y, i)
     end
+    log:warn("Graph:fill: done", time() - t0)
 end
 
 function Graph:get(x, y)
@@ -222,69 +285,117 @@ function Graph:cost(current, _next)
     return 1
 end
 
-function Graph:set_neighbors()
+
+function Graph:neighbor_functions()
+    return {
+        north_neighbor,
+        east_neighbor,
+        south_neighbor,
+        west_neighbor,
+        northeast_neighbor,
+        southeast_neighbor,
+        southwest_neighbor,
+        northwest_neighbor,
+    }
+end
+
+function Graph:neighbors_at_radius(r)
+    local r = r or 1
+
     local h = self.h
     local w = self.w
     local size = w * h
 
-    local neighbors_4d = {}
-    local neighbors_8d = {}
-    local north = {}
-    local east = {}
-    local south = {}
-    local west = {}
+    local t = {
+        ["4d"] = {},
+        ["8d"] = {},
+        north = {},
+        east = {},
+        south = {},
+        west = {}
+    }
+    local neighbors_4d = t["4d"]
+    local neighbors_8d = t["8d"]
+    local north = t["north"]
+    local east = t["east"]
+    local south = t["south"]
+    local west = t["west"]
+    local east_neighbor = east_neighbor
+    local west_neighbor = west_neighbor
+    local north_neighbor = north_neighbor
+    local south_neighbor = south_neighbor
+    local northeast_neighbor = northeast_neighbor
+    local northwest_neighbor = northwest_neighbor
+    local southeast_neighbor = southeast_neighbor
+    local southwest_neighbor = southwest_neighbor
+
     for i = 1, size do
         neighbors_4d[i] = {}
         neighbors_8d[i] = {}
-        local neighbor_index
         local n4 = neighbors_4d[i]
         local n8 = neighbors_8d[i]
-        if i % w ~= 0 then
-            neighbor_index = i + 1 -- east
-            n4[#n4 + 1] = neighbor_index
-            n8[#n8 + 1] = neighbor_index
-            east[i] = neighbor_index
+
+        local e_v = east_neighbor(i, w, h, r)
+        if e_v ~= nil then
+            n4[#n4 + 1] = e_v
+            n8[#n8 + 1] = e_v
+            east[i] = e_v
         end
-        if (i - 1) % w ~= 0 then
-            neighbor_index = i - 1 -- west
-            n4[#n4 + 1] = neighbor_index
-            n8[#n8 + 1] = neighbor_index
-            west[i] = neighbor_index
+
+        local w_v = west_neighbor(i, w, h, r)
+        if w_v ~= nil then
+            n4[#n4 + 1] = w_v
+            n8[#n8 + 1] = w_v
+            west[i] = w_v
         end
-        if i - w > 0 then
-            neighbor_index = i - w -- north
-            n4[#n4 + 1] = neighbor_index
-            n8[#n8 + 1] = neighbor_index
-            north[i] = neighbor_index
+
+        local n_v = north_neighbor(i, w, h, r)
+        if n_v ~= nil then
+            n4[#n4 + 1] = n_v
+            n8[#n8 + 1] = n_v
+            north[i] = n_v
         end
-        if i + w <= size then
-            neighbor_index = i + w -- south
-            n4[#n4 + 1] = neighbor_index
-            n8[#n8 + 1] = neighbor_index
-            south[i] = neighbor_index
+
+        local s_v = south_neighbor(i, w, h, r)
+        if s_v ~= nil then
+            n4[#n4 + 1] = s_v
+            n8[#n8 + 1] = s_v
+            south[i] = s_v
         end
-        if ((i - w + 1) > 0) and (i % w ~= 0) then
-            n8[#n8 + 1] = i - w + 1  -- northeast
+
+        local ne_v = northeast_neighbor(i, w, h, r)
+        if ne_v then
+            n8[#n8 + 1] = ne_v
         end
-        if ((i - w - 1) > 0) and ((i - 1) % w ~= 0) then
-            n8[#n8 + 1] = i - w - 1  -- northwest
+
+        local nw_v = northwest_neighbor(i, w, h, r)
+        if nw_v ~= nil then
+            n8[#n8 + 1] = nw_v
         end
-        if ((i + w + 1) <= size) and (i % w ~= 0) then
-            n8[#n8 + 1] = i + w + 1  -- southeast
+
+        local se_v = southeast_neighbor(i, w, h, r)
+        if se_v ~= nil then
+            n8[#n8 + 1] = se_v
         end
-        if ((i + w - 1) <= size) and ((i - 1) % w ~= 0) then
-            n8[#n8 + 1] = i + w - 1  -- southwest
+
+        local sw_v = southwest_neighbor(i, w, h, r)
+        if sw_v ~= nil then
+            n8[#n8 + 1] = sw_v
         end
         neighbors_4d[i] = shuffle(neighbors_4d[i])
         neighbors_8d[i] = shuffle(neighbors_8d[i])
     end
+    return t
+end
 
-    self.neighbors_4d = neighbors_4d
-    self.neighbors_8d = neighbors_8d
-    self.north = north
-    self.east = east
-    self.south = south
-    self.west = west
+function Graph:set_neighbors()
+    local res = self:neighbors_at_radius(1)
+    self.neighbors_4d = res["4d"]
+    self.neighbors_8d = res["8d"]
+    self.north = res["north"]
+    self.east = res["east"]
+    self.south = res["south"]
+    self.west = res["west"]
 end
 
 function Graph:get_neighbors(i, mode, check)

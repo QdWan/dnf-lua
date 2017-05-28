@@ -1,6 +1,7 @@
 local lm = love.math
 
 local util = require("lib.util")
+local extend = util.extend_array
 local Rect = require("lib.rect")
 
 local map_gen_base = require("lib.map_gen.base")
@@ -9,6 +10,8 @@ local creator = require("lib.map_gen.creator")
 local Graph = map_gen_base.Graph
 local MapCreator = creator.MapCreator
 
+local time = love.timer.getTime
+
 
 local W = 31
 local H = 31
@@ -16,29 +19,23 @@ local H = 31
 -- neighbors cache for various radius
 local neighborhood = {}
 
-local function neighbors(map, x, y, r)
-    local index = util.cantor(x, y, r)
-    local nodes = neighborhood[index]
+local function neighbors(map, x, y, max_r)
+    local t0 = time()
+    max_r = max_r or 1
 
-    if nodes ~= nil then
-        return nodes
-    else
-        nodes = {}
-        neighborhood[index] = nodes
-    end
+    local nodes = map.nodes
+    local extend = extend
+    local w = map.w
+    local h = map.h
+    local flat_i = ((y - 1) * w) + x
+    local index = util.cantor(flat_i, max_r)
+    local res = {}
 
-    r = r or 1
-    for _i = -r, r do
-        local i = _i + r
-        for _j = -r, r do
-            local j = _j + r
-            local node = map:get(i, j)
-            if node then
-                nodes[#nodes + 1] = node
-            end
-        end
+    for r = 1, max_r do
+        neighborhood[r] = neighborhood[r] or map:neighbors_at_radius(r)["8d"]
+        extend(res, neighborhood[r][flat_i])
     end
-    return nodes
+    return res
 end
 
 local function get_hnv(nodes)
@@ -118,7 +115,7 @@ function HeightmapBase:init_grid(t)
     local nodes = self.map.nodes
     local w, h = self.cols, self.rows
     print("Initializing grid... ")
-    local t0 = manager.time()
+    local t0 = time()
 
     local get_noise = function(x, y)
         return lm.noise(x + lm.random(), y + lm.random())
@@ -146,7 +143,7 @@ function HeightmapBase:init_grid(t)
             node.value = nv
         end
     end
-    local t1 = manager.time()
+    local t1 = time()
 
     self:print_stats()
     print(string.format("Done! (Time: %.2f's)", t1 - t0))
@@ -164,7 +161,7 @@ function HeightmapBase:deposition(k)
 
     self:print_stats()
     print("Starting Particle Deposition...")
-    local t0 = manager.time()
+    local t0 = time()
 
     local n = 1.0
     local area = (w * h)
@@ -227,7 +224,7 @@ function HeightmapBase:deposition(k)
         end
     end
 
-    local t1 = manager.time()
+    local t1 = time()
     self:print_stats()
     print(string.format("Done! (Time: %.2f's)", t1 - t0))
 end
@@ -259,11 +256,9 @@ function HeightmapBase:diamond_step(rect, k)
 
     Taking a square of four points, generate a random value at the square midpoint, where the two diagonals meet. The midpoint value is calculated by averaging the four corner values, plus a random amount.
     ]]--
-    --[[
-    ]]--
-
-    print("HeightmapBase:diamond_step",
-          rect.x, rect.y, rect.right, rect.bottom, rect.w, rect.h)
+    print(
+        "diamond_step",
+        rect.x, rect.y, rect.right, rect.bottom, rect.w, rect.h)
     local map = self.map
 
     local tl = get_pos(map, rect.topleft)
@@ -274,8 +269,9 @@ function HeightmapBase:diamond_step(rect, k)
     local avg = (tl.value + tr.value + bl.value + br.value) / 4
     local noise = random_k(k)
     center.value = avg + noise
+
     print(string.format(
-        "HeightmapBase:diamond_step:done (avg %.4f, noise %.4f, final %.4f",
+        "diamond_step (avg %.4f, noise %.4f, final %.4f",
         avg, noise, center.value))
 end
 
@@ -290,8 +286,7 @@ function HeightmapBase:square_step(rect, k)
     local noise = random_k(low)
     --[[
     ]]--
-
-    print("HeightmapBase:square_step",
+    print("square_step",
           rect.x, rect.y, rect.right, rect.bottom, rect.w, rect.h, noise)
 
     local mt = get_pos(map, rect.midtop)
@@ -338,11 +333,13 @@ function HeightmapBase:square_step(rect, k)
     print(string.format(
         "diamond_step:square_step ml(avg %.4f, noise %.4f, final %.4f",
         v, noise, ml.value))
-    print("HeightmapBase:square_step: done")
 end
 
 function HeightmapBase:apply_diamond_square(k, start)
-    log:warn("HeightmapBase:apply_diamond_square: start")
+    local t0 = time()
+    log:warn("apply_diamond_square: start")
+
+
     local rects = {[start] = true}
     local used
     local k = k
@@ -358,7 +355,7 @@ function HeightmapBase:apply_diamond_square(k, start)
         used, rects = rects, {}
         if check.w >= 4 then -- can divide
             print(
-                "HeightmapBase:apply_diamond_square (divide)",
+                "apply_diamond_square -> divide)",
                 check.x, check.y, check.right, check.bottom, check.w, check.h)
             for rect, _ in pairs(used) do
                 local divided = rect:divide()
@@ -371,7 +368,7 @@ function HeightmapBase:apply_diamond_square(k, start)
             break
         end
     end
-    log:warn("HeightmapBase:apply_diamond_square: done")
+    log:warn("apply_diamond_square: done", time() - t0)
 end
 
 function HeightmapBase:diamond_square(left, top, right, bottom)
@@ -419,7 +416,7 @@ function HeightmapBase:erupt_grid(param)
 
     self:print_stats()
     print("Starting Global Erupt...")
-    local t0 = manager.time()
+    local t0 = time()
 
     for i = 1, n do
         for x = 1, w do
@@ -430,7 +427,7 @@ function HeightmapBase:erupt_grid(param)
     end
 
 
-    local t1 = manager.time()
+    local t1 = time()
     self:print_stats()
     print(string.format("Done! (Time: %.2f's)", t1 - t0))
 end
@@ -446,7 +443,7 @@ function HeightmapBase:erode_grid(param)
 
     self:print_stats()
     print("Starting Global Erupt...")
-    local t0 = manager.time()
+    local t0 = time()
 
     for i = 1, n do
         for x = 1, w do
@@ -456,7 +453,7 @@ function HeightmapBase:erode_grid(param)
         end
     end
 
-    local t1 = manager.time()
+    local t1 = time()
     self:print_stats()
     print(string.format("Done! (Time: %.2f's)", t1 - t0))
 end
@@ -471,7 +468,11 @@ function HeightmapBase:erupt(x, y, param)
     local k = param.k or 0.50
     local r = param.r or 1
     -- highest neighbor value
-    local nodes = neighbors(self.map, x, y, r)
+    local indexes = neighbors(self.map, x, y, r)
+    local nodes = util.filter_array(
+        indexes,
+        function(i) return self.map.nodes[i] end)
+
     local hnv = get_hnv(nodes)
 
     local node = self.map:get(x, y)
@@ -492,7 +493,10 @@ function HeightmapBase:erode(x, y, param)
     local k = param.k or 0.50
     local r = param.r or 1
 
-    local nodes = neighbors(self.map, x, y, r)
+    local indexes = neighbors(self.map, x, y, r)
+    local nodes = util.filter_array(
+        indexes,
+        function(i) return self.map.nodes[i] end)
     local lnv = get_lnv(nodes)
 
     local node = self.map:get(x, y)
@@ -527,7 +531,7 @@ function HeightmapBase:smoothe(param)
     if mode == 0 then
         for i = 1, times do
             print(string.format("Smoothing step %d...", i))
-            local t0 = manager.time()
+            local t0 = time()
             for _, dir in ipairs(directions) do
                 local dx = dir.dx
                 local dy = dir.dy
@@ -539,7 +543,7 @@ function HeightmapBase:smoothe(param)
                     end
                 end
             end
-            local t1 = manager.time()
+            local t1 = time()
             self:print_stats()
             print(string.format("Done! (Time: %.2f's)", t1 - t0))
         end
@@ -547,6 +551,8 @@ function HeightmapBase:smoothe(param)
 end
 
 function HeightmapBase:set_base_feature()
+    local t0 = time()
+    log:warn("HeightmapBase:set_base_feature: done")
     local function get_feature(v)
         if v > 0.7 then
             return "mountain"
@@ -570,6 +576,7 @@ function HeightmapBase:set_base_feature()
             node.template = get_feature(node.value)
         end
     end
+    log:warn("HeightmapBase:set_base_feature: done", time() - t0)
 end
 
 
@@ -629,13 +636,19 @@ local function precipitation(height, heat, water_ratio)
             water_ratio * 0.35)
 end
 
-function PrecipitationMap:create_node(x, y)
+function PrecipitationMap:create_node(x, y, i)
     local floor = math.floor
     local node = Graph.create_node(self, x, y)  -- super
-    local height = self.parent._heightmap:get(x, y).value
-    local heat = self.parent._heat_map:get(x, y).value
+    local parent = self.parent
 
-    local height_neighbors = neighbors(self.parent._heightmap, x, y, 5)
+    local height = parent._heightmap.nodes[i].value
+    local heat = parent._heat_map.nodes[i].value
+
+    local height_indexes = neighbors(self, x, y, 5)
+    local height_neighbors = util.filter_array(
+        height_indexes,
+        function(i) return self.nodes[i] end)
+
     local water_ratio = get_water_ratio(height_neighbors)
     local v = precipitation(height, heat, water_ratio)
     node.value = v
@@ -770,30 +783,54 @@ function MapSurface02:create(header)
     self:smoothe{times=1, k=0.60, mode=0}
     self:set_base_feature()
 
+    return self:standard_map()
+end
+
+function MapSurface02:standard_map(_)
     local w, h = self.cols, self.rows
-    self._noise = NoiseMap(w, h)
+
     self._heightmap = self.map
+
+    local t0 = time()
+    log:warn("NoiseMap: start")
+    self._noise = NoiseMap(w, h)
+    log:warn("NoiseMap: done", time() - t0)
+
+    local t0 = time()
+    log:warn("LatitudinalHeatMap: start")
     self._heat_map = LatitudinalHeatMap(w, h)
+    log:warn("LatitudinalHeatMap: done", time() - t0)
+
+    local t0 = time()
+    log:warn("PrecipitationMap: start")
     self._rainfall_map = PrecipitationMap(w, h, self)
+    log:warn("PrecipitationMap: done", time() - t0)
+
+    local t0 = time()
+    log:warn("CompositeBiomeMap: start")
     self.map = CompositeBiomeMap(w, h, self)
+    log:warn("CompositeBiomeMap: done", time() - t0)
 
     local function prepare_map(graph, type)
         local _ = graph.prepare and graph:prepare(self)
-        graph = self:standard_map(graph)
+        graph = HeightmapBase.standard_map(self, graph)
         apply_tiling(graph)
         return graph
     end
 
+    local t0 = time()
+    log:warn("prepare_maps: start")
     local height = prepare_map(self._heightmap)
     local heat = prepare_map(self._heat_map)
     local rainfall = prepare_map(self._rainfall_map)
     local biomes = prepare_map(self.map)
     biomes.views = {height, heat, rainfall}
+    log:warn("prepare_maps: done", time() - t0)
 
     return biomes
 end
 
-local MapSurface03 = class("MapSurface03", HeightmapBase)
+local MapSurface03 = class("MapSurface03", MapSurface02)
 
 function MapSurface03:adjust_size(_w, _h)
     --[[Diamong-square algorithm requires a square grid of 2^n + 1 size.
@@ -827,27 +864,7 @@ function MapSurface03:create(header)
     self:diamond_square()
     self:set_base_feature()
 
-    local w, h = self.cols, self.rows
-    self._noise = NoiseMap(w, h)
-    self._heightmap = self.map
-    self._heat_map = LatitudinalHeatMap(w, h)
-    self._rainfall_map = PrecipitationMap(w, h, self)
-    self.map = CompositeBiomeMap(w, h, self)
-
-    local function prepare_map(graph, type)
-        local _ = graph.prepare and graph:prepare(self)
-        graph = self:standard_map(graph)
-        apply_tiling(graph)
-        return graph
-    end
-
-    local height = prepare_map(self._heightmap)
-    local heat = prepare_map(self._heat_map)
-    local rainfall = prepare_map(self._rainfall_map)
-    local biomes = prepare_map(self.map)
-    biomes.views = {height, heat, rainfall}
-
-    return biomes
+    return self:standard_map()
 end
 
 return MapSurface03

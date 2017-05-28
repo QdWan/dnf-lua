@@ -58,6 +58,26 @@ local function merge_tables(t1, t2)
 end
 util.merge_tables = merge_tables
 
+local function extend_array(table1, table2)
+    --[[Extend table1 with table2, in place
+    ]]--
+    for _, v in ipairs(table2) do
+        table1[#table1 + 1] = v
+    end
+end
+util.extend_array = extend_array
+
+local function filter_array(table, fn, ip)
+    --[[Return a new table as result of a funcion on each value of the table.
+    ]]--
+    ip = ip or false
+    local res = ip and table or {}
+    for i, v in ipairs(table) do
+        res[i] = fn(v, i)
+    end
+    return res
+end
+util.filter_array = filter_array
 
 local function list_unify(t)
     local set = {}

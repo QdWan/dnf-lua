@@ -176,6 +176,8 @@ function SceneMap:draw()
             )
         end
     end
+    log:warn("SceneMap:draw is calling quit")
+    love.event.quit()
 end
 
 function SceneMap:set_zoom(v)
@@ -215,7 +217,6 @@ function SceneMap:keypressed(key)
         self:setupTileset()
     elseif key == "tab" then
         self.view = (self.view + 1) % (#self.map.views + 1)
-        print(self.view)
         return self:moveMap(0, 0, true)
     else
         return

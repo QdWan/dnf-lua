@@ -126,5 +126,5 @@ function love.conf(t)
     t.custom.framerate = 60
     t.custom.lovebird = true
 
-    t.custom.profile = false
+    t.custom.profile = true
 end
