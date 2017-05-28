@@ -1,3 +1,5 @@
+local Properties = require('properties')
+
 local map_containers = {}
 
 -- ############
@@ -10,9 +12,12 @@ MapLink.__index = MapLink
 setmetatable(
     MapLink,
     {
-        __call = function (self, t)
-            setmetatable({}, self)
-            return self:initialize(t)
+        __call = function (class, ...)
+            local self = setmetatable({}, class)
+            if self.initialize then
+                self:initialize(...)
+            end
+            return self
         end
     }
 )
@@ -61,9 +66,12 @@ MapHeader.__index = MapHeader
 setmetatable(
     MapHeader,
     {
-        __call = function (self, t)
-            setmetatable({}, self)
-            return self:initialize(t)
+        __call = function (class, ...)
+            local self = setmetatable({}, class)
+            if self.initialize then
+                self:initialize(...)
+            end
+            return self
         end
     }
 )
@@ -124,9 +132,12 @@ MapContainer.__index = MapContainer
 setmetatable(
     MapContainer,
     {
-        __call = function (self, t)
-            setmetatable({}, self)
-            return self:initialize(t)
+        __call = function (class, ...)
+            local self = setmetatable({}, class)
+            if self.initialize then
+                self:initialize(...)
+            end
+            return self
         end
     }
 )
@@ -165,34 +176,31 @@ map_containers.MapContainer = MapContainer
 --   NodeGroup class
 -- ############
 
-local NodeGroup = {}
-NodeGroup.__index = NodeGroup
+local NodeGroup = class("NodeGroup"):include(Properties)
 
-setmetatable(
-    NodeGroup,
-    {
-        __call = function (self, t)
-            setmetatable({}, self)
-            return self:initialize(t)
-        end
-    }
-)
-
-function NodeGroup:initialize()
+function NodeGroup:initialize(t)
     --[[Contain all the entities in a map position/node.
 
         Args:
             t (table): table containing the below keyword arguments.
-            t.tile ():
+            t.tile (TileEntity):
             t.feature ():
             t.objects ():
             t.creatures ():
         ]]--
+        assert(t.tile)
         self._tile = t.tile
         self._feature = t.feature
         self._objects = t.objects or {}
         self._creatures = t.creatures or {}
-    return self
+end
+
+function NodeGroup:getter_tile()
+    return self._tile
+end
+
+function NodeGroup:setter_tile(v)
+    self._tile = v
 end
 
 map_containers.NodeGroup = NodeGroup
@@ -208,9 +216,12 @@ Position.__index = Position
 setmetatable(
     Position,
     {
-        __call = function (self, x, y)
-            setmetatable({}, self)
-            return self:initialize(x ,y)
+        __call = function (class, ...)
+            local self = setmetatable({}, class)
+            if self.initialize then
+                self:initialize(...)
+            end
+            return self
         end
     }
 )

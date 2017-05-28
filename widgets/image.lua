@@ -11,7 +11,8 @@ local style = {
 }
 
 local function load_img(widget, to, from)
-    local img = manager.resources:image(from)
+    local img = (type(from) == "string" and manager.resources:image(from)
+                 or from)
     if widget.fit_mode == "scale" then
         local size = {img:getWidth(), img:getHeight()}
         widget.scale = math.max(widget.parent.w / size[1],

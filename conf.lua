@@ -28,13 +28,13 @@ function love.conf(t)
     t.window.icon = nil
 
     -- The window width (number)
-    t.window.width = 800
+    t.window.width = 1366
 
     -- The window height (number)
-    t.window.height = 600
+    t.window.height = 768
 
     -- Remove all border visuals from the window (boolean)
-    t.window.borderless = false
+    t.window.borderless = true
 
     -- Let the window be user-resizable (boolean)
     t.window.resizable = false
@@ -125,4 +125,6 @@ function love.conf(t)
     t.custom = {}
     t.custom.framerate = 60
     t.custom.lovebird = true
+
+    t.custom.profile = false
 end

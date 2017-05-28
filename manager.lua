@@ -1,10 +1,4 @@
-package.path = "lib/?.lua;../lib/?.lua;?/init.lua;" .. package.path
-
-class = require('middleclass')
 local AudioManager = require("audio_manager")
-beholder = require('beholder')
-local inspect = require("inspect")
--- local Shaders = require("shaders")
 local Resources = require("resources")
 local time = require("time")
 
@@ -73,6 +67,16 @@ function Manager:set_triggers()
         local x, y = love.mouse.getPosition()
         beholder.trigger('WHEELMOVED', self, x, y, dx, dy)
     end
+
+    love.quit = function(...)
+        self:quit()
+        log:write()
+        if self.profile then
+            self.profile:stop()
+            self.profile:writeReport()
+        end
+        return false
+    end
 end
 
 function Manager:load()
@@ -97,6 +101,10 @@ function Manager:parse_initial_args(args)
     self.lovebird = custom.lovebird
     self.width = t.window.width
     self.height = t.window.height
+    if custom.profile then
+        self.profile = require "ProFi"
+        self.profile:start()
+    end
 end
 
 function Manager:parse_scene_arg(text)

@@ -271,6 +271,32 @@ function Rect:copy()
     return Rect(self.x, self.y, self.w, self.h)
 end
 
+function Rect:fill(x1, y1, x2, y2)
+    return Rect(x1, y1, x2 - x1, y2 - y1)
+end
+
+function Rect:divide()
+    --[[Create 4 rectangles with half the width and the height of the rect.
+
+    Returns 4 new rectangles that fills the original rect's area.
+
+    Usage:
+        source_rect:divide()
+
+    Returns:
+        table containing 4 Rect
+    ]]--
+    local tl = self:fill(
+        self.x,       self.y,       self.centerx, self.centery)
+    local tr = self:fill(
+        self.centerx, self.y,       self.right,   self.centery)
+    local bl = self:fill(
+        self.x,       self.centery, self.centerx, self.bottom)
+    local br = self:fill(
+        self.centerx, self.centery, self.right,   self.bottom)
+    return {tl, tr, bl, br}
+end
+
 function Rect:move(x, y)
     --[[Move the rectangle.
 

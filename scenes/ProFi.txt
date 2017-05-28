@@ -1,0 +1,321 @@
+###############################################################################################################
+#####  ProFi, a lua profiler. This profile was generated on: 05/28/17 11:59:14
+#####  ProFi is created by Luke Perkin 2012 under the MIT Licence, www.locofilm.co.uk
+#####  Version 1.3. Get the most recent version at this gist: https://gist.github.com/2838755
+###############################################################################################################
+
+| TOTAL TIME = 26.943000
+| FILE                                              : FUNCTION                                : LINE                : TIME        : RELATIVE    : CALLED      |
+| ../lib/beholder.lua                               : copy                                    :    8                : 12612.846   : 46813.07%   :    3350     |
+| manager.lua                                       : anonymous                               :  124                : 1452.185    : 5389.84%    :    1175     |
+| manager.lua                                       : set_scene                               :  116                : 15.622      : 57.98%      :       1     |
+| ../lib/middleclass.lua                            : scene                                   :  131                : 15.586      : 57.85%      :       1     |
+| scenes/test_map_4.lua                             : initialize                              :   24                : 15.586      : 57.85%      :       1     |
+| scenes/test_map_4.lua                             : setup_map                               :   32                : 13.430      : 49.85%      :       1     |
+| lib/map_gen/mapsurface02.lua                      : create                                  :  825                : 13.430      : 49.85%      :       1     |
+| lib/map_gen/base.lua                              : initialize                              :  164                : 6.002       : 22.28%      :       5     |
+| lib/map_gen/mapsurface02.lua                      : prepare_map                             :  837                : 5.678       : 21.07%      :       4     |
+| lib/map_gen/base.lua                              : fill                                    :  185                : 5.385       : 19.99%      :       5     |
+| lib/map_gen/creator.lua                           : standard_map                            :   64                : 5.162       : 19.16%      :       4     |
+| lib/map_gen/mapsurface02.lua                      : initialize                              :  599                : 4.847       : 17.99%      :       1     |
+| ../lib/middleclass.lua                            : PrecipitationMap                        :  131                : 4.847       : 17.99%      :       1     |
+| lib/map_gen/mapsurface02.lua                      : create_node                             :  632                : 4.682       : 17.38%      :    1089     |
+| ../lib/middleclass.lua                            : __index                                 :   43                : 3.833       : 14.23%      :  118890     |
+| ../lib/properties.lua                             : __newindex                              :   14                : 3.796       : 14.09%      :   61263     |
+| ../lib/middleclass.lua                            : TileEntity                              :  131                : 3.660       : 13.58%      :    4356     |
+| lib/map_gen/mapsurface02.lua                      : neighbors                               :   19                : 3.635       : 13.49%      :    1089     |
+| lib/dnf/map_entities.lua                          : initialize                              :  108                : 3.250       : 12.06%      :    4356     |
+| lib/map_gen/base.lua                              : get                                     :  194                : 2.925       : 10.86%      :  144243     |
+| ../lib/beholder.lua                               : invokeNodeCallbacksFromPath             :   68                : 2.176       : 8.08%       :    7583     |
+| scenes/test_map_4.lua                             : setupTileset                            :   65                : 2.154       : 7.99%       :       1     |
+| lib/dnf/map_entities.lua                          : apply_template                          :    8                : 2.014       : 7.48%       :    4356     |
+| lib/map_gen/mapsurface02.lua                      : diamond_square                          :  377                : 1.701       : 6.31%       :       1     |
+| lib/map_gen/mapsurface02.lua                      : apply_diamond_square                    :  344                : 1.581       : 5.87%       :       1     |
+| ../lib/beholder.lua                               : invokeNodeCallbacks                     :   49                : 1.561       : 5.79%       :   22743     |
+| resources.lua                                     : tileset                                 :  142                : 1.500       : 5.57%       :    1106     |
+| resources.lua                                     : load_tileset                            :  133                : 1.493       : 5.54%       :       1     |
+| manager.lua                                       : draw                                    :   39                : 1.441       : 5.35%       :    1892     |
+| ../lib/middleclass.lua                            : f                                       :   43                : 1.289       : 4.78%       :   47412     |
+| ../lib/middleclass.lua                            : NodeGroup                               :  131                : 1.254       : 4.65%       :    4356     |
+| resources.lua                                     : load_tileset_files                      :   51                : 1.016       : 3.77%       :       1     |
+| ../lib/dnf\map_containers.lua                     : initialize                              :  181                : 0.977       : 3.63%       :    4356     |
+| lib/map_gen/base.lua                              : to_1d                                   :   52                : 0.963       : 3.57%       :  148680     |
+| lib/map_gen/mapsurface02.lua                      : square_step                             :  282                : 0.893       : 3.31%       :     341     |
+| scenes/test_map_4.lua                             : updateTilesetBatch                      :   75                : 0.883       : 3.28%       :       3     |
+| resources.lua                                     : image                                   :   31                : 0.860       : 3.19%       :    1103     |
+| lib/map_gen/mapsurface02.lua                      : get_water_ratio                         :  615                : 0.831       : 3.08%       :    1089     |
+| lib/map_gen/base.lua                              : set_neighbors                           :  225                : 0.617       : 2.29%       :       5     |
+| lib/log.lua                                       : print                                   :   33                : 0.598       : 2.22%       :    3428     |
+| lib/log.lua                                       : print                                   :   53                : 0.552       : 2.05%       :    3434     |
+| lib/map_gen/mapsurface02.lua                      : apply_tiling                            :  747                : 0.516       : 1.92%       :       4     |
+| lib/map_gen/mapsurface02.lua                      : diamond_step                            :  257                : 0.516       : 1.92%       :     341     |
+| lib/shuffle.lua                                   : shuffle                                 :    5                : 0.513       : 1.90%       :   10890     |
+| ../lib/properties.lua                             : f                                       :    7                : 0.506       : 1.88%       :   87480     |
+| lib/log.lua                                       : info                                    :   69                : 0.502       : 1.86%       :    3434     |
+| manager.lua                                       : anonymous                               :   45                : 0.485       : 1.80%       :       3     |
+| scenes/test_map_4.lua                             : anonymous                               :  203                : 0.483       : 1.79%       :       3     |
+| scenes/test_map_4.lua                             : moveMap                                 :  138                : 0.481       : 1.79%       :       2     |
+| lib/log.lua                                       : log                                     :   57                : 0.458       : 1.70%       :    3437     |
+| resources.lua                                     : create_atlas                            :   89                : 0.455       : 1.69%       :       1     |
+| manager.lua                                       : update                                  :   36                : 0.399       : 1.48%       :    1892     |
+| ../lib/middleclass.lua                            : CompositeBiomeMap                       :  131                : 0.378       : 1.40%       :       1     |
+| lib/map_gen/mapsurface02.lua                      : initialize                              :  729                : 0.378       : 1.40%       :       1     |
+| ../lib/beholder.lua                               : hash2array                              :   14                : 0.370       : 1.37%       :   22743     |
+| ../lib/middleclass.lua                            : NoiseMap                                :  131                : 0.362       : 1.34%       :       1     |
+| ../lib/middleclass.lua                            : LatitudinalHeatMap                      :  131                : 0.242       : 0.90%       :       1     |
+| lib/map_gen/mapsurface02.lua                      : create_node                             :  734                : 0.219       : 0.81%       :    1089     |
+| lib/map_gen/mapsurface02.lua                      : create_node                             :  578                : 0.184       : 0.68%       :    1089     |
+| lib/map_gen/mapsurface02.lua                      : random_k                                :  251                : 0.181       : 0.67%       :     682     |
+| lib/map_gen/mapsurface02.lua                      : create                                  :   69                : 0.175       : 0.65%       :       1     |
+| lib/map_gen/creator.lua                           : create                                  :   60                : 0.173       : 0.64%       :       1     |
+| ../lib/middleclass.lua                            : Graph                                   :  131                : 0.173       : 0.64%       :       1     |
+| [builtin:remove]                                  : remove                                  :   -1                : 0.152       : 0.56%       :   15169     |
+| lib/rect.lua                                      : divide                                  :  278                : 0.152       : 0.56%       :      85     |
+| lib/log.lua                                       : add                                     :   39                : 0.146       : 0.54%       :    3437     |
+| ../lib/middleclass.lua                            : __index                                 :   90                : 0.119       : 0.44%       :    8732     |
+| lib/map_gen/mapsurface02.lua                      : normalize                               :  386                : 0.118       : 0.44%       :       1     |
+| lib/log.lua                                       : extend                                  :   19                : 0.109       : 0.40%       :    3437     |
+| lib/log.lua                                       : write                                   :   43                : 0.101       : 0.37%       :       1     |
+| ../lib/middleclass.lua                            : fill                                    :  131                : 0.101       : 0.37%       :     340     |
+| lib/map_gen/mapsurface02.lua                      : print_stats                             :   76                : 0.093       : 0.35%       :       2     |
+| scenes/base.lua                                   : anonymous                               :   72                : 0.084       : 0.31%       :    1892     |
+| lib/map_gen/base.lua                              : get_pos                                 :  194                : 0.083       : 0.31%       :    4437     |
+| lib/map_gen/base.lua                              : create_node                             :  143                : 0.079       : 0.29%       :    5445     |
+| lib/rect.lua                                      : initialize                              :   52                : 0.076       : 0.28%       :     341     |
+| lib/map_gen/mapsurface02.lua                      : create_node                             :  586                : 0.069       : 0.26%       :    1089     |
+| lib/rect.lua                                      : f                                       :  147                : 0.068       : 0.25%       :     683     |
+| scenes/test_map_4.lua                             : anonymous                               :  162                : 0.068       : 0.25%       :    1892     |
+| C:/Users/Lucas/Documents/Lucas/love2d/lib/lovebird: update                                  :  692                : 0.068       : 0.25%       :    1892     |
+| lib/map_gen/base.lua                              : to_2d                                   :   59                : 0.064       : 0.24%       :    5445     |
+| lib/rect.lua                                      : f                                       :  151                : 0.060       : 0.22%       :     683     |
+| lib/rect.lua                                      : f                                       :  155                : 0.059       : 0.22%       :     683     |
+| ../lib/dnf\map_containers.lua                     : f                                       :  198                : 0.052       : 0.19%       :    7029     |
+| lib/dnf/map_entities.lua                          : initialize                              :   29                : 0.052       : 0.19%       :    4356     |
+| lib/map_gen/mapsurface02.lua                      : set_base_feature                        :  549                : 0.046       : 0.17%       :       1     |
+| resources.lua                                     : get_tile_variations                     :  153                : 0.044       : 0.16%       :    1089     |
+| lib/rect.lua                                      : f                                       :  179                : 0.040       : 0.15%       :     341     |
+| lib/rect.lua                                      : f                                       :  167                : 0.040       : 0.15%       :     341     |
+| ../lib/audio_manager.lua                          : anonymous                               :   17                : 0.038       : 0.14%       :    1892     |
+| resources.lua                                     : tile                                    :  166                : 0.037       : 0.14%       :    2673     |
+| ../lib/beholder.lua                               : trigger                                 :  123                : 0.035       : 0.13%       :    7583     |
+| scenes/test_map_4.lua                             : anonymous                               :    0                : 0.035       : 0.13%       :       1     |
+| lib/rect.lua                                      : f                                       :  175                : 0.034       : 0.13%       :     341     |
+| lib/rect.lua                                      : f                                       :  171                : 0.031       : 0.12%       :     341     |
+| lib/util.lua                                      : cantor                                  :  293                : 0.027       : 0.10%       :    4386     |
+| lib/map_gen/init.lua                              : anonymous                               :    0                : 0.026       : 0.10%       :       1     |
+| lib/rect.lua                                      : f                                       :  183                : 0.023       : 0.09%       :     341     |
+| resources.lua                                     : create_quads                            :  119                : 0.022       : 0.08%       :       1     |
+| lib/rect.lua                                      : f                                       :  163                : 0.019       : 0.07%       :    1363     |
+| lib/rect.lua                                      : f                                       :  135                : 0.016       : 0.06%       :    2563     |
+| [string "wrap_RandomGenerator.lua"]               : random                                  :   33                : 0.014       : 0.05%       :    2860     |
+| lib/rect.lua                                      : f                                       :  159                : 0.014       : 0.05%       :    1363     |
+| lib/rect.lua                                      : f                                       :  131                : 0.012       : 0.04%       :    2563     |
+| lib/map_gen/mapsurface02.lua                      : compose_biome                           :  648                : 0.010       : 0.04%       :    1089     |
+| lib/rect.lua                                      : f                                       :  115                : 0.010       : 0.04%       :    1024     |
+| ../lib/middleclass.lua                            : class                                   :  171                : 0.009       : 0.03%       :      17     |
+| ../lib/middleclass.lua                            : subclass                                :  138                : 0.008       : 0.03%       :      11     |
+| lib/map_gen/creator.lua                           : anonymous                               :    0                : 0.007       : 0.03%       :       1     |
+| lib/map_gen/mapsurface02.lua                      : precipitation                           :  626                : 0.006       : 0.02%       :    1089     |
+| scenes/base.lua                                   : anonymous                               :    0                : 0.005       : 0.02%       :       1     |
+| lib/map_gen/mapsurface02.lua                      : anonymous                               :    0                : 0.005       : 0.02%       :       1     |
+| lib/map_gen/mapsurface02.lua                      : get_feature                             :  550                : 0.005       : 0.02%       :    1089     |
+| C:/Users/Lucas/Documents/Lucas/love2d/lib/lovebird: init                                    :  430                : 0.004       : 0.01%       :       1     |
+| ../lib/middleclass.lua                            : _propagateInstanceMethod                :   57                : 0.004       : 0.01%       :     397     |
+| lib/map_gen/base.lua                              : anonymous                               :    0                : 0.004       : 0.01%       :       1     |
+| lib/rect.lua                                      : f                                       :  143                : 0.004       : 0.01%       :     683     |
+| lib/rect.lua                                      : f                                       :  119                : 0.004       : 0.01%       :    1024     |
+| resources.lua                                     : print                                   :   38                : 0.004       : 0.01%       :    1103     |
+| C:/Users/Lucas/Documents/Lucas/love2d/lib/lovebird: print                                   :  439                : 0.004       : 0.01%       :       6     |
+| C:/Users/Lucas/Documents/Lucas/love2d/lib/lovebird: pushline                                :  540                : 0.003       : 0.01%       :       5     |
+| ../lib/rect.lua                                   : anonymous                               :    0                : 0.003       : 0.01%       :       1     |
+| C:/Users/Lucas/Documents/Lucas/love2d/lib/lovebird: print                                   :  578                : 0.003       : 0.01%       :       6     |
+| C:/Users/Lucas/Documents/Lucas/love2d/lib/lovebird: recalcbuffer                            :  551                : 0.003       : 0.01%       :       6     |
+| lib/properties.lua                                : __newindex                              :   14                : 0.003       : 0.01%       :      12     |
+| C:/Users/Lucas/Documents/Lucas/love2d/lib/lovebird: template                                :  453                : 0.002       : 0.01%       :       3     |
+| ../lib/middleclass.lua                            : __newindex                              :   68                : 0.002       : 0.01%       :     187     |
+| lib/dnf/map_entities.lua                          : anonymous                               :    0                : 0.002       : 0.01%       :       1     |
+| scenes/base.lua                                   : initialize                              :    6                : 0.002       : 0.01%       :       1     |
+| lib/log.lua                                       : warn                                    :   74                : 0.002       : 0.01%       :       3     |
+| C:/Users/Lucas/Documents/Lucas/love2d/lib/lovebird: anonymous                               :    0                : 0.002       : 0.01%       :       1     |
+| [string "socket.lua"]                             : bind                                    :   31                : 0.002       : 0.01%       :       1     |
+| C:/Users/Lucas/Documents/Lucas/love2d/lib/lovebird: fn                                      :  552                : 0.002       : 0.01%       :      20     |
+| C:/Users/Lucas/Documents/Lucas/love2d/lib/lovebird: map                                     :  468                : 0.002       : 0.01%       :       6     |
+| [string "socket.lua"]                             : anonymous                               :    0                : 0.002       : 0.01%       :       1     |
+| manager.lua                                       : anonymous                               :   51                : 0.001       : 0.00%       :       2     |
+| [string "boot.lua"]                               : anonymous                               :  131                : 0.001       : 0.00%       :       1     |
+| ../lib/middleclass.lua                            : Rect                                    :  131                : 0.001       : 0.00%       :       2     |
+| lib/map_gen/creator.lua                           : f                                       :   50                : 0.001       : 0.00%       :       7     |
+| ../lib/rect.lua                                   : initialize                              :   52                : 0.001       : 0.00%       :       1     |
+| ../lib/beholder.lua                               : findOrCreateDescendantNode              :   41                : 0.001       : 0.00%       :       9     |
+| ../lib/dnf\map_containers.lua                     : anonymous                               :    0                : 0.001       : 0.00%       :       1     |
+| scenes/base.lua                                   : _set_observers                          :   13                : 0.001       : 0.00%       :       1     |
+| lib/map_gen/mapsurface02.lua                      : initialize_pos                          :  243                : 0.001       : 0.00%       :       1     |
+| lib/map_gen/mapdungeon02.lua                      : anonymous                               :    0                : 0.001       : 0.00%       :       1     |
+| ../lib/middleclass.lua                            : _createClass                            :   81                : 0.001       : 0.00%       :      17     |
+| lib/inspect.lua                                   : anonymous                               :    0                : 0.001       : 0.00%       :       1     |
+| lib/map_gen/mapsurface02.lua                      : adjust_size                             :  798                : 0.001       : 0.00%       :       1     |
+| lib/properties.lua                                : f                                       :    7                : 0.001       : 0.00%       :      48     |
+| lib/log.lua                                       : oldprint                                :   33                : 0.001       : 0.00%       :       6     |
+| scenes/base.lua                                   : quit                                    :  145                : 0.001       : 0.00%       :       1     |
+| manager.lua                                       : quit                                    :  148                : 0.001       : 0.00%       :       2     |
+| scenes/base.lua                                   : anonymous                               :   96                : 0.001       : 0.00%       :       3     |
+| manager.lua                                       : anonymous                               :   48                : 0.001       : 0.00%       :       3     |
+| scenes/base.lua                                   : anonymous                               :   65                : 0.000       : 0.00%       :       2     |
+| [string "boot.lua"]                               : anonymous                               :  128                : 0.000       : 0.00%       :       2     |
+| scenes/test_map_4.lua                             : set_zoom                                :  181                : 0.000       : 0.00%       :       2     |
+| ...Lucas/Documents/Lucas/love2d/lib/rs_strict/rs_s: anonymous                               :    9                : 0.000       : 0.00%       :       1     |
+| [string "boot.lua"]                               : anonymous                               :  188                : 0.000       : 0.00%       :       1     |
+| [string "boot.lua"]                               : anonymous                               :  182                : 0.000       : 0.00%       :       1     |
+| [C]                                               : setColor                                :   -1                : 0.000       : 0.00%       :    2673     |
+| [C]                                               : add                                     :   -1                : 0.000       : 0.00%       :    2673     |
+| [C]                                               : flush                                   :   -1                : 0.000       : 0.00%       :       3     |
+| [C]                                               : write                                   :   -1                : 0.000       : 0.00%       :       1     |
+| ../lib/ProFi.lua                                  : shouldReturn                            :  199                : 0.000       : 0.00%       :       1     |
+| ../lib/ProFi.lua                                  : stop                                    :   85                : 0.000       : 0.00%       :       1     |
+| [C]                                               : newSpriteBatch                          :   -1                : 0.000       : 0.00%       :       3     |
+| scenes/base.lua                                   : anonymous                               :   88                : 0.000       : 0.00%       :       2     |
+| manager.lua                                       : load                                    :   82                : 0.000       : 0.00%       :       0     |
+| manager.lua                                       : quit                                    :   71                : 0.000       : 0.00%       :       1     |
+| scenes/base.lua                                   : anonymous                               :   35                : 0.000       : 0.00%       :       3     |
+| [string "boot.lua"]                               : anonymous                               :  125                : 0.000       : 0.00%       :       3     |
+| manager.lua                                       : load                                    :   33                : 0.000       : 0.00%       :       0     |
+| [C]                                               : poll                                    :   -1                : 0.000       : 0.00%       :    1893     |
+| [C]                                               : quit                                    :   -1                : 0.000       : 0.00%       :       2     |
+| [C]                                               : pump                                    :   -1                : 0.000       : 0.00%       :    1893     |
+| [C]                                               : step                                    :   -1                : 0.000       : 0.00%       :    1893     |
+| [C]                                               : date                                    :   -1                : 0.000       : 0.00%       :      20     |
+| ../lib/beholder.lua                               : trigger                                 :  166                : 0.000       : 0.00%       :    7583     |
+| [string "boot.lua"]                               : anonymous                               :  185                : 0.000       : 0.00%       :       3     |
+| [C]                                               : gsub                                    :   -1                : 0.000       : 0.00%       :      23     |
+| [C]                                               : settimeout                              :   -1                : 0.000       : 0.00%       :       1     |
+| [C]                                               : getsockname                             :   -1                : 0.000       : 0.00%       :       1     |
+| C:/Users/Lucas/Documents/Lucas/love2d/lib/lovebird: anonymous                               :  455                : 0.000       : 0.00%       :      16     |
+| [C]                                               : loadstring                              :   -1                : 0.000       : 0.00%       :       3     |
+| scenes/base.lua                                   : anonymous                               :   18                : 0.000       : 0.00%       :    1892     |
+| [C]                                               : getDelta                                :   -1                : 0.000       : 0.00%       :    1892     |
+| [C]                                               : listen                                  :   -1                : 0.000       : 0.00%       :       1     |
+| [C]                                               : bind                                    :   -1                : 0.000       : 0.00%       :       1     |
+| [C]                                               : newtry                                  :   -1                : 0.000       : 0.00%       :       1     |
+| [C]                                               : module                                  :   -1                : 0.000       : 0.00%       :       1     |
+| manager.lua                                       : anonymous                               :   26                : 0.000       : 0.00%       :    1892     |
+| [string "socket.lua"]                             : choose                                  :   44                : 0.000       : 0.00%       :       2     |
+| [C]                                               : setoption                               :   -1                : 0.000       : 0.00%       :       1     |
+| [C]                                               : tcp                                     :   -1                : 0.000       : 0.00%       :       1     |
+| [C]                                               : htmlescape                              :   -1                : 0.000       : 0.00%       :      20     |
+| [C]                                               : accept                                  :   -1                : 0.000       : 0.00%       :    1892     |
+| [C]                                               : isActive                                :   -1                : 0.000       : 0.00%       :    1892     |
+| [C]                                               : select                                  :   -1                : 0.000       : 0.00%       :      18     |
+| scenes/base.lua                                   : anonymous                               :   29                : 0.000       : 0.00%       :       3     |
+| [C]                                               : unpack                                  :   -1                : 0.000       : 0.00%       :    7577     |
+| manager.lua                                       : anonymous                               :   62                : 0.000       : 0.00%       :       1     |
+| C:/Users/Lucas/Documents/Lucas/love2d/lib/lovebird: htmlescape                              :  499                : 0.000       : 0.00%       :      20     |
+| [string "boot.lua"]                               : anonymous                               :  134                : 0.000       : 0.00%       :       1     |
+| ../lib/audio_manager.lua                          : anonymous                               :   14                : 0.000       : 0.00%       :    1892     |
+| [string "boot.lua"]                               : anonymous                               :  122                : 0.000       : 0.00%       :       3     |
+| [C]                                               : sleep                                   :   -1                : 0.000       : 0.00%       :    1892     |
+| [C]                                               : origin                                  :   -1                : 0.000       : 0.00%       :    1892     |
+| [C]                                               : getBackgroundColor                      :   -1                : 0.000       : 0.00%       :    1892     |
+| scenes/base.lua                                   : anonymous                               :   41                : 0.000       : 0.00%       :       1     |
+| scenes/base.lua                                   : anonymous                               :   23                : 0.000       : 0.00%       :    1892     |
+| scenes/base.lua                                   : anonymous                               :  109                : 0.000       : 0.00%       :       1     |
+| [C]                                               : present                                 :   -1                : 0.000       : 0.00%       :    1892     |
+| [C]                                               : encode                                  :   -1                : 0.000       : 0.00%       :       1     |
+| ../lib/ProFi.lua                                  : startHooks                              :  234                : 0.000       : 0.00%       :       0     |
+| [C]                                               : newQuad                                 :   -1                : 0.000       : 0.00%       :    1103     |
+| ../lib/middleclass.lua                            : Rect                                    :   79                : 0.000       : 0.00%       :       2     |
+| [C]                                               : __index                                 :   -1                : 0.000       : 0.00%       :   12668     |
+| [C]                                               : rawset                                  :   -1                : 0.000       : 0.00%       :   61276     |
+| ../lib/beholder.lua                               : observe                                 :  136                : 0.000       : 0.00%       :       9     |
+| ../lib/beholder.lua                               : extractEventAndCallbackFromParams       :  127                : 0.000       : 0.00%       :       9     |
+| ../lib/middleclass.lua                            : __index                                 :   92                : 0.000       : 0.00%       :    8719     |
+| ../lib/middleclass.lua                            : allocate                                :  126                : 0.000       : 0.00%       :    9061     |
+| [C]                                               : allocate                                :   -1                : 0.000       : 0.00%       :    9061     |
+| [C]                                               : rawget                                  :   -1                : 0.000       : 0.00%       :    8732     |
+| ../lib/middleclass.lua                            : scene                                   :   79                : 0.000       : 0.00%       :       1     |
+| lib/itertools/init.lua                            : anonymous                               :    0                : 0.000       : 0.00%       :       1     |
+| ../lib/beholder.lua                               : findOrCreateChildNode                   :   36                : 0.000       : 0.00%       :      19     |
+| ../lib/beholder.lua                               : observe                                 :  106                : 0.000       : 0.00%       :       9     |
+| lib/map_gen/creator.lua                           : get                                     :   39                : 0.000       : 0.00%       :       1     |
+| ../lib/middleclass.lua                            : get                                     :   79                : 0.000       : 0.00%       :       1     |
+| ../lib/middleclass.lua                            : get                                     :  131                : 0.000       : 0.00%       :       1     |
+| ../lib/beholder.lua                               : addCallbackToNode                       :   83                : 0.000       : 0.00%       :       9     |
+| ../lib/dnf\map_containers.lua                     : initialize                              :   79                : 0.000       : 0.00%       :       1     |
+| ../lib/dnf\map_containers.lua                     : initialize                              :  229                : 0.000       : 0.00%       :       1     |
+| ../lib/dnf\map_containers.lua                     : MapHeader                               :   69                : 0.000       : 0.00%       :       1     |
+| ../lib/beholder.lua                               : newNode                                 :   27                : 0.000       : 0.00%       :      17     |
+| ../lib/dnf\map_containers.lua                     : Position                                :  219                : 0.000       : 0.00%       :       1     |
+| ../lib/middleclass.lua                            : initialize                              :  147                : 0.000       : 0.00%       :       4     |
+| [C]                                               : format                                  :   -1                : 0.000       : 0.00%       :    5526     |
+| [C]                                               : randomseed                              :   -1                : 0.000       : 0.00%       :       1     |
+| [C]                                               : setRandomSeed                           :   -1                : 0.000       : 0.00%       :       1     |
+| [string "wrap_Math.lua"]                          : setRandomSeed                           :   40                : 0.000       : 0.00%       :       1     |
+| ../lib/middleclass.lua                            : class                                   :  176                : 0.000       : 0.00%       :      17     |
+| [C]                                               : type                                    :   -1                : 0.000       : 0.00%       :  166870     |
+| [C]                                               : assert                                  :   -1                : 0.000       : 0.00%       :   26916     |
+| [C]                                               : anonymous                               :   -1                : 0.000       : 0.00%       :      57     |
+| manager.lua                                       : parse_initial_args                      :   90                : 0.000       : 0.00%       :       0     |
+| [C]                                               : require                                 :   -1                : 0.000       : 0.00%       :    1930     |
+| [C]                                               : getTime                                 :   -1                : 0.000       : 0.00%       :       3     |
+| ../lib/ProFi.lua                                  : start                                   :   67                : 0.000       : 0.00%       :       0     |
+| [C]                                               : char                                    :   -1                : 0.000       : 0.00%       :      32     |
+| [C]                                               : setmetatable                            :   -1                : 0.000       : 0.00%       :    5524     |
+| [C]                                               : pairs                                   :   -1                : 0.000       : 0.00%       :   44517     |
+| lib/collections/priority_queue.lua                : anonymous                               :    0                : 0.000       : 0.00%       :       1     |
+| lib/shuffle.lua                                   : anonymous                               :    0                : 0.000       : 0.00%       :       1     |
+| [C]                                               : time                                    :   -1                : 0.000       : 0.00%       :       7     |
+| ../lib/middleclass.lua                            : _includeMixin                           :  101                : 0.000       : 0.00%       :      10     |
+| ../lib/middleclass.lua                            : subclassed                              :  155                : 0.000       : 0.00%       :      11     |
+| [C]                                               : (for generator)                         :   -1                : 0.000       : 0.00%       :  161764     |
+| ../lib/middleclass.lua                            : _createIndexWrapper                     :   39                : 0.000       : 0.00%       :      15     |
+| ../lib/middleclass.lua                            : include                                 :  163                : 0.000       : 0.00%       :       4     |
+| [C]                                               : ipairs                                  :   -1                : 0.000       : 0.00%       :   14306     |
+| [C]                                               : newImageData                            :   -1                : 0.000       : 0.00%       :       1     |
+| ../lib/middleclass.lua                            : initialize                              :  119                : 0.000       : 0.00%       :       1     |
+| lib/map_gen/mapsurface02.lua                      : log_base                                :  802                : 0.000       : 0.00%       :       3     |
+| ../lib/middleclass.lua                            : CompositeBiomeMap                       :   79                : 0.000       : 0.00%       :       1     |
+| ../lib/middleclass.lua                            : PrecipitationMap                        :   79                : 0.000       : 0.00%       :       1     |
+| ../lib/middleclass.lua                            : TileEntity                              :   79                : 0.000       : 0.00%       :    4356     |
+| ../lib/middleclass.lua                            : NodeGroup                               :   79                : 0.000       : 0.00%       :    4356     |
+| scenes/test_map_4.lua                             : setupMapView                            :   45                : 0.000       : 0.00%       :       3     |
+| [C]                                               : sin                                     :   -1                : 0.000       : 0.00%       :    1089     |
+| [C]                                               : noise                                   :   -1                : 0.000       : 0.00%       :    1089     |
+| ../lib/middleclass.lua                            : LatitudinalHeatMap                      :   79                : 0.000       : 0.00%       :       1     |
+| [string "wrap_Math.lua"]                          : noise                                   :   84                : 0.000       : 0.00%       :    1089     |
+| [C]                                               : noise2                                  :   -1                : 0.000       : 0.00%       :    1089     |
+| ../lib/middleclass.lua                            : NoiseMap                                :   79                : 0.000       : 0.00%       :       1     |
+| [C]                                               : getDirectoryItems                       :   -1                : 0.000       : 0.00%       :       1     |
+| [C]                                               : newImage                                :   -1                : 0.000       : 0.00%       :    1103     |
+| [C]                                               : draw                                    :   -1                : 0.000       : 0.00%       :    2995     |
+| [C]                                               : getWidth                                :   -1                : 0.000       : 0.00%       :    1103     |
+| [C]                                               : getHeight                               :   -1                : 0.000       : 0.00%       :    1103     |
+| [C]                                               : match                                   :   -1                : 0.000       : 0.00%       :    1108     |
+| [C]                                               : setBlendMode                            :   -1                : 0.000       : 0.00%       :       1     |
+| [C]                                               : setCanvas                               :   -1                : 0.000       : 0.00%       :       2     |
+| [C]                                               : clear                                   :   -1                : 0.000       : 0.00%       :    1893     |
+| [C]                                               : getSystemLimits                         :   -1                : 0.000       : 0.00%       :       1     |
+| [C]                                               : newCanvas                               :   -1                : 0.000       : 0.00%       :       1     |
+| lib/map_gen/mapsurface02.lua                      : pow2plus1                               :  806                : 0.000       : 0.00%       :       1     |
+| ../lib/ProFi.lua                                  : stopHooks                               :  238                : 0.000       : 0.00%       :       1     |
+| ../lib/middleclass.lua                            : fill                                    :   79                : 0.000       : 0.00%       :     340     |
+| [C]                                               : pow                                     :   -1                : 0.000       : 0.00%       :       2     |
+| [C]                                               : pow2plus1                               :   -1                : 0.000       : 0.00%       :       1     |
+| [C]                                               : max                                     :   -1                : 0.000       : 0.00%       :    5486     |
+| [C]                                               : old_print                               :   -1                : 0.000       : 0.00%       :       4     |
+| [C]                                               : insert                                  :   -1                : 0.000       : 0.00%       :    3455     |
+| [C]                                               : tostring                                :   -1                : 0.000       : 0.00%       :    5856     |
+| [C]                                               : concat                                  :   -1                : 0.000       : 0.00%       :    3450     |
+| [C]                                               : log                                     :   -1                : 0.000       : 0.00%       :       6     |
+| [C]                                               : ceil                                    :   -1                : 0.000       : 0.00%       :       9     |
+| [C]                                               : min                                     :   -1                : 0.000       : 0.00%       :    3286     |
+| ../lib/middleclass.lua                            : Graph                                   :   79                : 0.000       : 0.00%       :       1     |
+| lib/map_gen/base.lua                              : create_node                             :  181                : 0.000       : 0.00%       :    5445     |
+| [string "wrap_RandomGenerator.lua"]               : random                                  :   74                : 0.000       : 0.00%       :    2860     |
+| [C]                                               : tonumber                                :   -1                : 0.000       : 0.00%       :    5066     |
+| lib/rect.lua                                      : fill                                    :  274                : 0.000       : 0.00%       :     340     |
+| [C]                                               : floor                                   :   -1                : 0.000       : 0.00%       :   13590     |
+| [string "wrap_Math.lua"]                          : random                                  :   32                : 0.000       : 0.00%       :    2860     |
+| lib/map_gen/mapsurface02.lua                      : get_pos                                 :  239                : 0.000       : 0.00%       :    4437     |
+| [C]                                               : math_floor                              :   -1                : 0.000       : 0.00%       :    2726     |
+| [C]                                               : random                                  :   -1                : 0.000       : 0.00%       :   66669     |
+| lib/map_gen/creator.lua                           : f                                       :   55                : 0.000       : 0.00%       :       7     |
+| [C]                                               : sethook                                 :   -1                : 0.000       : 0.00%       :       1     |
