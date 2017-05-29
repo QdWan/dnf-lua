@@ -91,58 +91,111 @@ end
 
 local function east_neighbor(i, w, h, r)
     r = r or 1
-    return (i  + r - 1) % w ~= 0 and i + r or nil
+    local v = i + r
+    local size = w * h
+    local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
+    local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
+    return (
+        v <= size and
+        y == ny and
+        v)
+
 end
 map_gen.east_neighbor = east_neighbor
 
 local function west_neighbor(i, w, h, r)
     r = r or 1
-    return (i - r) % w ~= 0 and i - r or nil
+    local v = i - r
+    local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
+    local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
+    return (
+        v > 0 and
+        y == ny and
+        v)
 end
 map_gen.west_neighbor = west_neighbor
 
 local function north_neighbor(i, w, h, r)
     r = r or 1
-    return i - (w * r) > 0 and i - (w * r) or nil
+    local v = i - (w * r)
+    local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
+    local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
+    return (
+        v > 0 and
+        x == nx and
+        v)
 end
 map_gen.north_neighbor = north_neighbor
 
 local function south_neighbor(i, w, h, r)
     r = r or 1
-    return i + (w * r) and i + (w * r) or nil
+    local v = i + (w * r)
+    local size = w * h
+    local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
+    local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
+    return (
+        v <= size and
+        x == nx and
+        v)
 end
 map_gen.south_neighbor = south_neighbor
 
-local function northeast_neighbor(i, w, r)
+local function northeast_neighbor(i, w, h, r)
     r = r or 1
-    local ne = (i - w * r + r)
-    return ne > 0 and (i % (w * r) ~= 0) and ne or nil
+    local v = (i - w * r + r)
+    local size = w * h
+    local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
+    local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
+    return (
+        v > 0 and
+        v <= size and
+        x + r == nx and
+        y - r == ny and
+        v)
 end
 map_gen.northeast_neighbor = northeast_neighbor
 
 local function northwest_neighbor(i, w, h, r)
     r = r or 1
-    local nw = (i - w * r - r)
-    return nw > 0 and ((i - r) % w ~= 0) and nw or nil
+    local v = (i - w * r - r)
+    local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
+    local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
+    return (
+        v > 0 and
+        x - r == nx and
+        y - r == ny and
+        v)
 end
 map_gen.northwest_neighbor = northwest_neighbor
 
 local function southeast_neighbor(i, w, h, r)
     r = r or 1
+    local v = (i + w * r + r)
     local size = w * h
-    local se = (i + w * r + r)
-    return se <= size and (i % (w * r) ~= 0) and se or nil
+    local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
+    local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
+    return (
+        v <= size and
+        x + r == nx and
+        y + r == ny and
+        v)
 end
 map_gen.southeast_neighbor = southeast_neighbor
 
 local function southwest_neighbor(i, w, h, r)
     r = r or 1
+    local v = (i + w * r - r)
     local size = w * h
-    local sw = i + w * r - r
-    return sw <= size and ((i - r) % w ~= 0) and sw or nil
+    local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
+    local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
+    return (
+        v > 0 and
+        v <= size and
+        x - r == nx and
+        y + r == ny and
+        v)
 end
 map_gen.southwest_neighbor = southwest_neighbor
-
 
 -- ##########
 -- Room class
@@ -208,6 +261,11 @@ setmetatable(
         end
     }
 )
+function GraphNode:initialize(t)
+    t = t or {}
+    self.x = self.x or t.x
+    self.y = self.y or t.y
+end
 
 function GraphNode:set_template(name)
     self.template = name
@@ -336,28 +394,28 @@ function Graph:neighbors_at_radius(r)
         local n8 = neighbors_8d[i]
 
         local e_v = east_neighbor(i, w, h, r)
-        if e_v ~= nil then
+        if e_v then
             n4[#n4 + 1] = e_v
             n8[#n8 + 1] = e_v
             east[i] = e_v
         end
 
         local w_v = west_neighbor(i, w, h, r)
-        if w_v ~= nil then
+        if w_v then
             n4[#n4 + 1] = w_v
             n8[#n8 + 1] = w_v
             west[i] = w_v
         end
 
         local n_v = north_neighbor(i, w, h, r)
-        if n_v ~= nil then
+        if n_v then
             n4[#n4 + 1] = n_v
             n8[#n8 + 1] = n_v
             north[i] = n_v
         end
 
         local s_v = south_neighbor(i, w, h, r)
-        if s_v ~= nil then
+        if s_v then
             n4[#n4 + 1] = s_v
             n8[#n8 + 1] = s_v
             south[i] = s_v
@@ -369,17 +427,17 @@ function Graph:neighbors_at_radius(r)
         end
 
         local nw_v = northwest_neighbor(i, w, h, r)
-        if nw_v ~= nil then
+        if nw_v then
             n8[#n8 + 1] = nw_v
         end
 
         local se_v = southeast_neighbor(i, w, h, r)
-        if se_v ~= nil then
+        if se_v then
             n8[#n8 + 1] = se_v
         end
 
         local sw_v = southwest_neighbor(i, w, h, r)
-        if sw_v ~= nil then
+        if sw_v then
             n8[#n8 + 1] = sw_v
         end
         neighbors_4d[i] = shuffle(neighbors_4d[i])

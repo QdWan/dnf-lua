@@ -104,6 +104,7 @@ map_entities.MapEntity = MapEntity
 -- ############
 
 local TileEntity = class('TileEntity', MapEntity)
+local first_run = {}
 
 function TileEntity:initialize(t)
     --[[Generic map entity, supposed to be inherited by specific ones.
@@ -113,8 +114,14 @@ function TileEntity:initialize(t)
     ]]--
     MapEntity.initialize(self, t) -- super
 
-    self.name = t.name
-    self.color = t.color
+    for k, v in pairs(t) do
+        if not first_run[k] then
+            first_run[k] = v
+            log:warn("TileEntity:initialize", k, v)
+        end
+        self[k] = v
+    end
+
     self.template = self.name
     apply_template(self)
 end

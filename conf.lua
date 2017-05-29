@@ -28,13 +28,13 @@ function love.conf(t)
     t.window.icon = nil
 
     -- The window width (number)
-    t.window.width = 1366
+    t.window.width = 1240
 
     -- The window height (number)
-    t.window.height = 768
+    t.window.height = 600
 
     -- Remove all border visuals from the window (boolean)
-    t.window.borderless = true
+    t.window.borderless = false
 
     -- Let the window be user-resizable (boolean)
     t.window.resizable = false

@@ -1,5 +1,5 @@
 local SEED = 7
-
+local tile_templates = require("lib.templates")
 love.math.setRandomSeed(SEED)
 
 local SceneBase = require("scenes.base")
@@ -44,7 +44,7 @@ end
 
 function SceneMap:setupMapView()
 
-    self.view = self.view or 0
+    self.view = self.view or 1
     self.zoomX = self.zoomX or 1
     self.zoomY = self.zoomY or 1
 
@@ -75,7 +75,7 @@ end
 function SceneMap:updateTilesetBatch()
     local mapX = self.mapX
     local mapY = self.mapY
-    local map = self.view == 0 and self.map or self.map.views[self.view]
+    local map = self.map
     local tileSize = self.tileSize
     local max_x = self.tilesDisplayWidth-1
     local max_y = self.tilesDisplayHeight-1
@@ -85,6 +85,13 @@ function SceneMap:updateTilesetBatch()
     self.tilesetBatch = lg.newSpriteBatch(
         self.image, self.tilesDisplayWidth * self.tilesDisplayHeight * 2)
     local tilesetBatch = self.tilesetBatch
+
+    local meta = self.view ~= 1
+    local view = meta and map.views[self.view] or ""
+    local template_k = view .. "template"
+    local id_k = view .. "id"
+    local color_k = view .. "color"
+    log:warn("meta", self.view, meta, template_k, id_k, color_k)
 
     for x=0, max_x do
         for y=0, max_y do
@@ -96,11 +103,18 @@ function SceneMap:updateTilesetBatch()
                       ") map.h(", map.h
                       )
             end
-            local tile = map:get(x + mapX, y + mapY).tile
-            local template = tile.template
+            local node = map:get(x + mapX, y + mapY)
+            local tile = meta and node.tile.meta or node.tile
+            local template = tile[template_k]
 
-            tile.tile_pos = tile.tile_pos or 1
-            if tile.tile_var == nil then
+            local tile_pos
+            if meta or tile.image == "ascii" then
+                tile_pos = tile[id_k]
+            else
+                tile_pos = tile.tile_pos or 1
+            end
+            local tile_var = meta and 1 or nil
+            if tile_var == nil then
                 local max_pos, max_var = manager.resources:get_tile_variations(
                     "TileEntity", template)
                 tile.tile_var = tile.tile_var or math.random(max_var)
@@ -108,9 +122,9 @@ function SceneMap:updateTilesetBatch()
 
 
             local sprite = manager.resources:tile(
-                "TileEntity", template, tile.tile_pos, tile.tile_var)
-            if tile.image == "ascii" then
-                local c = tile.color
+                "TileEntity", template, tile_pos, tile_var)
+            if meta or tile.image == "ascii" then
+                local c = tile[color_k]
                 tilesetBatch:setColor(c[1], c[2], c[3], 255)
             else
                 tilesetBatch:setColor(255, 255, 255, 255)
@@ -176,6 +190,9 @@ function SceneMap:draw()
             )
         end
     end
+    --[[
+    ]]--
+
     log:warn("SceneMap:draw is calling quit")
     love.event.quit()
 end
@@ -216,7 +233,7 @@ function SceneMap:keypressed(key)
         self:setupMapView()
         self:setupTileset()
     elseif key == "tab" then
-        self.view = (self.view + 1) % (#self.map.views + 1)
+        self.view = (self.view % #self.map.views) + 1
         return self:moveMap(0, 0, true)
     else
         return

@@ -1,5 +1,6 @@
 local lm = love.math
 
+local tile_templates = require("lib.templates")
 local util = require("lib.util")
 local extend = util.extend_array
 local Rect = require("lib.rect")
@@ -13,30 +14,36 @@ local MapCreator = creator.MapCreator
 local time = love.timer.getTime
 
 
-local W = 31
-local H = 31
+local W = 120
+local H = 120
 
--- neighbors cache for various radius
-local neighborhood = {}
+local function neighbors(map, t)
+    local r = t.r or 1
+    local get_pos = t.get_pos or false
 
-local function neighbors(map, x, y, max_r)
-    local t0 = time()
-    max_r = max_r or 1
-
-    local nodes = map.nodes
-    local extend = extend
     local w = map.w
     local h = map.h
-    local flat_i = ((y - 1) * w) + x
-    local index = util.cantor(flat_i, max_r)
+    local size = w * h
+    local index = t.i
+    local x = t.x or ((index - 1) % w) + 1
+    local y = t.y or math.floor((index - 1) / w) + 1
     local res = {}
 
-    for r = 1, max_r do
-        neighborhood[r] = neighborhood[r] or map:neighbors_at_radius(r)["8d"]
-        extend(res, neighborhood[r][flat_i])
+    for i = x-r, x+r do
+        for j = y-r, y+r do
+            if (
+                i > 0 and i <= size and
+                j > 0 and j <= size and
+                not (i == x and j == x) -- self
+            ) then
+                local k = ((j - 1) * w) + i
+                res[#res + 1] = get_pos and k or map.nodes[k]
+            end
+        end
     end
     return res
 end
+
 
 local function get_hnv(nodes)
     local max_val = -math.huge
@@ -60,7 +67,6 @@ local function get_lnv(nodes)
     return min_val
 end
 
-
 local HeightmapBase = class("HeightmapBase", MapCreator)
 
 function HeightmapBase:create(header)
@@ -68,6 +74,10 @@ function HeightmapBase:create(header)
     local w, h = self:adjust_size(W, H)
     print("HeightmapBase:create", w, h)
     MapCreator.create(self, w, h)  -- super
+end
+
+function HeightmapBase:adjust_size(_w, _h)
+    return _w, _h
 end
 
 function HeightmapBase:print_stats()
@@ -468,10 +478,7 @@ function HeightmapBase:erupt(x, y, param)
     local k = param.k or 0.50
     local r = param.r or 1
     -- highest neighbor value
-    local indexes = neighbors(self.map, x, y, r)
-    local nodes = util.filter_array(
-        indexes,
-        function(i) return self.map.nodes[i] end)
+    local nodes = neighbors(self.map, {x=x, y=y, r=r})
 
     local hnv = get_hnv(nodes)
 
@@ -493,10 +500,7 @@ function HeightmapBase:erode(x, y, param)
     local k = param.k or 0.50
     local r = param.r or 1
 
-    local indexes = neighbors(self.map, x, y, r)
-    local nodes = util.filter_array(
-        indexes,
-        function(i) return self.map.nodes[i] end)
+    local nodes = neighbors(self.map, {x=x, y=y, r=r})
     local lnv = get_lnv(nodes)
 
     local node = self.map:get(x, y)
@@ -579,50 +583,10 @@ function HeightmapBase:set_base_feature()
     log:warn("HeightmapBase:set_base_feature: done", time() - t0)
 end
 
-
-local NoiseMap = class("NoiseMap", Graph)
-
-function NoiseMap:create_node(x, y)
-    local node = Graph.create_node(self, x, y)  -- super
-    node.value = lm.noise(x + lm.random(), y + lm.random())
-    return node
-end
-
-local LatitudinalHeatMap = class("LatitudinalHeatMap", Graph)
-
-function LatitudinalHeatMap:create_node(x, y)
-    local floor = math.floor
-    local node = Graph.create_node(self, x, y)  -- super
-    local v = math.sin((y / self.h) * math.pi)
-    node.value = v
-    node.template = "heat_view"
-    node.color = {floor(v * 255), 0, floor((1 - v) * 255)}
-    return node
-end
-
-
-local PrecipitationMap = class("PrecipitationMap", Graph)
-
-function PrecipitationMap:initialize(w, h, parent)
-    self.parent = parent
-    Graph.initialize(self, w, h)  -- super
-end
-
-local function get_lnv(nodes)
-    local min_val = math.huge
-    for _, node in ipairs(nodes) do
-        local v = node.value
-        if v < min_val then
-            min_val = v
-        end
-    end
-    return min_val
-end
-
 local function get_water_ratio(nodes)
     local count = 0
     for _, node in ipairs(nodes) do
-        local template = node.template
+        local template = node.meta._height_template
         if template == "shallow_water" or template == "deep_water" then
             count = count + 1
         end
@@ -635,28 +599,6 @@ local function precipitation(height, heat, water_ratio)
             heat * 0.4 +
             water_ratio * 0.35)
 end
-
-function PrecipitationMap:create_node(x, y, i)
-    local floor = math.floor
-    local node = Graph.create_node(self, x, y)  -- super
-    local parent = self.parent
-
-    local height = parent._heightmap.nodes[i].value
-    local heat = parent._heat_map.nodes[i].value
-
-    local height_indexes = neighbors(self, x, y, 5)
-    local height_neighbors = util.filter_array(
-        height_indexes,
-        function(i) return self.nodes[i] end)
-
-    local water_ratio = get_water_ratio(height_neighbors)
-    local v = precipitation(height, heat, water_ratio)
-    node.value = v
-    node.template = "rainfall_view"
-    node.color = {floor((1 - v) * 255), 0, floor(v * 255)}
-    return node
-end
-
 
 local function compose_biome(n, _height, _heat, rain)
     local height = _height * 0.95 + n * 0.05
@@ -737,40 +679,6 @@ local function compose_biome(n, _height, _heat, rain)
     end
 end
 
-local CompositeBiomeMap = class("CompositeBiomeMap", Graph)
-
-function CompositeBiomeMap:initialize(w, h, parent)
-    self.parent = parent
-    Graph.initialize(self, w, h)  -- super
-end
-
-function CompositeBiomeMap:create_node(x, y)
-    local node = Graph.create_node(self, x, y)  -- super
-
-    local n = self.parent._noise:get(x, y).value
-    local height = self.parent._heightmap:get(x, y).value
-    local heat = self.parent._heat_map:get(x, y).value
-    local rain = self.parent._rainfall_map:get(x, y).value
-
-    node.template = compose_biome(n, height, heat, rain)
-    return node
-end
-
-
-local function apply_tiling(map)
-    print("apply_tiling")
-    local nodes = map.nodes
-    for i, node in pairs(nodes) do
-        local node = nodes[i]
-        local tile = node.tile
-        -- print(node, tile.template, tile.id)
-        if tile.image == "ascii" then
-            tile.tile_pos = tile.id
-        end
-    end
-end
-
-
 local MapSurface02 = class("MapSurface02", HeightmapBase)
 
 function MapSurface02:create(header)
@@ -790,44 +698,47 @@ function MapSurface02:standard_map(_)
     local w, h = self.cols, self.rows
 
     self._heightmap = self.map
+    local nodes = self.map.nodes
+    local floor = math.floor
+    local sin = math.sin
+    local pi = math.pi
+    local tile_templates = tile_templates["TileEntity"]
 
-    local t0 = time()
-    log:warn("NoiseMap: start")
-    self._noise = NoiseMap(w, h)
-    log:warn("NoiseMap: done", time() - t0)
-
-    local t0 = time()
-    log:warn("LatitudinalHeatMap: start")
-    self._heat_map = LatitudinalHeatMap(w, h)
-    log:warn("LatitudinalHeatMap: done", time() - t0)
-
-    local t0 = time()
-    log:warn("PrecipitationMap: start")
-    self._rainfall_map = PrecipitationMap(w, h, self)
-    log:warn("PrecipitationMap: done", time() - t0)
-
-    local t0 = time()
-    log:warn("CompositeBiomeMap: start")
-    self.map = CompositeBiomeMap(w, h, self)
-    log:warn("CompositeBiomeMap: done", time() - t0)
-
-    local function prepare_map(graph, type)
-        local _ = graph.prepare and graph:prepare(self)
-        graph = HeightmapBase.standard_map(self, graph)
-        apply_tiling(graph)
-        return graph
+    for i, node in ipairs(nodes) do
+        local x, y = node.x, node.y
+        node.meta = {
+            height_value = node.value,
+            height_template = node.template,
+            height_id = tile_templates[node.template]["id"],
+            height_color = tile_templates[node.template]["color"],
+            noise_value = lm.noise(x + lm.random(), y + lm.random()),
+        }
+        local meta = node.meta
+        local heat_value = sin((y / h) * pi)
+        meta.heat_value = heat_value
+        meta.heat_template = "heat_view"
+        meta.heat_id = tile_templates[meta.heat_template]["id"]
+        meta.heat_color = {
+            floor(heat_value * 255), 0, floor((1 - heat_value) * 255)}
     end
+    for i, node in ipairs(nodes) do
+        local meta = node.meta
+        meta.rainfall_template = "rainfall_view"
+        meta.rainfall_id = tile_templates[meta.rainfall_template]["id"]
+        local height_nodes = neighbors(self.map, {i=i, r=4})
+        local water_ratio = get_water_ratio(height_nodes)
+        local v = precipitation(
+            meta.height_value, meta.heat_value, water_ratio)
+        meta.rainfall_value = v
+        meta.rainfall_color = {floor((1 - v) * 255), 0, floor(v * 255)}
 
-    local t0 = time()
-    log:warn("prepare_maps: start")
-    local height = prepare_map(self._heightmap)
-    local heat = prepare_map(self._heat_map)
-    local rainfall = prepare_map(self._rainfall_map)
-    local biomes = prepare_map(self.map)
-    biomes.views = {height, heat, rainfall}
-    log:warn("prepare_maps: done", time() - t0)
+        node.template = compose_biome(
+            meta.noise_value, meta.height_value,
+            meta.heat_value, meta.rainfall_value)
+    end
+    self.views = {false, "height_", "heat_", "rainfall_"}
 
-    return biomes
+    return HeightmapBase.standard_map(self)  -- super
 end
 
 local MapSurface03 = class("MapSurface03", MapSurface02)

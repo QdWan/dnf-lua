@@ -82,6 +82,7 @@ function MapCreator:standard_map(graph)
         east = graph.east,
         south = graph.south,
         west = graph.west,
+        views = self.views,
     }
     local TileEntity = map_entities.TileEntity
     local NodeGroup = map_containers.NodeGroup
@@ -90,7 +91,8 @@ function MapCreator:standard_map(graph)
         nodes[i] = NodeGroup{
             tile = TileEntity({
                 name = node.template,
-                color = node.color
+                color = node.color,
+                meta = node.meta,
             })
         }
     end
