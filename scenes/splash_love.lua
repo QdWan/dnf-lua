@@ -1,13 +1,12 @@
 local SceneBase = require("scenes.base")
 local widgets = require("widgets")
-local Rect = require('rect')
 
 local math_min = math.min
 
 local SceneSplash = class("SceneSplash", SceneBase)
 
-function SceneSplash:initialize()
-    self.class.super.initialize(self) -- super
+function SceneSplash:init()
+    self.class.super.init(self) -- super
     self:set_img()
     self.alpha = 0
     self.alpha_factor = 0.5
@@ -40,19 +39,17 @@ function SceneSplash:set_alpha()
         self.alpha = 255
         self.alpha_factor = -0.5
     elseif self.alpha < 0 then
-        beholder.trigger('SET_SCENE', 'main_menu')
+        events:trigger({'SET_SCENE'}, 'main_menu')
     end
 end
 
 function SceneSplash:stop_obververs()
-    for _, observer in pairs(self.observers) do
-        beholder.stopObserving(observer)
-    end
 end
 
 function SceneSplash:unload()
-    print(tostring(self) .. ":unload()")
-    beholder.stopObservingDict(self.observers)
+    for _, observer in pairs(self.observers) do
+        observer:remove()
+    end
 end
 
 function SceneSplash:draw()

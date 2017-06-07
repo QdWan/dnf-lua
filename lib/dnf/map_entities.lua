@@ -1,6 +1,5 @@
 local map_containers = require("dnf.map_containers")
-local Properties = require('properties')
-local tile_templates = require("lib.templates")
+local tile_templates = require("templates")
 
 local map_entities = {}
 
@@ -24,76 +23,17 @@ end
 --   MapEntity class
 -- ##################
 
-local MapEntity = class('MapEntity'):include(Properties)
+local MapEntity = class('MapEntity')
 
-function MapEntity:initialize(t)
+function MapEntity:init(t)
     --[[Generic map entity, supposed to be inherited by specific ones.
 
         Args:
             t (table): table containing the below keyword arguments.
     ]]--
     for k, v in pairs(t) do
-        if v.owner ~= nil and v.owner == false then
-            v.owner = self
-        end
+        if v and v.owner and v.owner == false then v.owner = self end
     end
-end
-
-function MapEntity:getter_x()
-    return self.rect.x
-end
-
-function MapEntity:setter_x(v)
-    self.rect.x = v
-end
-
-function MapEntity:getter_y()
-    return self.rect.y
-end
-
-function MapEntity:setter_y(v)
-    self.rect.y = v
-end
-
-function MapEntity:getter_pos()
-    return map_containers.Position(self.x, self.y)
-end
-
-function MapEntity:setter_pos(v)
-    self.rect.topleft = v
-end
-
-function MapEntity:getter_size()
-    return self.rect.size
-end
-
-function MapEntity:getter_left()
-    return self.rect.left
-end
-
-function MapEntity:getter_right()
-    return self.rect.right
-end
-
-function MapEntity:getter_top()
-    return self.rect.top
-end
-
-function MapEntity:getter_bottom()
-    return self.rect.bottom
-end
-
-function MapEntity:getter_topleft()
-    return self.rect.topleft
-end
-
-function MapEntity:getter_current_level()
-    return self.scene.current_level
-end
-
-function MapEntity:getter_visible()
-    local node = self.current_level:get(self.x, self.y)
-    return node.tile.visible
 end
 
 map_entities.MapEntity = MapEntity
@@ -106,18 +46,18 @@ map_entities.MapEntity = MapEntity
 local TileEntity = class('TileEntity', MapEntity)
 local first_run = {}
 
-function TileEntity:initialize(t)
+function TileEntity:init(t)
     --[[Generic map entity, supposed to be inherited by specific ones.
 
         Args:
             t (table): table containing the below keyword arguments.
     ]]--
-    MapEntity.initialize(self, t) -- super
+    MapEntity.init(self, t) -- super
 
-    for k, v in pairs(t) do
+    for k, v in next, t, nil do
         if not first_run[k] then
             first_run[k] = v
-            log:warn("TileEntity:initialize", k, v)
+            log:warn("TileEntity:init", k, v)
         end
         self[k] = v
     end

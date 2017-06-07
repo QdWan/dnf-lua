@@ -1,7 +1,4 @@
-local inspect = require("inspect")  -- https://github.com/kikito/inspect.lua
-
 local Style = require("lib.style")
-local Rect = require("lib.rect")
 local util = require("lib.util")
 
 local Widget = require("widgets.base")
@@ -10,8 +7,8 @@ local Widget = require("widgets.base")
 local Text = class('Text', Widget)
 local margin = 18
 
-function Text:initialize(args)
-    Widget.initialize(self, args)
+function Text:init(args)
+    Widget.init(self, args)
 
     local style = Style()
     if self.style ~= nil then
@@ -164,11 +161,11 @@ function Text:parse_text()
                 end
 
                 if #wraps == 1 and wrap['align'] == 'center' then
-                    rect.midtop = {math.floor(self.w / 2),
-                                   self.bottom + y}
+                    rect:set_midtop(math.floor(self.w / 2),
+                                    self:get_bottom() + y)
                 else
-                    rect.topleft = {x + w * 3,
-                                    self.bottom + y}
+                    rect:set_topleft(x + w * 3,
+                                     self:get_bottom() + y)
                 end
                 wrap['rect'] = rect
                 wrap['x'] = x

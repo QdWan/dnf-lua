@@ -510,8 +510,7 @@ end
 
 Creature = class("Creature")
 
-function Creature:initialize(t)
-end
+function Creature:init(t) end
 
 function Creature:__tostring()
     return inspect({

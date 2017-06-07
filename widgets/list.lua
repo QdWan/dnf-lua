@@ -3,7 +3,6 @@ local Label = require("widgets.label")
 local inspect = require("inspect")
 local util = require("lib.util")
 
-local List = class("List", Frame)
 
 local style = {
     font_size = 20,
@@ -11,16 +10,19 @@ local style = {
     font_name = "caladea-regular.ttf"
 }
 
-function List:initialize(t)
-    Frame.initialize(self, t)  --  super
+
+local List = class("List", Frame):set_class_defaults{default_style = style}
+
+function List:init(t)
+    Frame.init(self, t)  --  super
 end
 
-function List:_cache()
+function List:preload()
     self.font_obj = self.font_obj or manager.resources:font(
         self.font_name, self.font_size)
 end
 
-function List:getter_default_style()
+function List:get_default_style()
     return style
 end
 
@@ -48,6 +50,14 @@ function List:insert_list(l)
         t[#t + 1] = self:insert(type(v) == "number" and tostring(v) or v)
     end
     return t
+end
+
+function List:insert_list_get_dict(l)
+    local dict = {}
+    for _, v in ipairs(l) do
+        dict[v] = self:insert(type(v) == "number" and tostring(v) or v)
+    end
+    return dict
 end
 
 function List:__adjust_weight()

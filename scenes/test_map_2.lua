@@ -18,8 +18,8 @@ local max = math.max
 local min = math.min
 
 
-function SceneMap:initialize()
-    SceneBase.initialize(self) -- super
+function SceneMap:init()
+    SceneBase.init(self) -- super
 
     -- test only
     print(manager.resources:tileset_sprite("TileEntity", "floor"))

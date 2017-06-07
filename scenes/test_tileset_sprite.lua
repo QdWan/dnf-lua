@@ -3,8 +3,8 @@ local lg = love.graphics
 local SceneBase = require("scenes.base")
 local SceneSprite = class("SceneMap", SceneBase)
 
-function SceneSprite:initialize()
-    SceneBase.initialize(self) -- super
+function SceneSprite:init()
+    SceneBase.init(self) -- super
     self.tile_w = 32
     self.tile_h = 32
     self.tileQuads = {}

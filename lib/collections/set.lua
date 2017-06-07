@@ -1,20 +1,6 @@
-local Set = {}
-Set.__index = Set
+local Set = class("Set")
 
-setmetatable(
-    Set,
-    {
-        __call = function (class, ...)
-            local self = setmetatable({}, class)
-            if self.initialize then
-                self:initialize(...)
-            end
-            return self
-        end
-    }
-)
-
-function Set:initialize(t)
+function Set:init(t)
     if t ~= nil then
         for _, l in ipairs(t) do
             self[l] = true

@@ -22,24 +22,9 @@ License: zlib
 ]]--
 
 
-local PriorityQueue = {}
-PriorityQueue.__index = PriorityQueue
+local PriorityQueue = class("PriorityQueue")
 
-setmetatable(
-    PriorityQueue,
-    {
-        __call = function (class, ...)
-            local self = setmetatable({}, class)
-            if self.initialize then
-                self:initialize(...)
-            end
-            return self
-        end
-    }
-)
-
-
-function PriorityQueue:initialize()
+function PriorityQueue:init()
     --[[  Initialization.
 
     Example:

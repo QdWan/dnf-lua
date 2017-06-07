@@ -3,8 +3,8 @@ local SceneBase = require("scenes.base")
 local widgets = require("widgets")
 local SceneMainMenu = class("SceneMainMenu", SceneBase)
 
-function SceneMainMenu:initialize()
-    SceneBase.initialize(self) -- super
+function SceneMainMenu:init()
+    SceneBase.init(self) -- super
     self.frame = widgets.Frame({
         parent=self,
         -- bg_color={0, 0, 255, 255},

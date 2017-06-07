@@ -5,9 +5,9 @@ local SceneBase = require("scenes.base")
 
 local AudioTestScene = class("AudioTestScene", SceneBase)
 
-function AudioTestScene:initialize()
+function AudioTestScene:init()
     self:set_bgm()
-    SceneBase.initialize(self) -- super
+    SceneBase.init(self) -- super
 end
 
 function AudioTestScene:set_bgm()
@@ -25,8 +25,8 @@ end
 
 function AudioTestScene:_set_observers()
     SceneBase._set_observers(self) -- super
-    self.observers["MUSICSTOPPED"] = beholder.observe(
-        'MUSICSTOPPED', self.bgm, function() self:next_track() end)
+    self.observers["MUSICSTOPPED"] = events:observe(
+        {'MUSICSTOPPED', self.bgm}, function() self:next_track() end)
 end
 
 function AudioTestScene:update(dt)

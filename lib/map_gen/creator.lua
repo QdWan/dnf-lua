@@ -21,12 +21,10 @@
 -- package.path = "lib/?.lua;../lib/?.lua;?/init.lua;" .. package.path
 -- require("rs_strict")
 -- local class = require("middleclass")
-local Properties = require('lib.properties')
-local inspect = require("lib.inspect")
 local map_containers = require("dnf.map_containers")
-local map_entities = require("lib.dnf.map_entities")
+local map_entities = require("dnf.map_entities")
 
-local map_gen_base = require("lib.map_gen.base")
+local map_gen_base = require("map_gen.base")
 
 local max = math.max
 local min = math.min
@@ -45,17 +43,7 @@ creator.get = get_creator
 
 -- ##########
 -- MapCreator class
-local MapCreator = class("MapCreator"):include(Properties)
-
-function MapCreator:getter_cols()
-    self._cols = self._cols or self.map.w
-    return self._cols
-end
-
-function MapCreator:getter_rows()
-    self._rows = self._rows or self.map.h
-    return self._rows
-end
+local MapCreator = class("MapCreator")
 
 function MapCreator:create(cols, rows)
     self.map = Graph(cols, rows)
@@ -88,13 +76,18 @@ function MapCreator:standard_map(graph)
     local NodeGroup = map_containers.NodeGroup
     local nodes = map.nodes
     for i, node in ipairs(nodes) do
-        nodes[i] = NodeGroup{
+        local new_node = NodeGroup{
             tile = TileEntity({
                 name = node.template,
                 color = node.color,
                 meta = node.meta,
             })
         }
+        new_node.north = node.north
+        new_node.east = node.east
+        new_node.south = node.south
+        new_node.west = node.west
+        nodes[i] = new_node
     end
     return map
 end
@@ -106,25 +99,25 @@ local function calculate_tiling(map, tile, i, fn)
     --[[Calculate the tile index of a node based on its neighbors.]]--
     local s = 0
 
-    local north_index = map.north[i]
+    local north_index = map.nodes[i].north or map.north[i]
     local north_tile = map:get(north_index).tile
     if north_tile and tile.id ~= north_tile and fn(tile, north_tile) then
         s = s + 1
     end
 
-    local west_index = map.west[i]
+    local west_index = map.nodes[i].west or map.west[i]
     local west_tile = map:get(west_index).tile
     if west_tile and tile.id ~= west_tile and fn(tile, west_tile) then
         s = s + 2
     end
 
-    local east_index = map.east[i]
+    local east_index = map.nodes[i].east or map.east[i]
     local east_tile = map:get(east_index).tile
     if east_tile and tile.id ~= east_tile and fn(tile, east_tile) then
         s = s + 4
     end
 
-    local south_index = map.south[i]
+    local south_index = map.nodes[i].south or map.south[i]
     local south_tile = map:get(south_index).tile
     if south_tile and tile.id ~= south_tile and fn(tile, south_tile) then
         s = s + 8

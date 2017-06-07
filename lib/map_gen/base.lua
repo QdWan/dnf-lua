@@ -1,7 +1,7 @@
-local PriorityQueue = require("lib.collections.priority_queue")
-local shuffle = require("lib.shuffle")
-local Rect = require("lib.rect")
-local util = require("lib.util")
+local PriorityQueue = require("collections.priority_queue")
+local shuffle = require("shuffle")
+local Rect = require("rect")
+local util = require("util")
 local time = love.timer.getTime
 
 local COST = {
@@ -197,9 +197,11 @@ local function southwest_neighbor(i, w, h, r)
 end
 map_gen.southwest_neighbor = southwest_neighbor
 
+
 -- ##########
 -- Room class
 local Room = class("Room", Rect)
+map_gen.Room = Room
 
 function Room:random_pos(_map, templates, ignore)
     local templates = templates or {"floor"}
@@ -215,17 +217,12 @@ function Room:random_pos(_map, templates, ignore)
     end
 end
 
-function Room:__newindex(k, v)
-    Rect.__newindex(self, "_tiles", nil)
-    Rect.__newindex(self, k, v)
-end
-
 function Room:tiles()
     local tiles = self._tiles
     if tiles == nil then
         tiles = {}
-        for x = self.x, self.right do
-            for y = self.y, self.bottom do
+        for x = self.x, self:get_right() do
+            for y = self.y, self:get_bottom() do
                 tiles[#tiles + 1] = {x, y}
             end
         end
@@ -233,35 +230,22 @@ function Room:tiles()
     end
     return tiles
 end
+-- end of Room class
+-- ##########
 
-map_gen.Room = Room
 
 -- ##########
 -- GraphNode class
-local GraphNode = {
+local GraphNode = class("GraphNode"):set_class_defaults({
     x=false,
     y=false,
     block=false,
     explored=false,
     template="wall",
     cost = COST["wall"],
-}
+})
 
-GraphNode.__index = GraphNode
-
-setmetatable(
-    GraphNode,
-    {
-        __call = function (class, ...)
-            local self = setmetatable({}, class)
-            if self.initialize then
-                self:initialize(...)
-            end
-            return self
-        end
-    }
-)
-function GraphNode:initialize(t)
+function GraphNode:init(t)
     t = t or {}
     self.x = self.x or t.x
     self.y = self.y or t.y
@@ -276,9 +260,10 @@ end
 
 -- ##########
 -- Graph class
+local Graph_first_run = false
 local Graph = class("Graph")
 
-function Graph:initialize(w, h, map_file)
+function Graph:init(w, h, map_file)
     local random = love.math.random or math.random
     local to_2d = to_2d
 
@@ -296,7 +281,22 @@ function Graph:initialize(w, h, map_file)
 end
 
 function Graph:create_node(x, y, i)
-    return GraphNode{x = x, y = y}
+    local w = self.w
+    local h = self.h
+    local r = 1
+    local node = GraphNode{
+        x = x, y = y,
+    }
+    node.north=north_neighbor(i, w, h, r)
+    node.east=east_neighbor(i, w, h, r)
+    node.south=south_neighbor(i, w, h, r)
+    node.west=west_neighbor(i, w, h, r)
+    if Graph_first_run == false then
+        Graph_first_run = true
+        log:warn("Graph:create_node",
+                 node.north, node.east, node.south, node.west)
+    end
+    return node
 end
 
 function Graph:fill()

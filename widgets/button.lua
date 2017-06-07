@@ -22,8 +22,8 @@ local function fits(a, b)
 end
 
 
-function Button:initialize(args)
-    Frame.initialize(self, args)
+function Button:init(args)
+    Frame.init(self, args)
     args.parent=self
 
     args.z = 1
@@ -58,9 +58,9 @@ function Button:_register_widget(child)
 end
 
 function Button:draw(z)
-    beholder.trigger('DRAW', self, 1)
+    events:trigger({'DRAW', self, 1})
     self.label_obj.state = self.img.state
-    beholder.trigger('DRAW', self, 2)
+    events:trigger({'DRAW', self, 2})
 end
 
 function Button:_ungrid()

@@ -2,8 +2,8 @@ local SceneBase = require("scenes.base")
 local widgets = require("widgets")
 local SceneMainMenu = class("SceneMainMenu", SceneBase)
 
-function SceneMainMenu:initialize()
-    SceneBase.initialize(self)
+function SceneMainMenu:init()
+    SceneBase.init(self)
     self.time = 0
 
     self:set_music()
@@ -31,16 +31,18 @@ function SceneMainMenu:set_background()
 end
 
 function SceneMainMenu:set_menu()
+    self.menu_label_names = {"New", "Options", "Gallery", "Quit", }
+
     self.frame = widgets.Frame({
         parent=self,
         -- bg_color={0, 0, 255, 255},
         rect=self.rect,
         z = 2
     })
-    self.frame:row_config(1, 2)  -- row=1, weight=1
-    self.frame:col_config(1, 2)  -- col=1, weight=1
-    self.frame:row_config(2, 1)  -- row=2, weight=1
-    self.frame:row_config(3, 4)  -- row=2, weight=1
+    self.frame:row_config(1, 1)
+    self.frame:col_config(1, 2)
+    self.frame:row_config(2, 1)
+    self.frame:row_config(3, 1.5 * #self.menu_label_names)
 
     self.title = widgets.Label({
         hover=false,
@@ -59,17 +61,41 @@ function SceneMainMenu:set_menu()
         sticky="S"
     })
 
-    self.body = widgets.Label({
+    self.menu = widgets.List({
         parent=self.frame,
-        text="Options",
-        font_obj=manager.resources:font("caladea-regular.ttf", 54),
-        color={223, 223, 223, 255},
+        sticky="NWSE",
+        align="C",
         col=1,
         row=3,
-        sticky="N"
+        expand=true,
+        font_size = 54,
+        pady = 0
+
     })
 
+    self.menu_labels = self.menu:insert_list_get_dict(self.menu_label_names)
+    self.menu_labels["Quit"]:bind(
+        {"MOUSERELEASED.1", "MOUSERELEASED.2"},
+        love.event.quit
+    )
+    self.menu_labels["New"]:bind(
+        {"MOUSERELEASED.1", "MOUSERELEASED.2"},
+        function() events:trigger({'SET_SCENE'}, 'creation') end
+    )
     self.frame:grid()
+end
+
+function SceneMainMenu:unload()
+    log:warn("collectgarbage('count')", collectgarbage('count'))
+    log:warn("SceneMainMenu:unload")
+    self.bgm:stop()
+    self.bgm = nil
+    SceneBase.unload(self)
+    self.frame:destroy()
+    self.bg_frame:destroy()
+    collectgarbage()
+    log:warn("collectgarbage('count')", collectgarbage('count'))
+
 end
 
 function SceneMainMenu:scroll_bg(dt)
@@ -84,18 +110,18 @@ function SceneMainMenu:scroll_bg(dt)
         end
     elseif self.bg_direction == "DOWN" then
         local k = dt * 40
-        if bg.h > rect.h and bg.bottom > rect.bottom then
+        if bg.h > rect.h and bg:get_bottom() > rect:get_bottom() then
             bg.y = bg.y - k
-            bg.bottom = math.max(bg.bottom, rect.bottom)
+            bg:set_bottom(math.max(bg:get_bottom(), rect:get_bottom()))
         else
             self.bg_direction = "RIGHT"
             self.time = 0
         end
     elseif self.bg_direction == "RIGHT" then
         local k = dt * 80
-        if bg.w > rect.w and bg.right > rect.right then
+        if bg.w > rect.w and bg:get_right() > rect:get_right() then
             bg.x = bg.x - k
-            bg.right = math.max(bg.right, rect.right)
+            bg:set_right(math.max(bg:get_right(), rect:get_right()))
         else
             if self.time > 10 then
                 self.bg_direction = "LEFT"

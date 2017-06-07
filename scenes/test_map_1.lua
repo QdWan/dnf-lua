@@ -18,8 +18,8 @@ local max = math.max
 local min = math.min
 
 
-function SceneMap:initialize()
-    SceneBase.initialize(self) -- super
+function SceneMap:init()
+    SceneBase.init(self) -- super
 
     self:setup_map()
     self:setupMapView()

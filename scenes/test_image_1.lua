@@ -1,10 +1,9 @@
-local base_scenes = require("scenes.base")
--- local layer_text = require("layers.text")
+local SceneBase = require("scenes.base")
 local widgets = require("widgets")
-local SceneMainMenu = class("SceneMainMenu", base_scenes.SceneMultiLayer)
+local SceneMainMenu = class("SceneMainMenu", SceneBase)
 
-function SceneMainMenu:initialize()
-    base_scenes.SceneMultiLayer.initialize(self) -- super
+function SceneMainMenu:init()
+    SceneBase.init(self) -- super
     self.frame = widgets.Frame({
         parent=self,
         -- bg_color={0, 0, 255, 255},
@@ -18,7 +17,7 @@ function SceneMainMenu:initialize()
 
     self.title = widgets.Image({
         parent=self.frame,
-        path = 'resources/love-logo.png',
+        path = 'love-logo.png',
         col=1, row=1, sticky="S"
     })
 

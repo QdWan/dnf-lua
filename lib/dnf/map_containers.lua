@@ -1,28 +1,13 @@
-local Properties = require('properties')
-
 local map_containers = {}
 
 -- ############
 --   MapLink class
 -- ############
 
-local MapLink = {}
-MapLink.__index = MapLink
+local MapLink = class("MapLink")
+map_containers.MapLink = MapLink
 
-setmetatable(
-    MapLink,
-    {
-        __call = function (class, ...)
-            local self = setmetatable({}, class)
-            if self.initialize then
-                self:initialize(...)
-            end
-            return self
-        end
-    }
-)
-
-function MapLink:initialize(t)
+function MapLink:init(t)
     --[[Used by map transition entities and effects (e.g.: stairs)..
 
         Args:
@@ -53,30 +38,16 @@ function MapLink:__tostring()
                          self.from_h, self.from_pos)
 end
 
-map_containers.MapLink = MapLink
 
 
 -- ############
 --   MapHeader class
 -- ############
 
-local MapHeader = {}
-MapHeader.__index = MapHeader
+local MapHeader = class("MapHeader")
+map_containers.MapHeader = MapHeader
 
-setmetatable(
-    MapHeader,
-    {
-        __call = function (class, ...)
-            local self = setmetatable({}, class)
-            if self.initialize then
-                self:initialize(...)
-            end
-            return self
-        end
-    }
-)
-
-function MapHeader:initialize(t)
+function MapHeader:init(t)
     --[[Hold essential information to identify each unique map.
 
     It is used as a key for each map in MapContainer and by any MapLink.
@@ -119,30 +90,15 @@ function MapHeader:__tostring()
         self.creator)
 end
 
-map_containers.MapHeader = MapHeader
-
 
 -- ############
 --   MapContainer class
 -- ############
 
-local MapContainer = {}
-MapContainer.__index = MapContainer
+local MapContainer = class("MapContainer")
+map_containers.MapContainer = MapContainer
 
-setmetatable(
-    MapContainer,
-    {
-        __call = function (class, ...)
-            local self = setmetatable({}, class)
-            if self.initialize then
-                self:initialize(...)
-            end
-            return self
-        end
-    }
-)
-
-function MapContainer:initialize()
+function MapContainer:init()
     --[[Hold the game maps of the game session.
 
     Acts as a interface to load/add a map and provides methods to work with
@@ -169,16 +125,15 @@ function MapContainer:set(map)
     self.current = self._maps[map.header.key]
 end
 
-map_containers.MapContainer = MapContainer
-
 
 -- ############
 --   NodeGroup class
 -- ############
 
-local NodeGroup = class("NodeGroup"):include(Properties)
+local NodeGroup = class("NodeGroup")
+map_containers.NodeGroup = NodeGroup
 
-function NodeGroup:initialize(t)
+function NodeGroup:init(t)
     --[[Contain all the entities in a map position/node.
 
         Args:
@@ -188,45 +143,21 @@ function NodeGroup:initialize(t)
             t.objects ():
             t.creatures ():
         ]]--
-        assert(t.tile)
-        self._tile = t.tile
-        self._feature = t.feature
-        self._objects = t.objects or {}
-        self._creatures = t.creatures or {}
+        self.tile = t.tile
+        self.feature = t.feature
+        self.objects = t.objects or {}
+        self.creatures = t.creatures or {}
 end
-
-function NodeGroup:getter_tile()
-    return self._tile
-end
-
-function NodeGroup:setter_tile(v)
-    self._tile = v
-end
-
-map_containers.NodeGroup = NodeGroup
 
 
 -- ############
 --   Position class
 -- ############
 
-local Position = {}
-Position.__index = Position
+local Position = class("Position")
+map_containers.Position = Position
 
-setmetatable(
-    Position,
-    {
-        __call = function (class, ...)
-            local self = setmetatable({}, class)
-            if self.initialize then
-                self:initialize(...)
-            end
-            return self
-        end
-    }
-)
-
-function Position:initialize(x, y)
+function Position:init(x, y)
     --[[Contain x and y coordinates.
 
         Args:
@@ -235,10 +166,7 @@ function Position:initialize(x, y)
         ]]--
         self.x = x
         self.y = y
-    return self
 end
-
-map_containers.Position = Position
 
 
 return map_containers

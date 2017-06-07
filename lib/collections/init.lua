@@ -3,8 +3,8 @@ local collections = {}
 local Deque = require("collections.deque")
 collections.Deque = Deque
 
-local OrderedDict = require("collections.ordered_dict")
-collections.OrderedDict = OrderedDict
+local ODict = require("collections.odict")
+collections.ODict = ODict
 
 local PriorityQueue = require("collections.priority_queue")
 collections.PriorityQueue = PriorityQueue

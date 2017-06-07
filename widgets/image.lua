@@ -2,7 +2,6 @@ local Widget = require("widgets.base")
 local util = require("util")
 local time = require("time")
 
-local Image = class("Image", Widget)
 
 local lg = love.graphics
 
@@ -10,51 +9,49 @@ local style = {
     color = {255, 255, 255, 255}
 }
 
-local function load_img(widget, to, from)
+
+local Image = class("Image", Widget):set_class_defaults{default_style = style}
+
+local function load_img(widget, from, err)
+    if err then error("deprecated parameter 'err'") end
     local img = (type(from) == "string" and manager.resources:image(from)
                  or from)
     if widget.fit_mode == "scale" then
         local size = {img:getWidth(), img:getHeight()}
         widget.scale = math.max(widget.parent.w / size[1],
                               widget.parent.h / size[2])
-        widget.size  = {widget.parent.w, widget.parent.h}
+        widget:set_size(widget.parent.w, widget.parent.h)
         -- widget.dx = ((size[1] * widget.scale) - widget.parent.w) / 2
         -- widget.dy = ((size[2] * widget.scale) - widget.parent.h) / 2
     else
-        widget.size  = {img:getWidth(), img:getHeight()}
+        widget:set_size(img:getWidth(), img:getHeight())
     end
     widget.dx = 0
     widget.dy = 0
-    widget[to] = img
-    print("load_img", widget, to, from, widget[to])
+    -- print("load_img", widget, to, from, widget[to])
     return img
 end
 
-function Image:getter_default_style()
-    return style
+function Image:preload()
+    self:get_image_normal()
 end
 
-function Image:_cache()
-    --[[
-    Chain load the image/canvas caching.
-    This is currently required so that we have a proper size setting.
-    ]]--
-    assert(self.image_normal)
+function Image:get_image_normal()
+    self.image_normal = self.image_normal or load_img(
+        self, self.path)
+    return self.image_normal
 end
 
-function Image:getter_image_normal()
-    return self._image_normal or load_img(
-        self,  "_image_normal", self.path)
+function Image:get_image_hover()
+    self.image_hover = self.image_hover or self.path_hover and load_img(
+        self, self.path_hover)
+    return self.image_hover
 end
 
-function Image:getter_image_hover()
-    return self._image_hover or self.path_hover and load_img(
-        self,  "_image_hover", self.path_hover)
-end
-
-function Image:getter_image_press()
-    return self._image_press or self.path_press and load_img(
-        self,  "_image_press", self.path_press)
+function Image:get_image_press()
+    self.image_press = self.image_press or self.path_press and load_img(
+        self, self.path_press)
+    return self.image_press
 end
 
 function Image:update(dt)
@@ -75,7 +72,9 @@ function Image:draw()
     else
         s = 1
     end
-    local img = self["image_".. self.state] or self.image_normal
+    local key = "image_".. self.state
+    local loader = self["get_" .. key]
+    local img =  self[key] or loader(self) or self.image_normal
 
     lg.setColor(self.color)
     lg.draw(

@@ -28,10 +28,10 @@ function love.conf(t)
     t.window.icon = nil
 
     -- The window width (number)
-    t.window.width = 1240
+    t.window.width = 1360
 
     -- The window height (number)
-    t.window.height = 600
+    t.window.height = 720
 
     -- Remove all border visuals from the window (boolean)
     t.window.borderless = false
@@ -126,5 +126,10 @@ function love.conf(t)
     t.custom.framerate = 60
     t.custom.lovebird = true
 
-    t.custom.profile = true
+    t.custom.profile = false
+
+    -- t.custom.log_outfile = nil
+    t.custom.log_verbosity_level = 1
+    -- t.custom.log_terminal_at_end = nil
+    -- t.custom.log_replace_print = nil
 end

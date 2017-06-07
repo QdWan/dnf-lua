@@ -188,8 +188,8 @@ function update_values()
 
 end
 
-function SceneCreation:initialize()
-    SceneBase.initialize(self)
+function SceneCreation:init()
+    SceneBase.init(self)
 
     self:create_character()
 

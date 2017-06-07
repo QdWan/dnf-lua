@@ -4,23 +4,9 @@
 ---     https://github.com/catwell/cw-lua/tree/master/deque
 --- Modified by Lucas Siqueira
 
-local Deque = {}
-Deque.__index = Deque
+local Deque = class("Deque")
 
-setmetatable(
-    Deque,
-    {
-        __call = function (class, ...)
-            local self = setmetatable({}, class)
-            if self.initialize then
-                self:initialize(...)
-            end
-            return self
-        end
-    }
-)
-
-function Deque:initialize()
+function Deque:init()
         self.head = 0
         self.tail = 0
 end

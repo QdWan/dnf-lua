@@ -2,8 +2,8 @@ local SceneBase = require("scenes.base")
 
 local SceneBlank = class("SceneBlank", SceneBase)
 
-function SceneBlank:initialize()
-    SceneBase.initialize(self) -- super
+function SceneBlank:init()
+    SceneBase.init(self) -- super
 end
 
 function SceneBlank:update(dt)

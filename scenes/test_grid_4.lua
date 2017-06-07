@@ -3,8 +3,8 @@ local SceneBase = require("scenes.base")
 local widgets = require("widgets")
 local SceneGridTest = class("SceneGridTest", SceneBase)
 
-function SceneGridTest:initialize()
-    SceneBase.initialize(self)  -- super
+function SceneGridTest:init()
+    SceneBase.init(self)  -- super
 
     self.frame = widgets.Frame({
         parent=self,

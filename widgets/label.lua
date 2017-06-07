@@ -1,8 +1,6 @@
-local Rect = require("lib.rect")
 local Widget = require("widgets.base")
 local util = require("util")
 
-local Label = class("Label", Widget)
 
 local lg = love.graphics
 
@@ -14,11 +12,14 @@ local style = {
     cursor_char = "_"
 }
 
-function Label:getter_default_style()
+
+local Label = class("Label", Widget):set_class_defaults{default_style = style}
+
+function Label:get_default_style()
     return style
 end
 
-function Label:_cache()
+function Label:preload()
     local direction, fits
     repeat
         self.font_size = self.font_size - (direction or 0)

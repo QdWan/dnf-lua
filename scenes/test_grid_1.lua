@@ -3,8 +3,8 @@ local SceneBase = require("scenes.base")
 local widgets = require("widgets")
 local SceneGridTest = class("SceneGridTest", SceneBase)
 
-function SceneGridTest:initialize()
-    SceneBase.initialize(self) -- super
+function SceneGridTest:init()
+    SceneBase.init(self) -- super
 
     self.frame = widgets.Frame({
         parent=self,
@@ -13,7 +13,7 @@ function SceneGridTest:initialize()
     })
     self.frame.w = self.rect.w / 2
     self.frame.h = self.rect.h / 2
-    self.frame.center = self.rect.center
+    self.frame:set_center(self.rect:get_center())
 
     self.r0 = widgets.RectWidget({
         parent=self.frame,

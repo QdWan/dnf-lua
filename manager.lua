@@ -7,7 +7,7 @@ local text_input = ""
 
 local Manager = class("Manager")
 
-function Manager:initialize()
+function Manager:init()
     manager = self
     self:set_triggers()
     self:set_manager_watchers()
@@ -19,13 +19,14 @@ function Manager:initialize()
 end
 
 function Manager:set_manager_watchers()
-    beholder.observe('SET_SCENE',
-        function(scene, args)
-            self:set_scene(scene, args)
-        end)
-    beholder.observe('UPDATE', self, function(dt) return self:update(dt) end)
-    beholder.observe('SCENE_DRAWN', function() return self:draw() end)
-    beholder.observe('QUIT', function() self:quit() end)
+    events:observe({'SET_SCENE'},
+                   function(scene, args) self:set_scene(scene, args) end)
+    events:observe({'UPDATE', self},
+                   function(dt) return self:update(dt) end)
+    events:observe({'SCENE_DRAWN'},
+                   function() return self:draw() end)
+    events:observe({'QUIT'},
+                   function() self:quit() end)
 end
 
 function Manager:set_triggers()
@@ -34,38 +35,38 @@ function Manager:set_triggers()
 
     -- graphics callbacks
     love.update = function(dt)
-        beholder.trigger('UPDATE', self, dt)
+        events:trigger({'UPDATE', self}, dt)
     end
     love.draw = function()
-        beholder.trigger('DRAW', self, 1)
-        beholder.trigger('DRAW', self, -1) -- manager stuff
+        events:trigger({'DRAW', self, 1})
+        events:trigger({'DRAW', self}, -1) -- manager stuff
     end
 
     -- input/keyboard callbacks
     love.keypressed = function(key)
-        beholder.trigger('KEYPRESSED', self, key)
+        events:trigger({'KEYPRESSED', self}, key)
     end
     love.keyreleased = function(key)
-        beholder.trigger('KEYRELEASED', self, key)
+        events:trigger({'KEYRELEASED', self}, key)
     end
     love.textinput = function(t)
-        beholder.trigger('TEXTINPUT', self, t)
+        events:trigger({'TEXTINPUT', self}, t)
     end
 
     -- input/mouse callbacks
     love.mousepressed = function(x, y, button, istouch)
-        beholder.trigger('MOUSEPRESSED', self, x, y, button, istouch)
+        events:trigger({'MOUSEPRESSED', self}, x, y, button, istouch)
     end
     love.mousereleased = function(x, y, button, istouch)
-        beholder.trigger('MOUSERELEASED', self, x, y, button, istouch)
+        events:trigger({'MOUSERELEASED', self}, x, y, button, istouch)
     end
     love.mousemoved = function(x, y, dx, dy, istouch)
-        beholder.trigger('MOUSEMOVED', self, x, y, dx, dy, istouch)
+        events:trigger({'MOUSEMOVED', self}, x, y, dx, dy, istouch)
     end
     love.wheelmoved = function(dx, dy)
      -- get the position of the mouse
         local x, y = love.mouse.getPosition()
-        beholder.trigger('WHEELMOVED', self, x, y, dx, dy)
+        events:trigger({'WHEELMOVED', self}, x, y, dx, dy)
     end
 
     love.quit = function(...)
@@ -105,6 +106,8 @@ function Manager:parse_initial_args(args)
         self.profile = require "ProFi"
         self.profile:start()
     end
+    log.verbosity_level = custom.log_verbosity_level or log.verbosity_level
+
 end
 
 function Manager:parse_scene_arg(text)

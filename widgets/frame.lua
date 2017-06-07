@@ -4,7 +4,7 @@ local Frame = class("Frame", Widget)
 
 local inspect = require("inspect")
 
-function Frame:initialize(args)
+function Frame:init(args)
     --[[ Basic unit of organization for complex layouts.
 
     A frame is a rectangular area that can contain other widgets.
@@ -13,7 +13,9 @@ function Frame:initialize(args)
     self._rows = 0
     self._cols = 0
 
-    Widget.initialize(self, args)  --  super
+    assert(args.parent)
+
+    Widget.init(self, args)  --  super
     self._row_size = {}
     self._col_size = {}
     self.row_weight = {}
@@ -165,14 +167,14 @@ function Frame:_update_child(child)
 
     local resized = false
     if horizontal == "C" then
-        child.centerx = self.x + (self:get_cell_width(1, col - 1) +
-                                  self:get_cell_width(col, colspan) / 2)
+        child:set_centerx(self.x + (self:get_cell_width(1, col - 1) +
+                          self:get_cell_width(col, colspan) / 2))
     else
         resized = true
         if W == nil and E ~= nil then
-            child.right = (self:get_cell_width(1, col) -
-                           child.padx +
-                           self.x)
+            child:set_right(self:get_cell_width(1, col) -
+                            child.padx +
+                            self.x)
         else
             if E ~= nil and W ~= nil then
                 -- stretch horizontally
@@ -185,12 +187,12 @@ function Frame:_update_child(child)
     end
 
     if vertical == "C" then
-        child.centery = self.y + (self:get_cell_height(1, row - 1) +
-                                  self:get_cell_height(row, rowspan) / 2)
+        child:set_centery(self.y + (self:get_cell_height(1, row - 1) +
+                                    self:get_cell_height(row, rowspan) / 2))
     else
         resized = true
         if N == nil and S ~= nil then
-            child.bottom = (self:get_cell_height(1, row) -
+            child:set_bottom(self:get_cell_height(1, row) -
                        child.pady +
                        self.y)
         else
@@ -234,19 +236,19 @@ function Frame:col_config(col, weight)
     self.col_weight[col] = weight
 end
 
-function Frame:stopPropagation(str)
+function Frame:stop_propagation(str)
     local evt = self.observers[str]
     if evt ~= nil then
-        beholder.stopPropagation(evt)
+        evt:stop_propagation()
     end
     local parent_evt = self.parent.observers[str]
     if parent_evt ~= nil then
-        beholder.stopPropagation(parent_evt)
+        parent_evt:stop_propagation()
     end
 end
 
 function Frame:update(dt)
-    beholder.trigger('UPDATE', self, dt)
+    events:trigger({'UPDATE', self}, dt)
 end
 
 function Frame:draw(z)
@@ -255,42 +257,42 @@ function Frame:draw(z)
         love.graphics.rectangle("fill", self.x, self.y, self.w, self.h)
     end
     -- print("'DRAW' trigger", self, self.z)
-    beholder.trigger('DRAW', self, self.z)
+    events:trigger({'DRAW', self, self.z})
 end
 
 function Frame:keypressed(key, scancode, isrepeat)
     Widget.keypressed(self, key, scancode, isrepeat)
-    beholder.trigger('KEYPRESSED', self, key, scancode, isrepeat)
+    events:trigger({'KEYPRESSED', self}, key, scancode, isrepeat)
 end
 
 function Frame:keyreleased(key, scancode)
     Widget.keyreleased(self, key, scancode)
-    beholder.trigger('KEYRELEASED', self, key, scancode)
+    events:trigger({'KEYRELEASED', self}, key, scancode)
 end
 
 function Frame:mousemoved(x, y, dx, dy, istouch)
     Widget.mousemoved(self, x, y, dx, dy, istouch)
-    beholder.trigger('MOUSEMOVED', self, x, y, dx, dy, istouch)
+    events:trigger({'MOUSEMOVED', self}, x, y, dx, dy, istouch)
 end
 
 function Frame:wheelmoved(x, y, dx, dy)
     Widget.wheelmoved(self, x, y, dx, dy)
-    beholder.trigger('WHEELMOVED', self, x, y, dx, dy)
+    events:trigger({'WHEELMOVED', self}, x, y, dx, dy)
 end
 
 function Frame:mousepressed(x, y, button, istouch)
     Widget.mousepressed(self, x, y, button, istouch)
-    beholder.trigger('MOUSEPRESSED', self, x, y, button, istouch)
+    events:trigger({'MOUSEPRESSED', self}, x, y, button, istouch)
 end
 
 function Frame:mousereleased(x, y, button, istouch)
     Widget.mousereleased(self, x, y, button, istouch)
-    beholder.trigger('MOUSERELEASED', self, x, y, button, istouch)
+    events:trigger({'MOUSERELEASED', self}, x, y, button, istouch)
 end
 
 function Frame:textinput(t)
     Widget.textinput(self, t)
-    beholder.trigger('TEXTINPUT', self, t)
+    events:trigger({'TEXTINPUT', self}, t)
 end
 
 return Frame

@@ -6,8 +6,8 @@ local ScenePerlinTest = class("ScenePerlinTest", SceneBase)
 
 local size = 4
 
-function ScenePerlinTest:initialize()
-    SceneBase.initialize(self) -- super
+function ScenePerlinTest:init()
+    SceneBase.init(self) -- super
 
     --Assuming you called the module perlin.lua
 

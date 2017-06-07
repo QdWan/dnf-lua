@@ -1,14 +1,12 @@
 require('ext.ext')
-local class = require('middleclass')  -- https://github.com/kikito/middleclass
-local Style = require("style.style")
-local inspect = require("inspect")  -- https://github.com/kikito/inspect.lua
-local Rect = require("rect.rect")
+local Style = require("style")
+local Rect = require("rect")
 require("split.split")
 
 local SFText = class('SFText')
 local margin = 20
 
-function SFText:initialize(text, x, y, w, h, style, fonts)
+function SFText:init(text, x, y, w, h, style, fonts)
     self.text = text
     if not love then
         print("no love found :( ; using debug ('fake') love")
@@ -147,11 +145,11 @@ function SFText:parse_text()
                 end
 
                 if #wraps == 1 and wrap['align'] == 'center' then
-                    rect.midtop = {math.floor(self.rect.w / 2),
-                                   self.rect.bottom + y}
+                    rect:set_midtop(math.floor(self.rect.w / 2),
+                                    self.rect:get_bottom() + y)
                 else
-                    rect.topleft = {x + w * 3,
-                                    self.rect.bottom + y}
+                    rect:set_topleft(x + w * 3,
+                                     self.rect:get_bottom() + y)
                 end
                 wrap['rect'] = rect
                 wrap['x'] = x

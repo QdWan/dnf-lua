@@ -1,4 +1,3 @@
-local Rect = require("lib.rect")
 local util = require("lib.util")
 
 
@@ -74,17 +73,18 @@ local function call_bound_commands(args, ...)
     end
 end
 
-local Widget = class("Widget", Rect)
 
-function Widget:initialize(args)
-    -- print("Widget:initialize", self)
+local Widget = class("Widget", Rect):set_class_defaults{default_style = {}}
+
+function Widget:init(args)
+    -- print("Widget:init", self)
     self.active = true
     self.visible = true
     self.states = self.states or {}
     self:get_args(args)
     self.commands = self.commands or {}
     self.state = "normal" or self.state
-    self:_cache()
+    self:preload()
     self:_set_rect()
     self._children = {}
     if self.parent and self.parent._register_widget then
@@ -128,16 +128,19 @@ function Widget:get_args(t)
     end
 end
 
-function Widget:getter_default_style() end
+function Widget:preload()
+    --[[
+    This might be required to provide a 'size' parameter.
+    ]]--
+end
 
-function Widget:_cache() end
 
 function Widget:_set_rect()
     if self.rect == nil then
-        Rect.initialize(self, self.x or 0, self.y or 0,
+        Rect.init(self, self.x or 0, self.y or 0,
                         self.w or 1, self.h or 1)
     else
-        Rect.initialize(self,
+        Rect.init(self,
             self.rect.x or self.rect[1],
             self.rect.y or self.rect[2],
             self.rect.w or self.rect[3],
@@ -152,82 +155,98 @@ function Widget:_register_widget(child)
     child.z = self.z
 end
 
+function Widget:destroy()
+    for i, widget in ipairs(self._children) do
+        widget:destroy()
+        self._children[i] = nil
+    end
+    self:remove_observers()
+end
+
+function Widget:remove_observers()
+    for i, observer in pairs(self.observers) do
+        observer:remove()
+        self.observers[i] = nil
+    end
+end
+
 function Widget:_set_observers()
     local parent = self.parent
 
     self.observers = {}
 
-    self.observers["UPDATE"] = beholder.observe(
-        'UPDATE', parent,
+    self.observers["UPDATE"] = events:observe(
+        {'UPDATE', parent},
         function(dt)
             if self.visible then
                 return self:update(dt)
             end
         end)
 
-    self.observers["DRAW"] = beholder.observe(
-        'DRAW', parent, self.z, function()
+    self.observers["DRAW"] = events:observe(
+        {'DRAW', parent, self.z},
+        function()
             if self.visible then
                 return self:draw(self.z)
             end
         end)
 
-    self.observers["KEYPRESSED"] = beholder.observe(
-        'KEYPRESSED', parent,
+    self.observers["KEYPRESSED"] = events:observe(
+        {'KEYPRESSED', parent},
         function(key, scancode, isrepeat)
             if not self.disabled then
                 return self:keypressed(key, scancode, isrepeat)
             end
         end)
 
-    self.observers["KEYRELEASED"] = beholder.observe(
-        'KEYRELEASED', parent,
+    self.observers["KEYRELEASED"] = events:observe(
+        {'KEYRELEASED', parent},
         function(key, scancode)
             if not self.disabled then
                 return self:keyreleased(key, scancode)
             end
         end)
 
-    self.observers["MOUSEMOVED"] = beholder.observe(
-        'MOUSEMOVED', parent,
+    self.observers["MOUSEMOVED"] = events:observe(
+        {'MOUSEMOVED', parent},
         function(x, y, dx, dy, istouch)
             if not self.disabled then
                 return self:mousemoved(x, y, dx, dy, istouch)
             end
         end)
 
-    self.observers["WHEELMOVED"] = beholder.observe(
-        'WHEELMOVED', parent,
+    self.observers["WHEELMOVED"] = events:observe(
+        {'WHEELMOVED', parent},
         function(x, y, dx, dy)
             if not self.disabled and self:collidepoint(x, y) then
                 return self:wheelmoved(x, y, dx, dy)
             end
         end)
 
-    self.observers["MOUSEPRESSED"] = beholder.observe(
-        'MOUSEPRESSED', parent,
+    self.observers["MOUSEPRESSED"] = events:observe(
+        {'MOUSEPRESSED', parent},
         function(x, y, button, istouch)
             if not self.disabled and self:collidepoint(x, y) then
                 return self:mousepressed(x, y, button, istouch)
             end
         end)
 
-    self.observers["MOUSERELEASED"] = beholder.observe(
-        'MOUSERELEASED', parent,
+    self.observers["MOUSERELEASED"] = events:observe(
+        {'MOUSERELEASED', parent},
         function(x, y, button, istouch)
             if not self.disabled and self:collidepoint(x, y) then
                 return self:mousereleased(x, y, button, istouch)
             end
         end)
 
-    self.observers["TEXTINPUT"] = beholder.observe(
-        'TEXTINPUT', parent,
+    self.observers["TEXTINPUT"] = events:observe(
+        {'TEXTINPUT', parent},
         function(t)
             return self:textinput(t)
         end)
 
-    self.observers["UPDATE"] = beholder.observe(
-        "UPDATE", parent,
+    self.observers["UPDATE"] = events:observe(
+        {"UPDATE", parent},
         function(dt)
             return self:update(dt)
         end
@@ -340,6 +359,15 @@ function Widget:_ungrid()
     self.h = self._start_size.h
     self.size = self.default_rect.size
 end
+--[[
+
+function Widget:__newindex(k, v)
+    if type(v) ~= "function" then
+        log:warn("update of element", k)
+    end
+    rawset(self, k, v)
+end
+]]--
 
 
 

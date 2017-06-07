@@ -11,8 +11,8 @@ local SEED = 7
 
 love.math.setRandomSeed(SEED)
 
-function SceneRectPackagerTest:initialize()
-    SceneBase.initialize(self) -- super
+function SceneRectPackagerTest:init()
+    SceneBase.init(self) -- super
     self:create_rects()
 end
 

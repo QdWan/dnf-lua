@@ -1,17 +1,15 @@
 local AudioManager = class("AudioManager")
 
-local beholder = require("beholder")
-
 local K = 2
 
-function AudioManager:initialize()
+function AudioManager:init()
     -- will hold the currently playing sources
     self.sources = {}
     -- check for sources that finished playing and remove them
     -- add to love.update
     self.observers = {}
-    self.observers["UPDATE"] = beholder.observe(
-        'UPDATE', manager, function(dt) return self:update(dt) end)
+    self.observers["UPDATE"] = events:observe(
+        {'UPDATE', manager}, function(dt) return self:update(dt) end)
 end
 
 function AudioManager:update(dt)
@@ -96,7 +94,7 @@ function AudioManager:stop(src)
     if not src then return end
     love.audio.stop(src)
     self.sources[src] = nil
-    beholder.trigger("MUSICSTOPPED", src)
+    events:trigger({"MUSICSTOPPED", src})
 end
 
 function AudioManager:pause(src)

@@ -1,4 +1,4 @@
-local class = require('middleclass')
+local class = require('minclass')
 
 local FONTS = {
     caladea = {
@@ -21,7 +21,7 @@ local DEFAULT = {
 
 local Style = class('Style')
 
-function Style:initialize(style)
+function Style:init(style)
     self.default_style = self:new_style(style)
 end
 

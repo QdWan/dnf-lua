@@ -7,8 +7,8 @@ local math_min = math.min
 
 local SceneSplash = class("SceneSplash", SceneBase)
 
-function SceneSplash:initialize()
-    SceneBase.initialize(self) -- super
+function SceneSplash:init()
+    SceneBase.init(self) -- super
     self:set_img()
     self.alpha = 0
     self.alpha_factor = 0.5

@@ -1,13 +1,11 @@
-local class = require("middleclass")
 local util = require("lib.util")
-local Properties = require('lib.properties')
 local tileset_templates = require("lib.templates")
 
 local lg = love.graphics
 
-local Resources = class("Resources"):include(Properties)
+local Resources = class("Resources")
 
-function Resources:initialize()
+function Resources:init()
     self.fonts = {_mode = "v"}
     self.images = {_mode = "v"}
     -- self.sounds = {_mode = "v"}
