@@ -1,7 +1,7 @@
 local paths = "?.lua;?/init.lua;../?.lua;../?/init.lua;../?/?.lua;"
 package.path = paths .. package.path
 local Rect = require("rect")
-local class = require("minclass")
+local class = require('middleclass') or require('minclass')
 
 Quad = class("Quad", Rect)
 q = Quad(1, 2, 3, 4)

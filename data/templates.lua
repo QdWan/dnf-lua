@@ -37,81 +37,115 @@ templates.TileEntity = {
         ["id"] = string.byte("="),
         ["color"] = COLORS["blue"]
     },
-    ["mountain"] = {
-        ["id"] = string.byte("M"),
-        ["color"] = COLORS["light_chartreuse"]
-    },
-    ["hill"] = {
-        ["id"] = string.byte("h"),
-        ["color"] = COLORS["dark_chartreuse"]
-    },
     ["land"] = {
         ["id"] = string.byte("."),
         ["color"] = COLORS["darker_green"]
     },
-    ["coast"] = {
-        ["id"] = string.byte("c"),
-        ["color"] = COLORS["darker_amber"]
-    },
-    ["shallow_water"] = {
-        ["id"] = string.byte("~"),
-        ["color"] = COLORS["dark_blue"]
-    },
-    ["deep_water"] = {
-        ["id"] = string.byte("¬"),
-        ["color"] = COLORS["darkest_blue"]
-    },
 
-    ["arctic_shallow_water"] = {
-        ["id"] = string.byte("~"),
-        ["color"] = COLORS["sky"]
-    },
+
     ["arctic_deep_water"] = {
         ["id"] = string.byte("¬"),
-        ["color"] = COLORS["dark_sky"]
+        ["color"] = COLORS["dark_sky"],
+        ["image"] = "arctic_shallow_water",
+    },
+    ["arctic_shallow_water"] = {
+        ["id"] = string.byte("~"),
+        ["color"] = COLORS["sky"],
+        ["image"] = "arctic_shallow_water",
     },
     ["arctic coast"] = {
         ["id"] = string.byte("c"),
         ["color"] = {248, 243, 223}
         -- COLORS["lightest_amber"]  -- (255, 255, 255)
     },
-    ["arctic land"] = {
-        ["id"] = string.byte("."),
-        ["color"] = {248, 248, 255}  -- (255, 255, 255)
+    ["arctic mountain"] = {
+        ["id"] = string.byte("M"),
+        ["color"] = {245, 245, 245}  -- (255, 255, 255)
     },
     ["arctic hill"] = {
         ["id"] = string.byte("h"),
         ["color"] = {245, 245, 245}  -- (255, 255, 255)
     },
-    ["arctic mountain"] = {
+    ["arctic land"] = {
+        ["id"] = string.byte("."),
+        ["color"] = {248, 248, 255},  -- (255, 255, 255)
+        ["image"] = "arctic_land",
+        ["tiling"] = "8bit",
+        ["compare_function"] = "same_template",
+    },
+
+    ["deep_water"] = {
+        ["id"] = string.byte("¬"),
+        ["color"] = COLORS["darkest_blue"],
+        ["image"] = "deep_water",
+        ["tiling"] = "8bit",
+        ["compare_function"] = "same_template",
+    },
+    ["shallow_water"] = {
+        ["id"] = string.byte("~"),
+        ["color"] = COLORS["dark_blue"],
+        ["image"] = "shallow_water",
+        ["tiling"] = "8bit",
+        ["compare_function"] = "is_water",
+    },
+    ["coast"] = {
+        ["id"] = string.byte("c"),
+        ["color"] = COLORS["darker_amber"],
+    },
+    ["mountain"] = {
         ["id"] = string.byte("M"),
-        ["color"] = {245, 245, 245}  -- (255, 255, 255)
+        ["color"] = COLORS["light_chartreuse"],
+        ["image"] = "mountain",
+        ["tiling"] = "8bit",
+        ["compare_function"] = "same_template",
+    },
+    ["hill"] = {
+        ["id"] = string.byte("h"),
+        ["color"] = COLORS["dark_chartreuse"],
     },
 
     ["temperate desert"] = {
         ["id"] = string.byte("d"),
-        ["color"] = {240, 220, 7}
+        ["color"] = {240, 220, 7},
+        ["image"] = "temperate_desert",
+        ["tiling"] = "8bit",
+        ["compare_function"] = "same_template",
     },
     ["subtropical desert"] = {
         ["id"] = string.byte("d"),
-        ["color"] = {250, 150, 24}
+        ["color"] = {250, 150, 24},
+        ["image"] = "subtropical_desert",
+        ["tiling"] = "8bit",
+        ["compare_function"] = "same_template",
     },
     ["tropical desert"] = {
         ["id"] = string.byte("d"),
-        ["color"] = {255, 65, 12}
+        ["color"] = {255, 65, 12},
+        ["image"] = "tropical_desert",
+        ["tiling"] = "8bit",
+        ["compare_function"] = "same_template",
     },
 
     ["boreal grassland"] = {
         ["id"] = string.byte("."),
-        ["color"] = COLORS["dark_sea"]
+        ["color"] = COLORS["dark_sea"],
+        ["image"] = "boreal_grassland",
+        ["tiling"] = "8bit",
+        ["compare_function"] = "same_template",
     },
     ["grassland"] = {
         ["id"] = string.byte("."),
-        ["color"] = COLORS["darker_green"]
+        ["color"] = COLORS["darker_green"],
+        ["image"] = "grassland",
+        ["tiling"] = "8bit",
+        ["compare_function"] = "same_template",
     },
     ["savana"] = {
         ["id"] = string.byte("."),
-        ["color"] = COLORS["darker_yellow"]  -- (153, 219, 33)
+        ["color"] = COLORS["darker_yellow"],  -- (153, 219, 33)
+        ["image"] = "savana",
+        ["tiling"] = "8bit",
+        ["compare_function"] = "savana",
     },
 
     ["woodland"] = {
@@ -134,6 +168,8 @@ templates.TileEntity = {
         ["id"] = string.byte("R"),
         ["color"] = COLORS["darker_green"]  -- (8, 250, 50)
     },
+
+
     ["heat_view"] = {
         ["id"] = string.byte("$")
     },

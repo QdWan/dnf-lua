@@ -1,4 +1,4 @@
-local class = require("minclass")
+local class = require('middleclass') or require('minclass')
 
 local Odict = require("collections.odict")
 
@@ -8,7 +8,7 @@ local Observer
 local EveM = class("EveM")
 
 function EveM:init()
-    self.callbacks = {}
+    self.callbacks = {_mode = "kv"}
     self.hash_values = {_mode = "v"}
     self.i = 0
     self.stop_propagation = false
@@ -73,6 +73,11 @@ end
 
 function Observer:remove()
     self.event.callbacks[self.key]:remove(self.callback)
+end
+
+function Observer:destroy()
+    self:remove()
+    brutal_destroyer(self)
 end
 
 function Observer:stop_propagation()

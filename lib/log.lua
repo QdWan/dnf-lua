@@ -45,10 +45,6 @@ function Log:replace_print(replace_print)
     end
 end
 
-function Log:add(...)
-    extend(self.history, {...})
-end
-
 function Log:write()
     table.insert(self.history, "\n")
     local output = table.concat(self.history, "\n")
@@ -65,7 +61,8 @@ function Log:log(feedback, msg, ...)
         t[i] = type(v) == 'string' and v or tostring(v)
     end
     local input = table.concat(t, ", ")
-    self:add(msg .. input)
+    table.insert(self.history, msg .. input)
+
     if feedback then self.old_print(input) end
 end
 

@@ -1,5 +1,7 @@
 local map_gen_surface = require("map_gen.mapsurface")
 local HeightmapBase = map_gen_surface.HeightmapBase
+local creator = require("map_gen.creator")
+local apply_tiling = creator.apply_tiling
 
 
 local MapSurface01 = class("MapSurface01", HeightmapBase)
@@ -34,9 +36,14 @@ end
 function MapSurface01:create(header)
     HeightmapBase.create(self, header)  -- super
     self:diamond_square()
+    self:scale(2)
     self:set_base_feature()
 
-    return self:standard_map()
+    local map = self:standard_map()
+
+    apply_tiling(map)
+
+    return map
 end
 
 return MapSurface01

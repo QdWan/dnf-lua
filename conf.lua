@@ -124,12 +124,12 @@ function love.conf(t)
     -- ####  CUSTOM SETTINGS  ####
     t.custom = {}
     t.custom.framerate = 60
-    t.custom.lovebird = true
+    t.custom.lovebird = false
 
     t.custom.profile = false
 
     -- t.custom.log_outfile = nil
-    t.custom.log_verbosity_level = 1
+    t.custom.log_verbosity_level = 0
     -- t.custom.log_terminal_at_end = nil
     -- t.custom.log_replace_print = nil
 end

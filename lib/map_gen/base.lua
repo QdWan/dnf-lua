@@ -89,113 +89,112 @@ local function print_graph(graph)
     end
 end
 
-local function east_neighbor(i, w, h, r)
+local function north_neighbor(i, w, h, r)     error("deprecated") end
+local function east_neighbor(i, w, h, r)      error("deprecated") end
+local function south_neighbor(i, w, h, r)     error("deprecated") end
+local function west_neighbor(i, w, h, r)      error("deprecated") end
+local function northeast_neighbor(i, w, h, r) error("deprecated") end
+local function southeast_neighbor(i, w, h, r) error("deprecated") end
+local function southwest_neighbor(i, w, h, r) error("deprecated") end
+local function northwest_neighbor(i, w, h, r) error("deprecated") end
+
+local function neighbors(i, w, h, r, node)
     r = r or 1
+
+    node.neighbors = node.neighbors or {}
+
+    local t = node.neighbors[r]
+    if t then
+        return t
+    else
+        t = {}
+        node.neighbors[r] = t
+    end
+
+    -- north_neighbor
+    local v = i - (w * r)
+    local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
+    local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
+    t.north = (
+        v > 0 and
+        x == nx and
+        v)
+
+    -- east_neighbor
     local v = i + r
     local size = w * h
     local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
     local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
-    return (
+    t.east = (
         v <= size and
         y == ny and
         v)
 
-end
-map_gen.east_neighbor = east_neighbor
-
-local function west_neighbor(i, w, h, r)
-    r = r or 1
-    local v = i - r
-    local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
-    local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
-    return (
-        v > 0 and
-        y == ny and
-        v)
-end
-map_gen.west_neighbor = west_neighbor
-
-local function north_neighbor(i, w, h, r)
-    r = r or 1
-    local v = i - (w * r)
-    local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
-    local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
-    return (
-        v > 0 and
-        x == nx and
-        v)
-end
-map_gen.north_neighbor = north_neighbor
-
-local function south_neighbor(i, w, h, r)
-    r = r or 1
+    -- south_neighbor
     local v = i + (w * r)
     local size = w * h
     local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
     local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
-    return (
+    t.south = (
         v <= size and
         x == nx and
         v)
-end
-map_gen.south_neighbor = south_neighbor
 
-local function northeast_neighbor(i, w, h, r)
-    r = r or 1
+    -- west_neighbor
+    local v = i - r
+    local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
+    local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
+    t.west = (
+        v > 0 and
+        y == ny and
+        v)
+
+    -- northeast_neighbor
     local v = (i - w * r + r)
     local size = w * h
     local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
     local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
-    return (
+    t.northeast = (
         v > 0 and
         v <= size and
         x + r == nx and
         y - r == ny and
         v)
-end
-map_gen.northeast_neighbor = northeast_neighbor
 
-local function northwest_neighbor(i, w, h, r)
-    r = r or 1
-    local v = (i - w * r - r)
-    local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
-    local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
-    return (
-        v > 0 and
-        x - r == nx and
-        y - r == ny and
-        v)
-end
-map_gen.northwest_neighbor = northwest_neighbor
-
-local function southeast_neighbor(i, w, h, r)
-    r = r or 1
+    -- southeast_neighbor
     local v = (i + w * r + r)
     local size = w * h
     local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
     local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
-    return (
+    t.southeast = (
         v <= size and
         x + r == nx and
         y + r == ny and
         v)
-end
-map_gen.southeast_neighbor = southeast_neighbor
 
-local function southwest_neighbor(i, w, h, r)
-    r = r or 1
+    -- southwest_neighbor
     local v = (i + w * r - r)
     local size = w * h
     local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
     local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
-    return (
+    t.southwest = (
         v > 0 and
         v <= size and
         x - r == nx and
         y + r == ny and
         v)
+
+    -- northwest_neighbor
+    local v = (i - w * r - r)
+    local x, y = (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
+    local nx, ny = (((v - 1) % w) + 1), math.floor((v - 1) / w) + 1
+    t.northwest = (
+        v > 0 and
+        x - r == nx and
+        y - r == ny and
+        v)
+
 end
-map_gen.southwest_neighbor = southwest_neighbor
 
 
 -- ##########
@@ -236,19 +235,16 @@ end
 
 -- ##########
 -- GraphNode class
-local GraphNode = class("GraphNode"):set_class_defaults({
-    x=false,
-    y=false,
-    block=false,
-    explored=false,
-    template="wall",
-    cost = COST["wall"],
-})
+local GraphNode = class("GraphNode")
 
 function GraphNode:init(t)
     t = t or {}
-    self.x = self.x or t.x
-    self.y = self.y or t.y
+    self.x = t.x or false
+    self.y = t.y or false
+    self.block = t.block or false
+    self.explored = t.explored or false
+    self.template = t.template or "wall"
+    self.cost = t.cost or COST[self.template]
 end
 
 function GraphNode:set_template(name)
@@ -260,8 +256,13 @@ end
 
 -- ##########
 -- Graph class
-local Graph_first_run = false
 local Graph = class("Graph")
+map_gen.Graph = Graph
+
+function Graph:set_neighbors()               error("deprecated") end
+function Graph:get_neighbors(i, mode, check) error("deprecated") end
+function Graph:neighbors_at_radius(r)        error("deprecated") end
+function Graph:neighbor_functions()          error("deprecated") end
 
 function Graph:init(w, h, map_file)
     local random = love.math.random or math.random
@@ -276,8 +277,6 @@ function Graph:init(w, h, map_file)
     self.h = h
 
     self:fill()
-
-    self:set_neighbors()
 end
 
 function Graph:create_node(x, y, i)
@@ -287,15 +286,7 @@ function Graph:create_node(x, y, i)
     local node = GraphNode{
         x = x, y = y,
     }
-    node.north=north_neighbor(i, w, h, r)
-    node.east=east_neighbor(i, w, h, r)
-    node.south=south_neighbor(i, w, h, r)
-    node.west=west_neighbor(i, w, h, r)
-    if Graph_first_run == false then
-        Graph_first_run = true
-        log:warn("Graph:create_node",
-                 node.north, node.east, node.south, node.west)
-    end
+    neighbors(i, w, h, r, node)
     return node
 end
 
@@ -343,148 +334,6 @@ function Graph:cost(current, _next)
     return 1
 end
 
-
-function Graph:neighbor_functions()
-    return {
-        north_neighbor,
-        east_neighbor,
-        south_neighbor,
-        west_neighbor,
-        northeast_neighbor,
-        southeast_neighbor,
-        southwest_neighbor,
-        northwest_neighbor,
-    }
-end
-
-function Graph:neighbors_at_radius(r)
-    local r = r or 1
-
-    local h = self.h
-    local w = self.w
-    local size = w * h
-
-    local t = {
-        ["4d"] = {},
-        ["8d"] = {},
-        north = {},
-        east = {},
-        south = {},
-        west = {}
-    }
-    local neighbors_4d = t["4d"]
-    local neighbors_8d = t["8d"]
-    local north = t["north"]
-    local east = t["east"]
-    local south = t["south"]
-    local west = t["west"]
-    local east_neighbor = east_neighbor
-    local west_neighbor = west_neighbor
-    local north_neighbor = north_neighbor
-    local south_neighbor = south_neighbor
-    local northeast_neighbor = northeast_neighbor
-    local northwest_neighbor = northwest_neighbor
-    local southeast_neighbor = southeast_neighbor
-    local southwest_neighbor = southwest_neighbor
-
-    for i = 1, size do
-        neighbors_4d[i] = {}
-        neighbors_8d[i] = {}
-        local n4 = neighbors_4d[i]
-        local n8 = neighbors_8d[i]
-
-        local e_v = east_neighbor(i, w, h, r)
-        if e_v then
-            n4[#n4 + 1] = e_v
-            n8[#n8 + 1] = e_v
-            east[i] = e_v
-        end
-
-        local w_v = west_neighbor(i, w, h, r)
-        if w_v then
-            n4[#n4 + 1] = w_v
-            n8[#n8 + 1] = w_v
-            west[i] = w_v
-        end
-
-        local n_v = north_neighbor(i, w, h, r)
-        if n_v then
-            n4[#n4 + 1] = n_v
-            n8[#n8 + 1] = n_v
-            north[i] = n_v
-        end
-
-        local s_v = south_neighbor(i, w, h, r)
-        if s_v then
-            n4[#n4 + 1] = s_v
-            n8[#n8 + 1] = s_v
-            south[i] = s_v
-        end
-
-        local ne_v = northeast_neighbor(i, w, h, r)
-        if ne_v then
-            n8[#n8 + 1] = ne_v
-        end
-
-        local nw_v = northwest_neighbor(i, w, h, r)
-        if nw_v then
-            n8[#n8 + 1] = nw_v
-        end
-
-        local se_v = southeast_neighbor(i, w, h, r)
-        if se_v then
-            n8[#n8 + 1] = se_v
-        end
-
-        local sw_v = southwest_neighbor(i, w, h, r)
-        if sw_v then
-            n8[#n8 + 1] = sw_v
-        end
-        neighbors_4d[i] = shuffle(neighbors_4d[i])
-        neighbors_8d[i] = shuffle(neighbors_8d[i])
-    end
-    return t
-end
-
-function Graph:set_neighbors()
-    local res = self:neighbors_at_radius(1)
-    self.neighbors_4d = res["4d"]
-    self.neighbors_8d = res["8d"]
-    self.north = res["north"]
-    self.east = res["east"]
-    self.south = res["south"]
-    self.west = res["west"]
-end
-
-function Graph:get_neighbors(i, mode, check)
-    local h = self.h
-    local w = self.w
-    local nodes = self.nodes
-    local size = w * h
-    local mode = mode or 8
-    local neighbors
-    if mode == 8 then
-        neighbors = self.neighbors_8d[i]
-    else
-        neighbors = self.neighbors_4d[i]
-    end
-
-    if not check then
-        return neighbors
-    else
-        local valid_nodes = {}
-        for i = 1, #neighbors do
-            local pos = neighbors[i]
-            if check(pos) == true then
-                valid_nodes[#valid_nodes + 1] = pos
-            end
-        end
-        return valid_nodes
-    end
-end
-
-map_gen.Graph = Graph
-
 local function reconstruct_path(came_from, start, goal)
     local current = goal
     local path = {current}
@@ -515,9 +364,9 @@ local function a_star_search(graph, start, goal, cost, neighbors)
             break
         end
 
-        local _neighbors = neighbors(current, false)
-        for i = 1, #_neighbors do
-            local _next = _neighbors[i]
+        local node_neighbors = neighbors and neighbors(current) or
+                               nodes[current].neighbors[1]
+        for i, _next in ipairs(node_neighbors) do
             local new_cost = cost_so_far[current] + cost(current, _next)
             if cost_so_far[_next] == nil or new_cost < cost_so_far[_next] then
                 cost_so_far[_next] = new_cost

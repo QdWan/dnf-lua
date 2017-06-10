@@ -10,7 +10,7 @@ local style = {
 }
 
 
-local Image = class("Image", Widget):set_class_defaults{default_style = style}
+local Image = class("Image", Widget)
 
 local function load_img(widget, from, err)
     if err then error("deprecated parameter 'err'") end
@@ -30,6 +30,10 @@ local function load_img(widget, from, err)
     widget.dy = 0
     -- print("load_img", widget, to, from, widget[to])
     return img
+end
+
+function Widget:get_default_style()
+    return style
 end
 
 function Image:preload()

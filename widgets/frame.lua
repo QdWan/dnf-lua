@@ -2,8 +2,6 @@ local Widget = require("widgets.base")
 
 local Frame = class("Frame", Widget)
 
-local inspect = require("inspect")
-
 function Frame:init(args)
     --[[ Basic unit of organization for complex layouts.
 
@@ -26,9 +24,6 @@ function Frame:grid(mode)
     if mode ~= "soft" then
         self:_ungrid()
     end
-    if #self._children == 0 then
-        return
-    end
     self:_update_grid_size()
     self:_adjust_weight()
     self:_update_children()
@@ -41,8 +36,7 @@ function Frame:_update_grid_size()
     self._row_size = {}
     self._col_size = {}
     local max = math.max
-    for i = 1, #children do
-        local child = children[i]
+    for child, _, i in children:sorted() do
         child:_ungrid()
         child.row = child.row or self._rows + 1
         local row = child.row
@@ -132,9 +126,8 @@ function Frame:_col_adjust(col, span, widget)
 end
 
 function Frame:_update_children()
-    local children = self._children
-    for i = 1, #children do
-        self:_update_child(children[i])
+    for child, _, i in self._children:sorted() do
+        self:_update_child(child)
     end
 end
 

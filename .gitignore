@@ -1,4 +1,6 @@
 *.sublime-workspace
 *.sublime-project
 *.log
+loveless.lua
+loveless_test.lua
 git-commit.bat

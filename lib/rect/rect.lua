@@ -38,7 +38,7 @@
 master/src/pygame_sdl2/rect.pyx
 --]]
 
-local class = require('minclass')
+local class = require('middleclass') or require('minclass')
 local math_floor = math.floor
 local math_max = math.max
 local math_min = math.min

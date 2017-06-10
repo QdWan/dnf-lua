@@ -1,4 +1,5 @@
 local util = require("lib.util")
+local ODict = require("collections.odict")
 
 
 local GRID_DEFAULTS = {
@@ -58,6 +59,8 @@ local COMMANDS = {
     "WHEELMOVED", "HOVERED", "UNHOVERED", "TEXTINPUT"
 }
 
+local style = {}
+
 local function call_bound_commands(args, ...)
     local iterables = {...}
     if #iterables == 0 then
@@ -74,10 +77,10 @@ local function call_bound_commands(args, ...)
 end
 
 
-local Widget = class("Widget", Rect):set_class_defaults{default_style = {}}
+local Widget = class("Widget", Rect)
 
 function Widget:init(args)
-    -- print("Widget:init", self)
+    self.default_style = {}
     self.active = true
     self.visible = true
     self.states = self.states or {}
@@ -86,7 +89,7 @@ function Widget:init(args)
     self.state = "normal" or self.state
     self:preload()
     self:_set_rect()
-    self._children = {}
+    self._children = ODict()
     if self.parent and self.parent._register_widget then
         self.parent:_register_widget(self)
     end
@@ -103,8 +106,12 @@ function Widget:copy_style()
     }
 end
 
+function Widget:get_default_style()
+    return style
+end
+
 function Widget:get_args(t)
-    local default_style = self.default_style
+    local default_style = self:get_default_style()
 
     local args
 
@@ -151,22 +158,38 @@ function Widget:_set_rect()
 end
 
 function Widget:_register_widget(child)
-    util.list_insert_new(self._children, child)
+    self._children:insert(child)
     child.z = self.z
 end
 
-function Widget:destroy()
-    for i, widget in ipairs(self._children) do
+function Widget:_unregister_widget(child)
+    self._children:remove(child)
+end
+
+function Widget:remove_children()
+    local children = self._children
+    for widget, _, i in children:sorted() do
+        assert(widget.destroy, "no destroy method" .. inspect(widget))
         widget:destroy()
-        self._children[i] = nil
+        children:remove(widget)
     end
+end
+
+function Widget:destroy()
     self:remove_observers()
+    self:remove_children()
+    if self.parent and self.parent._unregister_widget then
+        self.parent:_unregister_widget(self)
+    end
+    brutal_destroyer(self)
 end
 
 function Widget:remove_observers()
-    for i, observer in pairs(self.observers) do
-        observer:remove()
-        self.observers[i] = nil
+    if self.observers then
+        for i, observer in pairs(self.observers) do
+            observer:destroy()
+            self.observers[i] = nil
+        end
     end
 end
 
@@ -359,16 +382,5 @@ function Widget:_ungrid()
     self.h = self._start_size.h
     self.size = self.default_rect.size
 end
---[[
-
-function Widget:__newindex(k, v)
-    if type(v) ~= "function" then
-        log:warn("update of element", k)
-    end
-    rawset(self, k, v)
-end
-]]--
-
-
 
 return Widget

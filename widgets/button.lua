@@ -7,7 +7,7 @@ local time = require("time")
 local Button = class("Button", Frame)
 
 local function fits(a, b)
-    print(a, b, a.w, a.h, b.w, b.h)
+    -- print(a, b, a.w, a.h, b.w, b.h)
     if (a.w > b.w * 0.85) or
        (a.h > b.h * 0.85)
     then
@@ -53,7 +53,7 @@ function Button:init(args)
 end
 
 function Button:_register_widget(child)
-    util.list_insert_new(self._children, child)
+    self._children:insert(child)
     -- child.z = self.z
 end
 

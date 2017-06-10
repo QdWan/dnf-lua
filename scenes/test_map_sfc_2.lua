@@ -192,10 +192,10 @@ function SceneMapSurfaceTest02:draw()
         end
     end
     --[[
-    ]]--
 
     log:warn("SceneMapSurfaceTest02:draw is calling quit")
     love.event.quit()
+    ]]--
 end
 
 function SceneMapSurfaceTest02:set_zoom(v)
@@ -242,6 +242,14 @@ function SceneMapSurfaceTest02:keypressed(key)
     self:moveMap(0, 0)
 end
 
-return SceneMapSurfaceTest02
+function SceneMapSurfaceTest02:wheelmoved(x, y, dx, dy)
+    if lk.isDown("lctrl") or lk.isDown("rctrl") then
+        dx, dy = dy, dx
+    end
+    dx = 1 / self.zoomX * dx
+    dy = 1 / self.zoomY * dy
+    self:moveMap(-dx, -dy)
+end
 
+return SceneMapSurfaceTest02
 

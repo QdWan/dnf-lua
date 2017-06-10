@@ -5,8 +5,8 @@ local time = love.timer.getTime
 local lm = love.math
 
 
-local W = 255
-local H = 255
+local W = 120
+local H = 120
 
 
 local MODULE = {}
@@ -92,6 +92,20 @@ local function precipitation(height, heat, water_ratio)
             water_ratio * 0.35)
 end
 
+local run_once = false
+local function undeepify_water(node, grid)
+    local template = node.template
+    for k, address in pairs(node.neighbors[1]) do
+        if address and not string.find(grid[address].template, "water") then
+            return template == "deep_water" and "shallow_water" or
+                                                "arctic_shallow_water"
+        end
+    end
+    run_once = true
+    return template
+end
+
+
 local function compose_biome(n, _height, _heat, rain)
     local height = _height * 0.95 + n * 0.05
     local height2 = _height * 0.90 + n * 0.1
@@ -131,7 +145,7 @@ local function compose_biome(n, _height, _heat, rain)
         elseif rain < 0.29 then
             return "boreal grassland"
         else
-            return "boreal forest"
+            return "boreal forest"  -- conifer
         end
     -- subtropical/temperate
     elseif heat2 < 0.77 then
@@ -187,7 +201,6 @@ function HeightmapBase:adjust_size(_w, _h)
 end
 
 function HeightmapBase:print_stats()
-
     local map = self.map
     local max = math.max
     local min = math.min
@@ -215,6 +228,29 @@ function HeightmapBase:print_stats()
              string.format("max %.4f, min:%.4f, avg:%.4f.", _max, _min, avg))
 
     return _max, _min, avg
+end
+
+function HeightmapBase:scale(k)
+    k = math.floor(k)
+
+    log:warn(string.format("%s scale(%d) - start", self.class.name, k))
+    local t0 = time()
+
+    local old_map = self.map
+    local old_nodes = self.map.nodes
+
+    MapCreator.create(self, old_map.w * k, old_map.h * k)
+    for i, node in ipairs(self.map.nodes) do
+        local x, y = math.ceil(node.x / k), math.ceil(node.y / k)
+        local old_index = ((y - 1) * old_map.w) + x
+        local old_node = assert(old_nodes[old_index], "invalid node")
+        node.value = old_node.value
+        node.template = old_node.template
+    end
+    log:warn("HeightmapBase:done", k)
+
+    log:warn(string.format("%s scale(%d) - done!", self.class.name, k),
+             time() - t0)
 end
 
 function HeightmapBase:init_grid(t)
@@ -722,6 +758,12 @@ function HeightmapBase:standard_map(_)
         node.template = compose_biome(
             meta.noise_value, meta.height_value,
             meta.heat_value, meta.rainfall_value)
+    end
+    for i, node in ipairs(nodes) do
+        if (node.template == "deep_water" or
+                node.template == "arctic_deep_water") then
+            node.template = undeepify_water(node, nodes)
+        end
     end
     self.views = {false, "height_", "heat_", "rainfall_"}
 

@@ -1,3 +1,6 @@
+local map_gen_base = require("map_gen.base")
+local Graph = map_gen_base.Graph
+
 local map_containers = {}
 
 -- ############
@@ -50,7 +53,7 @@ map_containers.MapHeader = MapHeader
 function MapHeader:init(t)
     --[[Hold essential information to identify each unique map.
 
-    It is used as a key for each map in MapContainer and by any MapLink.
+    It is used as a key for each map in MapsContainer and by any MapLink.
     Contain additional meta-map information used by the map creators..
 
         Args:
@@ -92,13 +95,13 @@ end
 
 
 -- ############
---   MapContainer class
+--   MapsContainer class
 -- ############
 
-local MapContainer = class("MapContainer")
-map_containers.MapContainer = MapContainer
+local MapsContainer = class("MapsContainer")
+map_containers.MapsContainer = MapsContainer
 
-function MapContainer:init()
+function MapsContainer:init()
     --[[Hold the game maps of the game session.
 
     Acts as a interface to load/add a map and provides methods to work with
@@ -113,17 +116,38 @@ function MapContainer:init()
     return self
 end
 
-function MapContainer:add(map)
+function MapsContainer:add(map)
     --[[Add a new map.
     ]]--
     self._maps[map.header.key] = map
 end
 
-function MapContainer:set(map)
+function MapsContainer:set(map)
     --[[Set the current map.
     ]]--
     self.current = self._maps[map.header.key]
 end
+
+
+-- ########################
+--   Map class
+-- ------------------------
+local Map = class("Map")
+map_containers.Map = Map
+
+function Map:init(t)
+    for k, v in pairs(t) do
+        self[k] = v
+    end
+end
+
+function Map:get(x, y)
+    return Graph.get(self, x, y)
+end
+-- ------------------------
+--   end of Map class
+-- ########################
+
 
 
 -- ############

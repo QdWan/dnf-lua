@@ -51,7 +51,7 @@ end
 
 function MapCreator:standard_map(graph)
     local graph = graph or self.map
-    local map = {
+    local map = map_containers.Map{
         header = self.header,
         rooms = self.rooms,
         halls = self.halls,
@@ -63,13 +63,6 @@ function MapCreator:standard_map(graph)
         _start = self.start_pos,
         _end = self.end_pos,
         nodes = graph.nodes,
-        get = graph.get,
-        neighbors_4d = graph.neighbors_4d,
-        neighbors_8d = graph.neighbors_8d,
-        north = graph.north,
-        east = graph.east,
-        south = graph.south,
-        west = graph.west,
         views = self.views,
     }
     local TileEntity = map_entities.TileEntity
@@ -83,10 +76,7 @@ function MapCreator:standard_map(graph)
                 meta = node.meta,
             })
         }
-        new_node.north = node.north
-        new_node.east = node.east
-        new_node.south = node.south
-        new_node.west = node.west
+        new_node.neighbors = node.neighbors
         nodes[i] = new_node
     end
     return map
@@ -98,27 +88,29 @@ creator.MapCreator = MapCreator
 local function calculate_tiling(map, tile, i, fn)
     --[[Calculate the tile index of a node based on its neighbors.]]--
     local s = 0
+    local nodes = map.nodes
+    local neighbors = nodes[i].neighbors[1]
 
-    local north_index = map.nodes[i].north or map.north[i]
-    local north_tile = map:get(north_index).tile
+    local north_index = neighbors.north
+    local north_tile = north_index and nodes[north_index].tile
     if north_tile and tile.id ~= north_tile and fn(tile, north_tile) then
         s = s + 1
     end
 
-    local west_index = map.nodes[i].west or map.west[i]
-    local west_tile = map:get(west_index).tile
+    local west_index = neighbors.west
+    local west_tile = west_index and nodes[west_index].tile
     if west_tile and tile.id ~= west_tile and fn(tile, west_tile) then
         s = s + 2
     end
 
-    local east_index = map.nodes[i].east or map.east[i]
-    local east_tile = map:get(east_index).tile
+    local east_index = neighbors.east
+    local east_tile = east_index and nodes[east_index].tile
     if east_tile and tile.id ~= east_tile and fn(tile, east_tile) then
         s = s + 4
     end
 
-    local south_index = map.nodes[i].south or map.south[i]
-    local south_tile = map:get(south_index).tile
+    local south_index = neighbors.south
+    local south_tile = south_index and nodes[south_index].tile
     if south_tile and tile.id ~= south_tile and fn(tile, south_tile) then
         s = s + 8
     end
@@ -126,18 +118,85 @@ local function calculate_tiling(map, tile, i, fn)
     return s
 end
 
+local conversion_8bit = {
+       [2] = 1,    [8] = 2,   [10] = 3,   [11] = 4,   [16] = 5,   [18] = 6,
+      [22] = 7,   [24] = 8,   [26] = 9,   [27] = 10,  [30] = 11,  [31] = 12,
+      [64] = 13,  [66] = 14,  [72] = 15,  [74] = 16,  [75] = 17,  [80] = 18,
+      [82] = 19,  [86] = 20,  [88] = 21,  [90] = 22,  [91] = 23,  [94] = 24,
+      [95] = 25, [104] = 26, [106] = 27, [107] = 28, [120] = 29, [122] = 30,
+     [123] = 31, [126] = 32, [127] = 33, [208] = 34, [210] = 35, [214] = 36,
+     [216] = 37, [218] = 38, [219] = 39, [222] = 40, [223] = 41, [248] = 42,
+     [250] = 43, [251] = 44, [254] = 45, [255] = 46,   [0] = 47
+}
+
+
+local function calculate_tiling_8bit(map, tile, i, same)
+    --[[Calculate the tile index of a node based on its neighbors.
+
+    Cardinal directions and diagonals are considered.]]--
+    local nodes = map.nodes
+    local neighbors = nodes[i].neighbors[1]
+
+    local directions = {
+        northwest = {v = 2^0, condition = {"north", "west"}}, --   1
+        north     = {v = 2^1},                                --   2
+        northeast = {v = 2^2, condition = {"north", "east"}}, --   4
+        west      = {v = 2^3},                                --   8
+        east      = {v = 2^4},                                --  16
+        southwest = {v = 2^5, condition = {"south", "west"}}, --  32
+        south     = {v = 2^6},                                --  64
+        southeast = {v = 2^7, condition = {"south", "east"}}, -- 128
+     }
+
+    local function should_count(direction)
+        local index = neighbors[direction]
+        local neighbor_tile = index and nodes[index].tile
+        return neighbor_tile and same(tile, neighbor_tile)
+    end
+
+    local sum = 0
+    for direction, table in pairs(directions) do
+        local count
+        local extras = table.condition
+        if extras then
+            count = should_count(extras[1]) and should_count(extras[2]) and
+                    should_count(direction)
+        else
+            count = should_count(direction)
+        end
+
+        if count then
+            sum = sum + table.v
+        end
+    end
+    return conversion_8bit[sum] + 1
+end
+
 local function calculate_shadow(node, neighbor)
     return not neighbor.block_sight
 end
 
+local tiling_compare = {}
+
+function tiling_compare.same_template(node, neighbor)
+    return node.template == neighbor.template
+end
+
+function tiling_compare.is_water(node, neighbor)
+    return string.find(neighbor.template, "water") and true or false
+end
+
 local function apply_tiling(map)
-    local nodes = map.nodes
-    for i = 1, #nodes do
-        local node = nodes[i]
+    local tiling_compare = tiling_compare
+    for i, node in ipairs(map.nodes) do
         local tile = node.tile
         if tile.receive_shadow then
             tile.tile_pos_shadow = calculate_tiling(
                 map, tile, i, calculate_shadow)
+        end
+        if tile.tiling == "8bit" then
+            tile.tile_pos = calculate_tiling_8bit(
+                map, tile, i, tiling_compare[tile.compare_function])
         end
     end
     return map

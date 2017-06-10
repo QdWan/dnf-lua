@@ -185,8 +185,9 @@ function MapDungeon02:create_rooms()
 end
 
 function MapDungeon02:create_halls()
-    local grid = self.map
-    local map_w, map_h = grid.w, grid.h
+    local map = self.map
+    local nodes = map.nodes
+    local map_w, map_h = map.w, map.h
     local halls = self.halls
     local a_star = a_star_search
     local sorted_rooms = self:sorted_rooms()
@@ -213,13 +214,20 @@ function MapDungeon02:create_halls()
     end
 
     local neighbor_func = function(i, blocked)
-        return grid:get_neighbors(i, 4, not_on_border)
+        local res = {}
+        for k, v in pairs(nodes[i].neighbors[1]) do
+            if (k == "north" or k == "east" or
+                    k == "south" or k == "west") and not_on_border(v) then
+                res[#res + 1] = v
+            end
+        end
+        return res
     end
 
     local tiles = function (gen)
         local r = {}
         for i = 1, #gen do
-            r[#r + 1] = grid:get(gen[i])
+            r[#r + 1] = map:get(gen[i])
         end
         local i = 0
         local n = #r
@@ -239,7 +247,7 @@ function MapDungeon02:create_halls()
     local dig_hall = function(start, goal)
         -- local function a_star_search(graph, start, goal)
         local path = a_star(
-            grid,
+            map,
             to_1d(start:get_center()),
             to_1d(goal:get_center()),
             cost_func,
@@ -311,30 +319,17 @@ function MapDungeon02:sorted_rooms()
 end
 
 function MapDungeon02:cost(a, b)
-    local map = self.map
+    local nodes = self.map.nodes
+    local neighborhood = nodes[b].neighbors[1]
 
-    local neighbors = function(i)
-        return map:get_neighbors(i, 8)
+    local neighborhood_cost = 0
+    for k, v in pairs(neighborhood) do
+        neighborhood_cost = neighborhood_cost + nodes[v].cost
     end
 
-    local sum_cost = function(t)
-        local sum = 0
-        local nodes = map.nodes
-        for i = 1, #t do
-            sum = sum + nodes[t[i]].cost
-        end
-        return sum
-    end
+    local main = nodes[b].cost
 
-    local neighborhood_cost = function(i)
-        return sum_cost(neighbors(i))
-    end
-
-    local main = map.nodes[b].cost
-
-    local nc = neighborhood_cost(b)
-
-    return main * 8 + nc
+    return main * 8 + neighborhood_cost
 end
 
 -- ##########

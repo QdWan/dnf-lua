@@ -1,20 +1,25 @@
-local Rect = require('rect')
-
+local time = love.timer.getTime
+local BaseWidget = require("widgets.base")
 
 local SceneBase = class("SceneBase")
 
 function SceneBase:init()
     log:warn(self.class.name .. ":init")
-    self.manager = manager
-    self.rect = Rect(0, 0, self.manager.width, self.manager.height)
+    self.rect = Rect(0, 0, manager.width, manager.height)
     self.z = 1
     self:_set_observers()
+    self:set_music()
 end
 
-function SceneBase:unload()
-    for i, observer in ipairs(self.observers) do
-        observer:remove()
-        self.observers[i] = nil
+
+function SceneBase:set_music()
+    if self.bgm_name then
+        if type(self.bgm_name) == "string" then
+            manager.jukebox:load(self.bgm_name)
+        else
+            manager.jukebox:load(unpack(self.bgm_name))
+        end
+        manager.jukebox:next_track()
     end
 end
 
@@ -150,7 +155,37 @@ function SceneBase:mousereleased(x, y, button, istouch)
 end
 
 function SceneBase:quit()
+    self:unload()
     manager:quit()
 end
+
+function SceneBase:unload()
+    local name = self.class.name
+
+    log:warn(string.format("%s unload - start...", name))
+    local t0 = time()
+
+
+    log:warn("collectgarbage('count')", collectgarbage('count'))
+    manager.jukebox:clear()
+    for k, observer in pairs(self.observers) do
+        observer:remove()
+        self.observers[k] = nil
+    end
+    for k, w in pairs(self) do
+        log:info("destroy", k, w)
+        if w and type(w) == "table" and
+                w.class and w.destroy and
+                w.isInstanceOf and w:isInstanceOf(BaseWidget) then
+            w:destroy()
+        end
+    end
+    brutal_destroyer(self)
+
+    log:warn(string.format("%s unload - done!", name),
+             time() - t0)
+    return manager:collectgarbage()
+end
+
 
 return SceneBase

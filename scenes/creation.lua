@@ -2,6 +2,7 @@ local SceneBase = require("scenes.base")
 local widgets = require("widgets")
 local SceneCreation = class("SceneCreation", SceneBase)
 local creature = require("dnf.creature")
+local World = require("dnf.world")
 local dnf_data = require("data.core")
 local util = require("util")
 local time = require("time")
@@ -189,6 +190,7 @@ function update_values()
 end
 
 function SceneCreation:init()
+    self.bgm_name = "resources/sounds/legends_of_the_north.ogg"
     SceneBase.init(self)
 
     self:create_character()
@@ -196,13 +198,6 @@ function SceneCreation:init()
     self:set_music()
     self:set_background()
     self:set_menu()
-end
-
-function SceneCreation:set_music()
-    self.bgm = manager.audio:load(
-        "resources/sounds/legends_of_the_north.ogg",
-        "stream", false)
-    manager.audio:play_m(self.bgm)
 end
 
 function SceneCreation:set_background()
@@ -298,8 +293,7 @@ function SceneCreation:create_buttons()
     self.create_button:bind(
         "MOUSERELEASED.1",
         function()
-            self:create_character()
-            update_values(self.values_labels)
+            events:trigger({'SET_SCENE'}, 'map')
         end)
     self.create_button:bind("HOVERED", unhover_list)
     self.create_button.sticky="W"
@@ -445,6 +439,7 @@ end
 
 function SceneCreation:create_character()
     player = creature.create_as_character()
+    world.player = player
 end
 
 return SceneCreation

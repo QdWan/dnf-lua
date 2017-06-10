@@ -1,4 +1,4 @@
-local class = require("minclass")
+local class = require('middleclass') or require('minclass')
 
 local ODict = class("ODict")
 
@@ -7,6 +7,10 @@ function ODict:init()
     self.last = nil
     self.hash = {}
     self.count = 0
+end
+
+function ODict:clear()
+    self:init()
 end
 
 function ODict:size() return self.count end
@@ -22,6 +26,7 @@ function ODict:get_at_index(index)
 end
 
 function ODict:insert(k, v)
+    v = v or true
     local hash = self.hash
 
     self.first = self.first == nil and k or self.first
@@ -152,6 +157,12 @@ function ODict:unsorted()
         k, v = next(hash, k)
         if v then return k, v.value, i end
     end
+end
+
+function ODict:next(k)
+    log:warn("ODict:next k = ", k)
+    local _k, v = next(self.hash, k)
+    if v then return _k ,v.value end
 end
 
 

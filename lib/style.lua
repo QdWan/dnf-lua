@@ -1,4 +1,4 @@
-local class = require('minclass')
+local class = require('middleclass') or require('minclass')
 
 local FONTS = {
     caladea = {

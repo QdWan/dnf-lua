@@ -3,19 +3,11 @@ local widgets = require("widgets")
 local SceneMainMenu = class("SceneMainMenu", SceneBase)
 
 function SceneMainMenu:init()
+    self.bgm_name = "resources/sounds/Steps_of_Destiny(Alexandr_Zhelanov).ogg"
     SceneBase.init(self)
     self.time = 0
-
-    self:set_music()
     self:set_background()
     self:set_menu()
-end
-
-function SceneMainMenu:set_music()
-    self.bgm = manager.audio:load(
-        "resources/sounds/Steps_of_Destiny(Alexandr_Zhelanov).ogg",
-        "stream", false)
-    manager.audio:play_m(self.bgm)
 end
 
 function SceneMainMenu:set_background()
@@ -26,12 +18,12 @@ function SceneMainMenu:set_background()
         })
     self.bg = widgets.Image({
         parent=self.bg_frame,
-        path='Environments-21-cave.jpg'
+        path='Environments-21-cave.png'
         })
 end
 
 function SceneMainMenu:set_menu()
-    self.menu_label_names = {"New", "Options", "Gallery", "Quit", }
+    self.menu_label_names = {"New", "Load", "Options", "Gallery", "Quit", }
 
     self.frame = widgets.Frame({
         parent=self,
@@ -75,27 +67,17 @@ function SceneMainMenu:set_menu()
 
     self.menu_labels = self.menu:insert_list_get_dict(self.menu_label_names)
     self.menu_labels["Quit"]:bind(
-        {"MOUSERELEASED.1", "MOUSERELEASED.2"},
-        love.event.quit
+        {"MOUSERELEASED.1", "MOUSERELEASED.2"}, function() self:quit() end
     )
     self.menu_labels["New"]:bind(
         {"MOUSERELEASED.1", "MOUSERELEASED.2"},
-        function() events:trigger({'SET_SCENE'}, 'creation') end
+        function() events:trigger({'SET_SCENE'}, 'new_game') end
+    )
+self.menu_labels["Load"]:bind(
+        {"MOUSERELEASED.1", "MOUSERELEASED.2"},
+        function() events:trigger({'SET_SCENE'}, 'load_game') end
     )
     self.frame:grid()
-end
-
-function SceneMainMenu:unload()
-    log:warn("collectgarbage('count')", collectgarbage('count'))
-    log:warn("SceneMainMenu:unload")
-    self.bgm:stop()
-    self.bgm = nil
-    SceneBase.unload(self)
-    self.frame:destroy()
-    self.bg_frame:destroy()
-    collectgarbage()
-    log:warn("collectgarbage('count')", collectgarbage('count'))
-
 end
 
 function SceneMainMenu:scroll_bg(dt)

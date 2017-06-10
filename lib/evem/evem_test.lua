@@ -5,7 +5,7 @@ local Event = require("evem")
 local events = Event()
 
 local time = require("time").time
-local class = require("minclass")
+local class = require('middleclass') or require('minclass')
 local Manager = class("Manager")
 local manager = Manager()
 

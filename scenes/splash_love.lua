@@ -9,7 +9,7 @@ function SceneSplash:init()
     self.class.super.init(self) -- super
     self:set_img()
     self.alpha = 0
-    self.alpha_factor = 0.5
+    self.alpha_factor = 1
 end
 
 function SceneSplash:set_img()
@@ -30,31 +30,26 @@ function SceneSplash:set_img()
 end
 
 function SceneSplash:update(dt)
-    self:set_alpha()
+    self:set_alpha(dt)
 end
 
-function SceneSplash:set_alpha()
-    self.alpha = self.alpha + self.alpha_factor
-    if self.alpha >= 255 then
+function SceneSplash:set_alpha(dt)
+    self.alpha = self.alpha + self.alpha_factor * dt * 120
+    if self.alpha >= 255 * 1.6 then
         self.alpha = 255
-        self.alpha_factor = -0.5
+        self.alpha_factor = -1
     elseif self.alpha < 0 then
         events:trigger({'SET_SCENE'}, 'main_menu')
     end
 end
 
-function SceneSplash:stop_obververs()
-end
-
-function SceneSplash:unload()
-    for _, observer in pairs(self.observers) do
-        observer:remove()
-    end
-end
-
 function SceneSplash:draw()
-    self.img.color = {255, 255, 255, self.alpha}
+    self.img.color = {255, 255, 255, math.min(self.alpha, 255)}
     self.class.super.draw(self)
+end
+
+function SceneSplash:keypressed(key)
+    events:trigger({'SET_SCENE'}, 'main_menu')
 end
 
 return SceneSplash

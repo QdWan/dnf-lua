@@ -107,10 +107,11 @@ local function create_atlas(info_map, tiles, count)
         -- print(tile.name, x, y)
     end
     --[[
+    ]]--
     local data = atlas:newImageData( )
     data:encode("tga","tile_test.tga")
-    ]]--
     love.graphics.setCanvas()
+    atlas:setFilter("nearest", "linear")
     return atlas
 end
 

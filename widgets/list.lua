@@ -11,7 +11,7 @@ local style = {
 }
 
 
-local List = class("List", Frame):set_class_defaults{default_style = style}
+local List = class("List", Frame)
 
 function List:init(t)
     Frame.init(self, t)  --  super

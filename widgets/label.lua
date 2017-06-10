@@ -13,7 +13,7 @@ local style = {
 }
 
 
-local Label = class("Label", Widget):set_class_defaults{default_style = style}
+local Label = class("Label", Widget)
 
 function Label:get_default_style()
     return style
