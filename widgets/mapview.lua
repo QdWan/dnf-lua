@@ -46,9 +46,9 @@ function MapView:setupMapView()
 end
 
 function MapView:setupTileset()
-    local tiles_set = manager.resources:tileset("TileEntity")
-    self.tiles_atlas = tiles_set.atlas
-    self.tiles_info = tiles_set.info_map
+    local tileset = manager.resources:tileset("TileEntity")
+    self.tiles_atlas = tileset.atlas
+    self.tiles_info = tileset.info_map
 end
 
 function MapView:updateTilesetBatch()
@@ -63,7 +63,7 @@ function MapView:updateTilesetBatch()
     self.text = {}
 
     self.tiles_batch = lg.newSpriteBatch(
-        self.tiles_atlas, self.horizontal_tiles * self.vertical_tiles * 2)
+        self.tiles_atlas, self.horizontal_tiles * self.vertical_tiles)
     local tiles_batch = self.tiles_batch
 
     local meta = self.view ~= 1
@@ -73,42 +73,35 @@ function MapView:updateTilesetBatch()
     local color_k = view .. "color"
     log:warn("meta", self.view, meta, template_k, id_k, color_k)
 
-    for x=0, max_x do
-        for y=0, max_y do
-            if self.debug then
-                print("x(", x, ") mapX(", mapX, ") x + mapX(", x + mapX,
-                      ") map.w(", map.w,
-                      ")\n",
-                      "y(", y, ") mapY(", mapY, ") y + mapY(", y + mapY,
-                      ") map.h(", map.h
-                      )
-            end
+    for x = 0, max_x do
+        for y = 0, max_y do
             local node = assert(map:get(x + mapX, y + mapY), string.format(
                 "invalid node index x %d, y %d", x + mapX, y + mapY))
             local tile = meta and node.tile.meta or node.tile
-            local template = tile[template_k]
 
-            local tile_pos
-            if meta or tile.image == "ascii" then
-                tile_pos = tile[id_k]
-            else
-                tile_pos = tile.tile_pos or 1
-            end
-            local tile_var = meta and 1 or nil
-            if tile_var == nil then
-                local max_pos, max_var = resources:get_tile_variations(
-                    "TileEntity", template)
-                if not pos_var[template] then
-                    pos_var[template] = true
-                    log:warn(template, "max_pos", max_pos, "max_var", max_var)
+            local sprite = tile.sprite
+            if sprite == nil then
+                local template = tile[template_k]
+
+                local tile_pos
+                if meta or tile.image == "ascii" then
+                    tile_pos = tile[id_k]
+                else
+                    tile_pos = tile.tile_pos or 1
                 end
+                tile.tile_pos = tile.tile_pos or tile_pos
 
-                tile.tile_var = tile.tile_var or math.random(max_var)
+                local tile_var = meta and 1 or tile.tile_var or math.random(
+                    resources:get_position_variations("TileEntity", template,
+                                                      tile_pos))
+                tile.tile_var = tile.tile_var or tile_var
+
+
+                sprite = resources:tile(
+                    "TileEntity", template, tile_pos, tile_var)
+                tile.sprite = sprite
             end
 
-
-            local sprite = resources:tile(
-                "TileEntity", template, tile_pos, tile_var)
             if meta or tile.image == "ascii" then
                 local c = tile[color_k]
                 tiles_batch:setColor(c[1], c[2], c[3], 255)
@@ -204,8 +197,8 @@ function MapView:set_zoom(v)
     local old_zoom_y = self.zoomY
 
     if v > 0 then
-        self.zoomX = math.min(self.zoomX * 2,   4/1)
-        self.zoomY = math.min(self.zoomY * 2,   4/1)
+        self.zoomX = math.min(self.zoomX * 2,   1)
+        self.zoomY = math.min(self.zoomY * 2,   1)
     elseif v < 0 then
         self.zoomX = math.max(self.zoomX * 0.5, 1/4)
         self.zoomY = math.max(self.zoomY * 0.5, 1/4)
@@ -214,6 +207,7 @@ function MapView:set_zoom(v)
     if self.zoomX == old_zoom_x and self.zoomY == old_zoom_y then
         return
     end
+    log:warn("new zoom is " .. self.zoomX)
 
     local old_center_x = (self.mapX + (self.horizontal_tiles / 2))
     local old_center_y = (self.mapY + (self.vertical_tiles   / 2))

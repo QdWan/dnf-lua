@@ -1,6 +1,10 @@
-local SceneBase = require("scenes.base")
 local widgets = require("widgets")
 local Rect = require('rect')
+
+
+local single_test = not auto and true or false
+local SceneBase = require("scenes.test_base")
+auto.single_test = single_test
 
 
 local SceneSplash = class("SceneSplash", SceneBase)

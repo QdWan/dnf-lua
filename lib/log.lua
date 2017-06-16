@@ -1,4 +1,4 @@
-local util = require("lib.util")
+local util = require("util")
 local extend = util.extend_array
 
 local OUTFILE = "log.log"
@@ -30,7 +30,7 @@ function Log:init(param)
     self.outfile_mode = param.outfile_mode or "w"
     self.verbosity_level = param.verbosity_level or VERBOSITY_LEVEL
     self.terminal_at_end = param.terminal_at_end or TERMINAL_AT_END
-    self.history = {string.format("LOG START: %s", os.date())}
+    self.history = string.format("LOG START: %s", os.date())
     self.old_print = print
     self:replace_print(param.replace_print or REPLACE_PRINT)
 end
@@ -46,33 +46,37 @@ function Log:replace_print(replace_print)
 end
 
 function Log:write()
-    table.insert(self.history, "\n")
-    local output = table.concat(self.history, "\n")
-    love.filesystem.write(self.outfile, output)
+    love.filesystem.write(self.outfile, self.history .. "\n")
+    --[[
+
     if self.terminal_at_end then
         self.old_print(output)
     end
-    self.old_print(string.format("Done writing log to %s", self.outfile))
+    ]]--
+    self.old_print("LOG: Done writing log to ", self.outfile)
 end
 
-function Log:log(feedback, msg, ...)
-    local t = {...}
+function Log:log(feedback, msg, t)
+    local type, tostring = type, tostring
     for i, v in ipairs(t) do
         t[i] = type(v) == 'string' and v or tostring(v)
     end
     local input = table.concat(t, ", ")
-    table.insert(self.history, msg .. input)
+    local final = msg .. input
+    self.history = self.history .. "\n" .. final
 
-    if feedback then self.old_print(input) end
+    if feedback then self.old_print(final) end
 end
 
 function Log:info(...)
-    self:log(self.verbosity_level >= 2 , "INFO: ", ...)
+    local args = {...}
+    self:log(self.verbosity_level >= 2 , "INFO: ", args)
 end
 
 
 function Log:warn(...)
-    self:log(self.verbosity_level >= 1, "WARNING: ", ...)
+    local args = {...}
+    self:log(self.verbosity_level >= 1, "WARNING: ", args)
 end
 
 --[[

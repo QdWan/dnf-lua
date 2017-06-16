@@ -167,7 +167,7 @@ end
 
 
 function ODict:__tostring()
-    local start = self.class.super.__tostring(self) .. "{"
+    local start = ODict.super.__tostring(self) .. "{"
     local _end = "}"
     local t = {start}
     for k, v, i in self:sorted() do

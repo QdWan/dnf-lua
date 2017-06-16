@@ -36,7 +36,7 @@ end
 function MapSurface01:create(header)
     HeightmapBase.create(self, header)  -- super
     self:diamond_square()
-    self:scale(2)
+    -- self:scale(2)
     self:set_base_feature()
 
     local map = self:standard_map()

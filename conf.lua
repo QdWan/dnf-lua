@@ -2,7 +2,7 @@ io.stdout:setvbuf("no")
 
 function love.conf(t)
     -- The name of the save directory (string)
-    t.identity = nil
+    t.identity = "dnf"
 
     -- The LÖVE version this game was made for (string)
     t.version = "0.10.2"
@@ -53,7 +53,7 @@ function love.conf(t)
     t.window.fullscreentype = "desktop"
 
     -- Enable vertical sync (boolean)
-    t.window.vsync = true
+    t.window.vsync = false
 
     -- The number of samples to use with multi-sampled antialiasing (number)
     t.window.msaa = 0
@@ -124,12 +124,13 @@ function love.conf(t)
     -- ####  CUSTOM SETTINGS  ####
     t.custom = {}
     t.custom.framerate = 60
+
     t.custom.lovebird = false
 
-    t.custom.profile = false
+    t.custom.profile = true -- WARNING will impact heavily on performance
 
     -- t.custom.log_outfile = nil
-    t.custom.log_verbosity_level = 0
+    t.custom.log_verbosity_level = 1
     -- t.custom.log_terminal_at_end = nil
     -- t.custom.log_replace_print = nil
 end

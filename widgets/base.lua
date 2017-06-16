@@ -1,4 +1,4 @@
-local util = require("lib.util")
+local util = require("util")
 local ODict = require("collections.odict")
 
 
@@ -169,7 +169,8 @@ end
 function Widget:remove_children()
     local children = self._children
     for widget, _, i in children:sorted() do
-        assert(widget.destroy, "no destroy method" .. inspect(widget))
+        assert(widget.destroy,
+               "no destroy method on widget: " .. widget.class.name)
         widget:destroy()
         children:remove(widget)
     end

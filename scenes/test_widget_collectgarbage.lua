@@ -1,5 +1,21 @@
-local SceneBase = require("scenes.base")
 local widgets = require("widgets")
+
+local single_test = not auto and true or false
+local SceneBase = require("scenes.test_base")
+auto.functions = {
+    function(scene)
+        log.history = {}
+        collectgarbage()
+        log:warn("collectgarbage('count')", collectgarbage('count'))
+        log:warn("WidgetCollectgarbageTest creating widgets")
+        scene:set_msg()
+    end,
+    function(scene)
+        return events:trigger({"SET_SCENE"}, "test_widget_collectgarbage")
+    end
+}
+auto.single_test = single_test
+
 
 local WidgetCollectgarbageTest = class("WidgetCollectgarbageTest", SceneBase)
 
@@ -33,16 +49,5 @@ function WidgetCollectgarbageTest:set_msg()
 
 end
 
-function WidgetCollectgarbageTest:update(dt)
-    log.history = {}
-    collectgarbage()
-    log:warn("collectgarbage('count')", collectgarbage('count'))
-    if not self.frame then
-        log:warn("WidgetCollectgarbageTest creating widgets")
-        self:set_msg()
-    else
-        return events:trigger({"SET_SCENE"}, "test_widget_collectgarbage")
-    end
-end
 
 return WidgetCollectgarbageTest

@@ -1,10 +1,15 @@
-local SceneBase = require("scenes.base")
--- local layer_text = require("layers.text")
 local widgets = require("widgets")
+
+
+local single_test = not auto and true or false
+local SceneBase = require("scenes.test_base")
+auto.single_test = single_test
+
+
 local SceneGridTest = class("SceneGridTest", SceneBase)
 
 function SceneGridTest:init()
-    self.class.super.init(self)
+    SceneGridTest.super.init(self)
     self.frame = widgets.Frame({
         parent=self,
         rect=self.rect,

@@ -2,7 +2,7 @@ local SceneBase = require("scenes.base")
 local widgets = require("widgets")
 local World = require("dnf.world")
 local creature = require("dnf.creature")
-
+--p=aF2
 local NewGame = class("NewGame", SceneBase)
 
 function NewGame:init()
@@ -40,7 +40,7 @@ end
 function NewGame:update(dt)
     self.anim = (self.anim + dt) % 4
     self.msg.text = self.string .. string.rep(".", self.anim)
-    self.class.super.update(self, dt)
+    NewGame.super.update(self, dt)
     if self.drawn then self:post_draw() end
     self.drawn = true
 end

@@ -6,7 +6,7 @@ local math_min = math.min
 local SceneSplash = class("SceneSplash", SceneBase)
 
 function SceneSplash:init()
-    self.class.super.init(self) -- super
+    SceneSplash.super.init(self) -- super
     self:set_img()
     self.alpha = 0
     self.alpha_factor = 1
@@ -45,7 +45,7 @@ end
 
 function SceneSplash:draw()
     self.img.color = {255, 255, 255, math.min(self.alpha, 255)}
-    self.class.super.draw(self)
+    SceneSplash.super.draw(self)
 end
 
 function SceneSplash:keypressed(key)

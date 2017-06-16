@@ -1,7 +1,7 @@
 local AudioManager = require("audio_manager")
 local LuaJukeBox = require("luajukebox")
 local Resources = require("resources")
-local time = require("time")
+local time = require("time").time
 
 manager = {}
 local text_input = ""
@@ -9,11 +9,12 @@ local quit
 local Manager = class("Manager")
 
 function Manager:init()
+    self.session_start = time()
     manager = self
     self:set_event_triggers()
     self:set_event_observers()
     self.scene = "splash_love"
-    self.time = time.time
+    self.time = time
     self.audio = AudioManager()
     self.jukebox = LuaJukeBox()
     self.resources = Resources()
@@ -86,8 +87,13 @@ function Manager:parse_initial_args(args)
     self.width = t.window.width
     self.height = t.window.height
     if custom.profile then
-        self.profile = require "ProFi"
+        self.profile = require("jit.p")
+        self.profile.start("aF2")
+        --[[
+
+        self.profile = require("ProFi")
         self.profile:start()
+        ]]--
     end
     log.verbosity_level = custom.log_verbosity_level or log.verbosity_level
 
@@ -100,14 +106,25 @@ end
 
 
 function Manager:set_scene(scene, args)
-    log:write()
-    lg.clear({0, 0, 0, 255})
+    self.session_start = time()
+    -- lg.clear({0, 0, 0, 255})
     lg.setColor({255, 255, 255, 255})
     lg.setFont(self.default_font)
     scene = require("scenes." .. scene)
     if self.scene and self.scene.unload then
+        local previous_scene = self.scene.class.name
+        local g0 = collectgarbage('count')
         self.scene:unload()
+        local g1 = collectgarbage('count')
+        log:warn(string.format(
+            "Manager:set_scene unload %s (scene time %.4fs, %.4fkb freed)",
+            previous_scene, time() - self.scene_start, g1 - g0))
     end
+    if scene then
+        log:warn("Manager:set_scene start",
+                 type(scene) ~= "function" and scene.name or scene)
+    end
+    self.scene_start = time()
     self.scene = scene(args)
 end
 
@@ -142,23 +159,18 @@ function Manager:sleep()
     lt.sleep(math.max(self.next_time - cur_time, 0.001))
 end
 
-function Manager:collectgarbage()
-    collectgarbage()
-    log:warn("collectgarbage('count')", collectgarbage('count'))
-end
-
 function Manager:quit()
     love.event.quit()
 end
 
 function quit(...)
-    print("Manager:quit")
+    log:warn("Manager:quit (session time "
+              .. time() - manager.session_start .. "s)")
     love.audio.stop()
-    log:write()
     if manager.profile then
-        manager.profile:stop()
-        manager.profile:writeReport()
+        manager.profile.stop()
     end
+    if log then log:write() end
     -- love.event.quit()
     return false
 end

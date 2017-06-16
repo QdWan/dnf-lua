@@ -162,11 +162,9 @@ end
 function SceneBase:unload()
     local name = self.class.name
 
-    log:warn(string.format("%s unload - start...", name))
+    log:info(name .. " unload - start...")
     local t0 = time()
 
-
-    log:warn("collectgarbage('count')", collectgarbage('count'))
     manager.jukebox:clear()
     for k, observer in pairs(self.observers) do
         observer:remove()
@@ -174,17 +172,11 @@ function SceneBase:unload()
     end
     for k, w in pairs(self) do
         log:info("destroy", k, w)
-        if w and type(w) == "table" and
-                w.class and w.destroy and
-                w.isInstanceOf and w:isInstanceOf(BaseWidget) then
-            w:destroy()
-        end
+        if w and type(w) == "table" and w.destroy then w:destroy() end
     end
     brutal_destroyer(self)
 
-    log:warn(string.format("%s unload - done!", name),
-             time() - t0)
-    return manager:collectgarbage()
+    log:info(name .. " unload - done! " .. time() - t0)
 end
 
 

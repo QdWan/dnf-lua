@@ -33,7 +33,7 @@ function World:create(t)
     t = t or {}
     self.player = t.player or creature.create_as_character()
     self.maps = map_containers.MapsContainer()
-    local surface_header = map_containers.MapHeader{
+    local surface_header = t.header or map_containers.MapHeader{
         global_pos = map_containers.Position(0, 0),
         depth = 0,
         branch = 0,

@@ -1,7 +1,7 @@
 local Frame = require("widgets.frame")
 local Label = require("widgets.label")
 local inspect = require("inspect")
-local util = require("lib.util")
+local util = require("util")
 
 
 local style = {

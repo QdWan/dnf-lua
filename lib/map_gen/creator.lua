@@ -18,11 +18,8 @@
 --]]
 
 
--- package.path = "lib/?.lua;../lib/?.lua;?/init.lua;" .. package.path
--- require("rs_strict")
--- local class = require("middleclass")
 local map_containers = require("dnf.map_containers")
-local map_entities = require("dnf.map_entities")
+local entities = require("dnf.entities")
 
 local map_gen_base = require("map_gen.base")
 
@@ -65,7 +62,7 @@ function MapCreator:standard_map(graph)
         nodes = graph.nodes,
         views = self.views,
     }
-    local TileEntity = map_entities.TileEntity
+    local TileEntity = entities.TileEntity
     local NodeGroup = map_containers.NodeGroup
     local nodes = map.nodes
     for i, node in ipairs(nodes) do
@@ -119,14 +116,14 @@ local function calculate_tiling(map, tile, i, fn)
 end
 
 local conversion_8bit = {
-       [2] = 1,    [8] = 2,   [10] = 3,   [11] = 4,   [16] = 5,   [18] = 6,
-      [22] = 7,   [24] = 8,   [26] = 9,   [27] = 10,  [30] = 11,  [31] = 12,
-      [64] = 13,  [66] = 14,  [72] = 15,  [74] = 16,  [75] = 17,  [80] = 18,
-      [82] = 19,  [86] = 20,  [88] = 21,  [90] = 22,  [91] = 23,  [94] = 24,
-      [95] = 25, [104] = 26, [106] = 27, [107] = 28, [120] = 29, [122] = 30,
-     [123] = 31, [126] = 32, [127] = 33, [208] = 34, [210] = 35, [214] = 36,
-     [216] = 37, [218] = 38, [219] = 39, [222] = 40, [223] = 41, [248] = 42,
-     [250] = 43, [251] = 44, [254] = 45, [255] = 46,   [0] = 47
+       [0] = 46,   [2] = 1,    [8] = 2,   [10] = 3,   [11] = 4,   [16] = 5,
+      [18] = 6,   [22] = 7,   [24] = 8,   [26] = 9,   [27] = 10,  [30] = 11,
+      [31] = 12,  [64] = 13,  [66] = 14,  [72] = 15,  [74] = 16,  [75] = 17,
+      [80] = 18,  [82] = 19,  [86] = 20,  [88] = 21,  [90] = 22,  [91] = 23,
+      [94] = 24,  [95] = 25, [104] = 26, [106] = 27, [107] = 28, [120] = 29,
+     [122] = 30, [123] = 31, [126] = 32, [127] = 33, [208] = 34, [210] = 35,
+     [214] = 36, [216] = 37, [218] = 38, [219] = 39, [222] = 40, [223] = 41,
+     [248] = 42, [250] = 43, [251] = 44, [254] = 45, [255] = 0,
 }
 
 
@@ -138,20 +135,20 @@ local function calculate_tiling_8bit(map, tile, i, same)
     local neighbors = nodes[i].neighbors[1]
 
     local directions = {
-        northwest = {v = 2^0, condition = {"north", "west"}}, --   1
+        northwest = {v = 2^0, condition = {"north", "west"}}, --   1-
         north     = {v = 2^1},                                --   2
-        northeast = {v = 2^2, condition = {"north", "east"}}, --   4
+        northeast = {v = 2^2, condition = {"north", "east"}}, --   4-
         west      = {v = 2^3},                                --   8
         east      = {v = 2^4},                                --  16
-        southwest = {v = 2^5, condition = {"south", "west"}}, --  32
+        southwest = {v = 2^5, condition = {"south", "west"}}, --  32-
         south     = {v = 2^6},                                --  64
-        southeast = {v = 2^7, condition = {"south", "east"}}, -- 128
+        southeast = {v = 2^7, condition = {"south", "east"}}, -- 128-
      }
 
     local function should_count(direction)
         local index = neighbors[direction]
         local neighbor_tile = index and nodes[index].tile
-        return neighbor_tile and same(tile, neighbor_tile)
+        return not neighbor_tile or same(tile, neighbor_tile)
     end
 
     local sum = 0
@@ -196,7 +193,11 @@ local function apply_tiling(map)
         end
         if tile.tiling == "8bit" then
             tile.tile_pos = calculate_tiling_8bit(
-                map, tile, i, tiling_compare[tile.compare_function])
+                map, tile, i,
+                assert(tiling_compare[tile.compare_function], string.format(
+                    "invalid compare_function ('%s') on template '%s'", tile.compare_function, node.template)
+                ))
+
         end
     end
     return map

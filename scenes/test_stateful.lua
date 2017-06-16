@@ -1,12 +1,21 @@
-local SceneBase = require("scenes.base")
 local widgets = require("widgets")
 local Stateful = require("stateful")
+
+
+local single_test = not auto and true or false
+local SceneBase = require("scenes.test_base")
+auto.functions = {
+    function(scene) scene:keypressed("tab") end,
+    function(scene) scene:keypressed("tab") end
+}
+auto.single_test = single_test
+
 
 local SceneMap = class("SceneMap", SceneBase)
 SceneMap:include(Stateful)
 
 function SceneMap:init(param)
-    self.class.super.init(self)
+    SceneMap.super.init(self)
     self.string = "Default state"
     self.anim = 3
     self:set_msg()
@@ -44,6 +53,7 @@ end
 function SceneMap:update(dt)
     self.anim = (self.anim + dt * 2) % 4
     self.msg.text = self:get_msg()
+    SceneMap.super.update(self, dt)
 end
 
 function SceneMap:keypressed(key, scancode, isrepeat)

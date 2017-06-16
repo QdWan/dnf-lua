@@ -26,15 +26,25 @@ declare("inspect")
 inspect = require("inspect")
 
 declare("log")
-local Log = require("lib.log")
+local Log = require("log")
 log = Log()
 
 local old_error = error
-error = function(msg, level)
+error = function(msg, level, debug_info)
+    msg = string.gsub(msg, "%z", "\\0")
     level = (level or 1) + 1
-    log:warn(msg)
+    log:warn("ERROR MSG: " .. msg)
+    if debug_info then log:info("DEBUG INFO: " .. debug_info) end
     log:write()
     old_error(msg, level)
+end
+
+local old_assert = assert
+assert = function(check, msg, level, debug_info)
+    return check or error(
+        msg,
+        (level or 1) + 1,
+        debug_info and debug_info() or nil)
 end
 
 declare("manager")
@@ -65,6 +75,9 @@ declare("lt")
 lt = love.timer
 declare("le")
 le = love.event
+
+declare("auto")
+declare("single_test")
 
 declare("brutal_destroyer")
 function brutal_destroyer(object)

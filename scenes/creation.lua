@@ -6,7 +6,7 @@ local World = require("dnf.world")
 local dnf_data = require("data.core")
 local util = require("util")
 local time = require("time")
-local descriptions = require("lib.descriptions")()
+local descriptions = require("descriptions")()
 
 local player, values, update_values, selected_row, description, rows,
     labels_table

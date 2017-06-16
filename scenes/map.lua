@@ -8,7 +8,7 @@ SceneMap:include(Stateful)
 
 
 function SceneMap:init(param)
-    self.class.super.init(self)
+    SceneBase.init(self)
     self:create_widgets(param)
 end
 
@@ -29,21 +29,18 @@ function SceneMap:create_widgets(param)
     self.frame:grid()
 end
 
-function SceneMap:draw()
-    self.class.super.draw(self)
-    --[[
+function SceneMap:update()
+    SceneMap.super.update(self)
+end
 
-    log:warn("SceneMapSurfaceTest02:draw is calling quit")
-    love.event.quit()
-    ]]--
+function SceneMap:draw()
+    SceneBase.draw(self)
 end
 
 function SceneMap:keypressed(key)
     if key == "kp-" then
-        print("zooming out")
         self.map_view:set_zoom(-1)
     elseif key == "kp+" then
-        print("zooming in")
         self.map_view:set_zoom(1)
     else
         return

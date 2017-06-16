@@ -1,5 +1,5 @@
 local time = require("time").time
-local itertools = require("lib.itertools")
+local itertools = require("itertools")
 local split_around = itertools.split_around
 local ichain = itertools.ichain
 local reversed = itertools.reversed
@@ -284,17 +284,17 @@ function MapDungeon02:create_halls()
             previous = room
         else
             local current = #halls + 1
-            log:warn("MapDungeon02:create_halls:", current)
+            log:info("MapDungeon02:create_halls:", current)
             halls[#halls + 1] = dig_hall(previous, room)
-            log:warn("MapDungeon02:create_halls:done", current)
+            log:info("MapDungeon02:create_halls:done", current)
             if random(5) == 1 then
                 -- dig an extra hall
                 local current = #halls + 1
-                log:warn("MapDungeon02:create_halls(extra):", current)
+                log:info("MapDungeon02:create_halls(extra):", current)
                 local other_room = pick_a_room(sorted_rooms, room)
                 -- print("other_room", other_room)
                 halls[#halls + 1] = dig_hall(other_room, room)
-                log:warn("MapDungeon02:create_halls(extra):done", current)
+                log:info("MapDungeon02:create_halls(extra):done", current)
             end
             previous = room
         end

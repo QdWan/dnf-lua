@@ -46,12 +46,16 @@ templates.TileEntity = {
     ["arctic_deep_water"] = {
         ["id"] = string.byte("¬"),
         ["color"] = COLORS["dark_sky"],
-        ["image"] = "arctic_shallow_water",
+        ["image"] = "deep_water",
+        ["tiling"] = "8bit",
+        ["compare_function"] = "same_template",
     },
     ["arctic_shallow_water"] = {
         ["id"] = string.byte("~"),
         ["color"] = COLORS["sky"],
         ["image"] = "arctic_shallow_water",
+        ["tiling"] = "8bit",
+        ["compare_function"] = "is_water",
     },
     ["arctic coast"] = {
         ["id"] = string.byte("c"),
@@ -145,27 +149,30 @@ templates.TileEntity = {
         ["color"] = COLORS["darker_yellow"],  -- (153, 219, 33)
         ["image"] = "savana",
         ["tiling"] = "8bit",
-        ["compare_function"] = "savana",
+        ["compare_function"] = "same_template",
     },
 
+    ["boreal forest"] = {
+        ["id"] = string.byte("Z"),  -- string.byte("B"),
+        ["color"] = COLORS["dark_orange"],  -- (5, 100, 33)
+        ["image"] = "boreal_forest",
+        ["tiling"] = "8bit",
+        ["compare_function"] = "same_template"
+    },
     ["woodland"] = {
-        ["id"] = string.byte("w"),
+        ["id"] = string.byte("2"),  -- string.byte("w"),
         ["color"] = COLORS["dark_turquoise"]  -- (0, 255, 255)
     },
-    ["boreal forest"] = {
-        ["id"] = string.byte("B"),
-        ["color"] = COLORS["dark_sea"]  -- (5, 100, 33)
-    },
     ["temperate deciduous forest"] = {
-        ["id"] = string.byte("D"),
+        ["id"] = string.byte("3"),  -- string.byte("D"),
         ["color"] = COLORS["dark_chartreuse"]  -- (47, 186, 74)
     },
     ["temperate rain forest"] = {
-        ["id"] = string.byte("T"),
+        ["id"] = string.byte("4"),  -- string.byte("T"),
         ["color"] = COLORS["dark_green"]  -- (7, 250, 160)
     },
     ["tropical rain forest"] = {
-        ["id"] = string.byte("R"),
+        ["id"] = string.byte("5"),  -- string.byte("R"),
         ["color"] = COLORS["darker_green"]  -- (8, 250, 50)
     },
 

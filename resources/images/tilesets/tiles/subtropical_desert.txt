@@ -13,8 +13,25 @@ Note the file is based on the LCP contest readme so don't expect the exact littl
 
 Assets from:
 
-LPC participants:
+LPC contributors:
 ----------------
+
+
+Matthew Nash
+ http://opengameart.org/content/misc-32x32-tiles
+ - Road
+
+Nushio
+ http://opengameart.org/content/lpc-colorful-sand-deep-water
+ - Snow and ice recolor
+ 
+William.Thompsonj
+ http://opengameart.org/content/lpc-sandrock-alt-colors
+ - Sand and dirt recolor
+ 
+Adrix89
+
+ - Recolor Nushio snow
 
 Casper Nilsson
 	*GNU GPL 3.0 or later

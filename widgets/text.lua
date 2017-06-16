@@ -1,5 +1,5 @@
-local Style = require("lib.style")
-local util = require("lib.util")
+local Style = require("style")
+local util = require("util")
 
 local Widget = require("widgets.base")
 

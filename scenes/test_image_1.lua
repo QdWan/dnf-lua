@@ -1,6 +1,13 @@
-local SceneBase = require("scenes.base")
 local widgets = require("widgets")
+
+
+local single_test = not auto and true or false
+local SceneBase = require("scenes.test_base")
+auto.single_test = single_test
+
+
 local SceneMainMenu = class("SceneMainMenu", SceneBase)
+
 
 function SceneMainMenu:init()
     SceneBase.init(self) -- super

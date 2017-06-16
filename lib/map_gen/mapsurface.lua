@@ -5,8 +5,8 @@ local time = love.timer.getTime
 local lm = love.math
 
 
-local W = 120
-local H = 120
+local W = 30
+local H = 30
 
 
 local MODULE = {}
@@ -18,7 +18,7 @@ end
 
 local function random_k(k)
     local v = ((love.math.random() * 2) - 1) * k
-    print("random_k", k, "->", v)
+    -- print("random_k", k, "->", v)
     return v
 end
 
@@ -390,86 +390,96 @@ end
 function HeightmapBase:diamond_step(rect, k)
     --[[Perform the diamond step.
 
-    Taking a square of four points, generate a random value at the square midpoint, where the two diagonals meet. The midpoint value is calculated by averaging the four corner values, plus a random amount.
+    Taking a square of four points, generate a random value at the square
+    midpoint, where the two diagonals meet. The midpoint value is calculated
+    by averaging the four corner values, plus a random amount.
     ]]--
+    --[[
+
     print(
         "diamond_step",
         rect.x, rect.y, rect:get_right(), rect:get_bottom(), rect.w, rect.h)
+    ]]--
     local map = self.map
 
-    local tl = get_pos(map, rect:get_topleft())
-    local tr = get_pos(map, rect:get_topright())
-    local bl = get_pos(map, rect:get_bottomleft())
-    local br = get_pos(map, rect:get_bottomright())
+    local topleft = get_pos(map, rect:get_topleft())
+    local topright = get_pos(map, rect:get_topright())
+    local bottomleft = get_pos(map, rect:get_bottomleft())
+    local bottomright = get_pos(map, rect:get_bottomright())
     local center = get_pos(map, rect:get_center())
-    local avg = (tl.value + tr.value + bl.value + br.value) / 4
+    local avg = (topleft.value + topright.value +
+                 bottomleft.value + bottomright.value) / 4
     local noise = random_k(k)
     center.value = avg + noise
+    --[[
 
     print(string.format(
         "diamond_step (avg %.4f, noise %.4f, final %.4f",
         avg, noise, center.value))
+    ]]--
 end
 
 function HeightmapBase:square_step(rect, k)
     --[[Perform the square step.
 
-    Set the four mid points between the corners, i.e. North, South, East and West, by averaging the two values on either side of the point in question and adding or subtracting a slightly smaller random amount of noise. This is the 'square' step.
+    Set the four mid points between the corners, i.e. North, South, East and
+    West, by averaging the two values on either side of the point in question
+    and adding or subtracting a slightly smaller random amount of noise. This
+    is the 'square' step.
     ]]--
     local map = self.map
     local low = k / 2
     local v, noise
     local noise = random_k(low)
     --[[
-    ]]--
     print("square_step",
           rect.x, rect.y, rect:get_right(), rect:get_bottom(),
           rect.w, rect.h, noise)
-
-    local mt = get_pos(map, rect:get_midtop())
-    local tl = get_pos(map, rect:get_topleft())
-    local tr = get_pos(map, rect:get_topright())
-    v = (tl.value + tr.value) / 2
-    --[[
-    mt.value = (1 - low) * v + (low * noise)
     ]]--
-    mt.value = noise + v
-    print(string.format(
-        "diamond_step:square_step mt(avg %.4f, noise %.4f, final %.4f",
-        v, noise, mt.value))
 
-    local mr = get_pos(map, rect:get_midright())
-    local br = get_pos(map, rect:get_bottomright())
-    v = (tr.value + br.value) / 2
+    local midtop = get_pos(map, rect:get_midtop())
+    local topleft = get_pos(map, rect:get_topleft())
+    local topright = get_pos(map, rect:get_topright())
+    v = (topleft.value + topright.value) / 2
+    midtop.value = noise + v
     --[[
-
-    mr.value = (1 - low) * v + (low * noise)
-    ]]--
-    mr.value = noise + v
+    midtop.value = (1 - low) * v + (low * noise)
     print(string.format(
-        "diamond_step:square_step mr(avg %.4f, noise %.4f, final %.4f",
-        v, noise, mr.value))
+        "diamond_step:square_step midtop(avg %.4f, noise %.4f, final %.4f",
+        v, noise, midtop.value))
+    ]]--
 
-    local mb = get_pos(map, rect:get_midbottom())
-    local bl = get_pos(map, rect:get_bottomleft())
-    v = (br.value + bl.value) / 2
+    local midright = get_pos(map, rect:get_midright())
+    local bottomright = get_pos(map, rect:get_bottomright())
+    v = (topright.value + bottomright.value) / 2
+    midright.value = noise + v
     --[[
-    mb.value = (1 - low) * v + (low * noise)
-    ]]--
-    mb.value = noise + v
+    midright.value = (1 - low) * v + (low * noise)
     print(string.format(
-        "diamond_step:square_step mb(avg %.4f, noise %.4f, final %.4f",
-        v, noise, mb.value))
+        "diamond_step:square_step midright(avg %.4f, noise %.4f, final %.4f",
+        v, noise, midright.value))
+    ]]--
+
+    local midbottom = get_pos(map, rect:get_midbottom())
+    local bottomleft = get_pos(map, rect:get_bottomleft())
+    v = (bottomright.value + bottomleft.value) / 2
+    midbottom.value = noise + v
+    --[[
+    midbottom.value = (1 - low) * v + (low * noise)
+    print(string.format(
+        "diamond_step:square_step midbottom(avg %.4f, noise %.4f, final %.4f",
+        v, noise, midbottom.value))
+    ]]--
 
     local ml = get_pos(map, rect:get_midleft())
-    v = (tl.value + bl.value) / 2
+    v = (topleft.value + bottomleft.value) / 2
+    ml.value = noise + v
     --[[
     ml.value = (1 - low) * v + (low * noise)
-    ]]--
-    ml.value = noise + v
     print(string.format(
         "diamond_step:square_step ml(avg %.4f, noise %.4f, final %.4f",
         v, noise, ml.value))
+    ]]--
 end
 
 function HeightmapBase:apply_diamond_square(k, start)

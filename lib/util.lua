@@ -341,6 +341,20 @@ local function cantor_t(t)
 end
 util.cantor_t = cantor_t
 
+local function key_concat(...)
+    local args = {...}
+    args = type(args[1]) == "table" and args[1] or args
+    return table.concat(args, "\0")  -- "\0"
+end
+util.key_concat = key_concat
+
+local function key_decat(str)
+   local sep, fields = "%z", {}
+   local pattern = string.format("([^%s]+)", sep)
+   str:gsub(pattern, function(c) fields[#fields+1] = c end)
+   return fields
+end
+util.key_decat = key_decat
 
 return util
 
