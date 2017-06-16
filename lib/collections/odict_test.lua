@@ -1,5 +1,3 @@
-local paths = "?.lua;?/init.lua;../?.lua;../?/init.lua;../?/?.lua;"
-package.path = paths .. package.path
 inspect = require("inspect")
 local OrderedDict = require("odict")
 

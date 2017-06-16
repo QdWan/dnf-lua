@@ -1,6 +1,3 @@
-local paths = "?.lua;?/init.lua;../?.lua;../?/init.lua;../?/?.lua;"
-package.path = paths .. package.path
-
 local class    = require 'middleclass'
 local Stateful = require 'stateful'
 

@@ -1,5 +1,3 @@
-local paths = "?.lua;?/init.lua;../?.lua;../?/init.lua;../?/?.lua;"
-package.path = paths .. package.path
 local Rect = require("rect")
 local class = require('middleclass') or require('minclass')
 

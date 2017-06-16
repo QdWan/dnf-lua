@@ -1,4 +1,3 @@
-local time = love.timer.getTime
 local BaseWidget = require("widgets.base")
 
 local SceneBase = class("SceneBase")

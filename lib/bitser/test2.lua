@@ -1,5 +1,3 @@
-local paths = "?.lua;?/init.lua;../?.lua;../?/init.lua;../?/?.lua;"
-package.path = paths .. package.path
 require("rs_strict")
 local ffi = require("ffi")
 local util = require("util")

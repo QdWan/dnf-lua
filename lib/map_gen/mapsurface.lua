@@ -1,7 +1,7 @@
 local creator = require("map_gen.creator")
 local tile_templates = require("templates")
 local MapCreator = creator.MapCreator
-local time = love.timer.getTime
+local time = time
 local lm = love.math
 
 

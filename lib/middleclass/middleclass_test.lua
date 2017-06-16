@@ -1,6 +1,3 @@
-local paths = "?.lua;?/init.lua;?/?.lua;../?.lua;../?/init.lua;../?/?.lua;"
-package.path = paths .. package.path
-
 local class = require("middleclass")
 
 local A = class("A")

@@ -1,6 +1,3 @@
-local paths = "?.lua;?/init.lua;../?.lua;../?/init.lua;../?/?.lua;"
-package.path = paths .. package.path
-
 local Event = require("evem")
 local events = Event()
 

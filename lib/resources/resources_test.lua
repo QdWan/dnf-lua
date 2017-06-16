@@ -1,6 +1,3 @@
-local paths = "?.lua;?/init.lua;?/?.lua;../?.lua;../?/init.lua;../?/?.lua;../../?.lua;../../?/init.lua;../../?/?.lua;"
-package.path = paths .. package.path
-
 require('lfs')
 class = require("middleclass")
 inspect = require("inspect")

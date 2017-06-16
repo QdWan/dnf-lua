@@ -1,6 +1,3 @@
-local paths = "?.lua;?/init.lua;../?.lua;../?/init.lua;../?/?.lua;"
-package.path = paths .. package.path
-
 local bitser = require("bitser")
 local class = require('middleclass') or require('minclass')
 local time = require("time").time

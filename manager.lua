@@ -1,7 +1,6 @@
 local AudioManager = require("audio_manager")
 local LuaJukeBox = require("luajukebox")
 local Resources = require("resources")
-local time = require("time").time
 
 manager = {}
 local text_input = ""
@@ -57,6 +56,8 @@ function Manager:set_event_triggers()
     end
 
     love.quit = quit
+    self.love_getTime = love.timer.getTime
+    love.timer.getTime = time
 end
 
 function Manager:set_default_font()
@@ -176,6 +177,7 @@ function quit(...)
 end
 
 function Manager:run()
+    local step = lt.step
 
     if lm then
         lm.setRandomSeed(os.time())
@@ -186,29 +188,33 @@ function Manager:run()
     self:load(arg)
 
     -- We don't want the first frame's dt to include time taken by love.load.
-    if lt then lt.step() end
+    if lt then step() end
 
     local dt = 0
 
     -- Main loop time.
+    local le_pump, le_poll, handlers = le.pump, le.poll, love.handlers
+    local lt_getDelta = lt.getDelta
+    local lg_isActive, lg_clear = lg.isActive, lg.clear
+    local lg_getBgColor, lg_origin = lg.getBackgroundColor, lg.origin
     while true do
         -- Process events.
         if le then
-            le.pump()
-            for name, a,b,c,d,e,f in le.poll() do
+            le_pump()
+            for name, a,b,c,d,e,f in le_poll() do
                 if name == "quit" then
                     if not love.quit or not love.quit() then
                         return a
                     end
                 end
-                love.handlers[name](a,b,c,d,e,f)
+                handlers[name](a,b,c,d,e,f)
             end
         end
 
         -- Update dt, as we'll be passing it to update
         if lt then
-            lt.step()
-            dt = lt.getDelta()
+            step()
+            dt = lt_getDelta()
         end
 
         -- Call update and draw
@@ -217,9 +223,9 @@ function Manager:run()
         events:trigger({'UPDATE', self}, dt)  -- update scene
         self:update(dt)
 
-        if lg and lg.isActive() then
-            lg.clear(lg.getBackgroundColor())
-            lg.origin()
+        if lg and lg_isActive() then
+            lg_clear(lg_getBgColor())
+            lg_origin()
             -- if love.draw then love.draw() end  -- love default
             events:trigger({'DRAW', self, 1})  -- draw scene
             self:draw() -- manager stuff

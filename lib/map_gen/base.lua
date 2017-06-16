@@ -2,7 +2,6 @@ local PriorityQueue = require("collections.priority_queue")
 local shuffle = require("shuffle")
 local Rect = require("rect")
 local util = require("util")
-local time = love.timer.getTime
 
 local COST = {
     hall = 6,
