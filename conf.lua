@@ -52,9 +52,6 @@ function love.conf(t)
     (string) ]=]--
     t.window.fullscreentype = "desktop"
 
-    -- Enable vertical sync (boolean)
-    t.window.vsync = false
-
     -- The number of samples to use with multi-sampled antialiasing (number)
     t.window.msaa = 0
 
@@ -110,27 +107,30 @@ function love.conf(t)
     t.modules.timer = true
 
     -- Enable the touch module (boolean)
-    t.modules.touch = true
+    t.modules.touch = false
 
     -- Enable the video module (boolean)
-    t.modules.video = true
+    t.modules.video = false
 
     -- Enable the window module (boolean)
     t.modules.window = true
 
     -- Enable the thread module (boolean)
-    t.modules.thread = true
+    t.modules.thread = false
+
+    -- Enable vertical sync (boolean)
+    t.window.vsync = true
 
     -- ####  CUSTOM SETTINGS  ####
     t.custom = {}
-    t.custom.framerate = 60
+    t.custom.framerate = 60 -- only works if vsync is set to false
 
     t.custom.lovebird = false
 
-    t.custom.profile = true -- WARNING will impact heavily on performance
+    t.custom.profile = true
 
-    -- t.custom.log_outfile = nil
     t.custom.log_verbosity_level = 1
+    -- t.custom.log_outfile = nil
     -- t.custom.log_terminal_at_end = nil
     -- t.custom.log_replace_print = nil
 end

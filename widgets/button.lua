@@ -2,7 +2,6 @@ local Frame = require("widgets.frame")
 local Image = require("widgets.image")
 local Label = require("widgets.label")
 local util = require("util")
-local time = require("time")
 
 local Button = class("Button", Frame)
 

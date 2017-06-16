@@ -1,4 +1,4 @@
-local time = require("time").time
+local time = time
 local itertools = require("itertools")
 local split_around = itertools.split_around
 local ichain = itertools.ichain

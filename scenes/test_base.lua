@@ -2,8 +2,7 @@ local SceneBase = require("scenes.base")
 local Auto = require("auto_test_scenes")
 
 auto = auto or Auto({
-    ignore = "test_base.lua",
-    sleep = 0.1
+    ignore = "test_base.lua"
 })
 
 local SceneTestBase = class("SceneTestBase", SceneBase)

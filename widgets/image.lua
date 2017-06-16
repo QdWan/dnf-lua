@@ -1,6 +1,5 @@
 local Widget = require("widgets.base")
 local util = require("util")
-local time = require("time")
 
 
 local lg = love.graphics

@@ -1,6 +1,4 @@
 local inspect = require("inspect")
-local time = require("time")
-math.randomseed(os.time() * 1000)
 
 local function shuffle(source, copy)
     local dest
@@ -27,6 +25,7 @@ end
 
 --[[
 --Example:
+math.randomseed(os.time() * 1000)
 local shuffle = shuffle or require("shuffle")
 
 local t1 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 }

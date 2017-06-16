@@ -83,8 +83,9 @@ function Manager:parse_initial_args(args)
     local t = {modules = {}, window = {}}
     love.conf(t)
     local custom = t.custom
+    self.vsync = t.window.vsync
     self.min_dt = 1 / custom.framerate
-    self.lovebird = custom.lovebird
+    self.lovebird = custom.lovebird and require("lovebird")
     self.width = t.window.width
     self.height = t.window.height
     if custom.profile then
@@ -133,7 +134,7 @@ function Manager:update(dt)
     -- manage state frame-to-frame
     self.next_time = self.next_time + self.min_dt
     if self.lovebird then
-        require("lovebird").update()
+        self.lovebird.update()
     end
 end
 
@@ -151,13 +152,13 @@ end
 
 function Manager:sleep()
     -- sleep if necessary to keep the framerate regular
-    local cur_time = lt.getTime()
+    local cur_time = time()
     if self.next_time <= cur_time then
         self.next_time = cur_time
-        return
+        return 0
     end
 
-    lt.sleep(math.max(self.next_time - cur_time, 0.001))
+    return self.next_time - cur_time
 end
 
 function Manager:quit()
@@ -232,7 +233,13 @@ function Manager:run()
         end
 
         -- if lt then lt.sleep(0.001) end  -- love default
-        self:sleep()
+        local nap = 0.001
+        if not self.vsync then
+            nap = math.max(self:sleep(), nap)
+        end
+
+        lt.sleep(nap)
+
     end
 
 end
