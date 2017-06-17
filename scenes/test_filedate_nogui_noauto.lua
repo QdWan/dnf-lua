@@ -1,0 +1,1 @@
+return love.event.quit()

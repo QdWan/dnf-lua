@@ -129,6 +129,8 @@ function love.conf(t)
 
     t.custom.profile = true
 
+    t.custom.skip_tileset_update = true
+
     t.custom.log_verbosity_level = 1
     -- t.custom.log_outfile = nil
     -- t.custom.log_terminal_at_end = nil

@@ -179,6 +179,10 @@ function tiling_compare.same_template(node, neighbor)
     return node.template == neighbor.template
 end
 
+function tiling_compare.same_id(node, neighbor)
+    return node.id == neighbor.id
+end
+
 function tiling_compare.is_water(node, neighbor)
     return string.find(neighbor.template, "water") and true or false
 end

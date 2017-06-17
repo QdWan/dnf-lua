@@ -23,11 +23,12 @@ end
 function AutoTestScenes:get_scenes()
     local get_items = love.filesystem.getDirectoryItems
 
+    local find = string.find
     for i, scene in ipairs(get_items("scenes")) do
-        if not self.ignored[scene] then
+        if not self.ignored[scene] and not find(scene, "_noauto") then
             local scene_name = string.match(scene, "(test_.+)%.lua")
             if scene_name then
-                log:info("loading test scene: " .. scene_name)
+                log:warn("loading test scene: " .. scene_name)
                 table.insert(self.scenes, scene_name)
             end
         end

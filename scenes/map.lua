@@ -1,9 +1,9 @@
 local SceneBase = require("scenes.base")
 local widgets = require("widgets")
-local Stateful = require("stateful")
+-- local Stateful = require("stateful")
 
 local SceneMap = class("SceneMap", SceneBase)
-SceneMap:include(Stateful)
+-- SceneMap:include(Stateful)
 
 
 
@@ -38,10 +38,15 @@ function SceneMap:draw()
 end
 
 function SceneMap:keypressed(key)
+    local isDown = love.keyboard.isDown
     if key == "kp-" then
         self.map_view:set_zoom(-1)
     elseif key == "kp+" then
         self.map_view:set_zoom(1)
+    elseif key == "tab" then
+        self.map_view:switch_view(isDown("lshift") or isDown("rshift"))
+    elseif key == "f1" then
+        self.map_view.debug_tile_info = not self.map_view.debug_tile_info
     else
         return
     end

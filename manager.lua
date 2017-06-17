@@ -74,36 +74,34 @@ function Manager:load()
 end
 
 function Manager:parse_initial_args(args)
-    for i = 1, #args do
-        local _arg = args[i]
-        self:parse_scene_arg(_arg)
-    end
-
     require("conf")
     local t = {modules = {}, window = {}}
     love.conf(t)
+    self.conf = t
     local custom = t.custom
-    self.vsync = t.window.vsync
-    self.min_dt = 1 / custom.framerate
-    self.lovebird = custom.lovebird and require("lovebird")
+
+    self:get_initial_scene(args)
+
+    self._vsync = t.window.vsync
     self.width = t.window.width
     self.height = t.window.height
+    self.min_dt = 1 / custom.framerate
+    self.lovebird = custom.lovebird and require("lovebird")
     if custom.profile then
-        self.profile = require("jit.p")
-        self.profile.start("aF2")
-        --[[
-
-        self.profile = require("ProFi")
-        self.profile:start()
-        ]]--
+        self._profile = require("jit.p")
+        self._profile.start("aF2")
     end
     log.verbosity_level = custom.log_verbosity_level or log.verbosity_level
 
 end
 
-function Manager:parse_scene_arg(text)
-    local scene = string.match(text, "%-%-scene=(.+)")
-    self.scene = scene or self.scene
+function Manager:get_initial_scene(args)
+    local scene
+    for i, arg in ipairs(args) do
+        scene = string.match(arg, "%-%-scene=(.+)")
+        if scene then break end
+    end
+    self.scene = scene
 end
 
 
@@ -169,8 +167,8 @@ function quit(...)
     log:warn("Manager:quit (session time "
               .. time() - manager.session_start .. "s)")
     love.audio.stop()
-    if manager.profile then
-        manager.profile.stop()
+    if manager._profile then
+        manager._profile.stop()
     end
     if log then log:write() end
     -- love.event.quit()
@@ -234,7 +232,7 @@ function Manager:run()
 
         -- if lt then lt.sleep(0.001) end  -- love default
         local nap = 0.001
-        if not self.vsync then
+        if not self._vsync then
             nap = math.max(self:sleep(), nap)
         end
 

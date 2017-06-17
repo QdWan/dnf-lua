@@ -35,17 +35,18 @@ error = function(msg, level, debug_info)
     msg = string.gsub(msg, "%z", "\\0")
     level = (level or 1) + 1
     log:warn("ERROR MSG: " .. msg)
-    if debug_info then log:info("DEBUG INFO: " .. debug_info) end
+    if debug_info then log:info("DEBUG INFO: " .. debug_info()) end
     log:write()
     old_error(msg, level)
 end
 
 local old_assert = assert
 assert = function(check, msg, level, debug_info)
+    msg = msg or "assertion failed!"
     return check or error(
         msg,
         (level or 1) + 1,
-        debug_info and debug_info() or nil)
+        debug_info)
 end
 
 declare("manager")

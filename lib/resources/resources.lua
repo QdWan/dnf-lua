@@ -3,6 +3,7 @@ local key_concat = util.key_concat
 local tileset_templates = require("templates")
 local crc32 = require("LAPHLibs.crc32").CRC32
 local lg = love.graphics
+local lg_newImage = lg.newImage
 
 local Resources = class("Resources")
 
@@ -28,12 +29,17 @@ function Resources:font(filename, size)
 end
 
 function Resources:image(filename, abs)
-    filename = assert(filename)
+    --[[
+    local caller = debug.getinfo(2)
+    log:warn(caller.source, caller.linedefined)
+    ]]--
+    filename = assert(filename,
+                      self.class.name .. ":image a file name is required")
     abs = abs or "resources/images/"
     local image = self.images[filename]
     if image == nil then
-        log:info("caching image:", filename)
-        image = love.graphics.newImage(
+        -- log:info("caching image:", filename)
+        image = lg_newImage(
             abs .. "/" .. filename
         )
         self._image = image
@@ -51,7 +57,6 @@ end
 local function load_tileset_files(sub, path, group)
     local count = 0
     local tiles = {}
-    local sources = {}
     local positions = {}
     local variations = {}
     local pos_zero_start_t = {} -- adjustment for when 'pos' starts at zero
@@ -107,13 +112,18 @@ local function load_tileset_files(sub, path, group)
             id[#id + 1] = Size(abs) .. abs .. Modified(abs)
 
             local info_map_k = name .. "\0" .. pos .. "\0" .. var
-            sources[#sources + 1] = tile
+            tiles[#tiles + 1] = tile
         end
-
     end
-    return {sources=sources, count=count, positions=positions,
-            variations=variations, group=group,
-            crc=string.format("%08x", crc32(table.concat(id, "\0")))}
+
+    local crc = string.format("%08x", crc32(table.concat(id, "\0")))
+
+    local sources = {sources=tiles, count=count, positions=positions,
+                     variations=variations, group=group, crc=crc}
+
+    bitser.dumpLoveFile("cache/" .. group .. "_" .. crc .. ".dat", sources)
+
+    return sources
 end
 
 local function create_atlas_and_quads(tileset)
@@ -140,7 +150,7 @@ local function create_atlas_and_quads(tileset)
         w = cache:getWidth() / 32
         h = cache:getHeight() / 32
         max_tiles_wide = w
-        log:warn("using cached canvas w, h, max_tiles_wide", w, h, max_tiles_wide)
+        log:info("using cached canvas w, h, max_tiles_wide", w, h, max_tiles_wide)
     end
 
     for _, tile in ipairs(tileset.sources) do
@@ -161,25 +171,25 @@ local function create_atlas_and_quads(tileset)
         end
     end
     if not cache then
+        assert(love.filesystem.createDirectory("cache"))
         -- EXPORT THE TILESET TO SAVE TIME IN THE FUTURE
-        atlas_data:encode("png", group .. "_" .. crc .. ".png")
+        atlas_data:encode("png", "cache/" .. group .. "_" .. crc .. ".png")
 
-        atlas = love.graphics.newImage(atlas_data)
+        atlas = lg_newImage(atlas_data)
         tileset.atlas = atlas
     end
 end
 
-local function load_cached_tileset(tileset)
+local function load_cached_tileset_image(tileset)
     local group, crc = tileset.group, tileset.crc
     local filename = group .. "_" .. crc .. ".png"
-    local abs = love.filesystem.getSaveDirectory()
-    local path = abs .. "/" .. filename
-    local cache = love.filesystem.exists(filename) and
-                  manager.resources:image(filename, "")
+    local cache_path = "cache/" .. filename
+    local cache = love.filesystem.exists(cache_path) and
+                  manager.resources:image(filename, "cache/")
 
     local png_pattern = "^(" .. group .. ")_[a-z0-9]+%.png$"
 
-    for _, item in ipairs(love.filesystem.getDirectoryItems("/")) do
+    for _, item in ipairs(love.filesystem.getDirectoryItems("cache/")) do
         local other_group = string.match(item, png_pattern)
         if item ~= filename and other_group and other_group == group then
             love.filesystem.remove(item)
@@ -188,18 +198,32 @@ local function load_cached_tileset(tileset)
     end
 
     if not cache then
-        log:warn("couldn't find cache for " .. filename)
+        log:warn("couldn't find cache for " .. cache_path)
     else
-        log:warn("recovering tileset cache " .. filename)
+        log:warn("recovering tileset cache: " .. cache_path)
         tileset.atlas = cache
         return true
     end
 end
+
+local function load_cached_tileset_data(group)
+    local cache_path = "cache/"
+    local dat_pattern = "^(" .. group .. ")_[a-z0-9]+%.dat$"
+    for _, item in ipairs(love.filesystem.getDirectoryItems(cache_path)) do
+        if string.find(item, dat_pattern) then
+            log:warn("recovering tileset data:  cache/" .. item)
+            return bitser.loadLoveFile("cache/" .. item)
+        end
+    end
+    log:warn("couldn't find data for tileset: " .. group)
+end
+
 local function load_tileset(group)
     local sub = tileset_templates[group]._default._folder
     local base_path = "resources/images/tilesets/" .. sub
-    local tileset = load_tileset_files(sub, base_path, group)
-    load_cached_tileset(tileset)
+    local tileset = load_cached_tileset_data(group) or
+                    load_tileset_files(sub, base_path, group)
+    load_cached_tileset_image(tileset)
     create_atlas_and_quads(tileset)
     tileset.atlas:setFilter("nearest", "linear")
     return tileset

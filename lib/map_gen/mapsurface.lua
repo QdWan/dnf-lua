@@ -5,8 +5,8 @@ local time = time
 local lm = love.math
 
 
-local W = 30
-local H = 30
+local W = 60
+local H = 60
 
 
 local MODULE = {}
@@ -24,25 +24,25 @@ end
 
 local function neighbors(map, t)
     local r = t.r or 1
+    local nodes = map.nodes
+    local index = t.i
     local get_pos = t.get_pos or false
 
     local w = map.w
     local h = map.h
     local size = w * h
-    local index = t.i
     local x = t.x or ((index - 1) % w) + 1
     local y = t.y or math.floor((index - 1) / w) + 1
     local res = {}
 
     for i = x-r, x+r do
         for j = y-r, y+r do
-            if (
-                i > 0 and i <= size and
+            local k = ((j - 1) * w) + i
+            if (i > 0 and i <= size and
                 j > 0 and j <= size and
-                not (i == x and j == x) -- self
-            ) then
-                local k = ((j - 1) * w) + i
-                res[#res + 1] = get_pos and k or map.nodes[k]
+                not (i == x and j == y) -- self
+                ) then
+                res[#res + 1] = get_pos and k or nodes[k]
             end
         end
     end
@@ -78,7 +78,7 @@ end
 local function get_water_ratio(nodes)
     local count = 0
     for _, node in ipairs(nodes) do
-        local template = node.meta._height_template
+        local template = node.template
         if template == "shallow_water" or template == "deep_water" then
             count = count + 1
         end
@@ -106,18 +106,20 @@ local function undeepify_water(node, grid)
 end
 
 
-local function compose_biome(n, _height, _heat, rain)
+local function compose_biome(n, _height, _heat, rain, water_r1, water_r2)
     local height = _height * 0.95 + n * 0.05
     local height2 = _height * 0.90 + n * 0.1
     local heat = _heat * 0.70 + (1 - rain) * 0.20 + n * 0.1
     local heat2 = _heat * 0.70 + (1 - rain) * 0.15 + n * 0.15
+    local wr1l = 0 -- water ratio at radius 2 lower limit
+    local wr2l = 0.5 -- water ratio at radius 2 lower limit
 
     if heat2 < 0.33 then
         if height <= 0.2 then
             return "arctic_deep_water"
         elseif height <= 0.27 then
             return "arctic_shallow_water"
-        elseif height <= 0.32 then
+        elseif water_r1 > 0 and (water_r2 > wr2l or height <= 0.32) then
             return "arctic coast"
         elseif 0.78 < height2 and height2 < 0.82 then
             return "arctic mountain"
@@ -134,8 +136,10 @@ local function compose_biome(n, _height, _heat, rain)
         return "shallow_water"
     -- temperate
     elseif heat2 < 0.52 then
-        if height <= 0.31 then
+        if water_r2 > 0 and (water_r1 > wr1l or water_r2 > wr2l or height <= 0.31) then
             return "coast"
+        elseif water_r2 > 0 then
+            return "boreal grassland"
         elseif (0.79 < height2 and height2 < 0.82) or 0.95 < height then
             return "mountain"
         elseif 0.70 < height2 and height2 < 0.72 then
@@ -149,8 +153,10 @@ local function compose_biome(n, _height, _heat, rain)
         end
     -- subtropical/temperate
     elseif heat2 < 0.77 then
-        if height <= 0.31 then
+        if water_r2 > 0 and (water_r1 > wr1l or water_r2 > wr2l or height <= 0.31) then
             return "coast"
+        elseif water_r2 > 0 then
+            return "grassland"
         elseif (0.79 < height2 and height2 < 0.82) or 0.95 < height then
             return "mountain"
         elseif 0.70 < height2 and height2 < 0.72 then
@@ -168,8 +174,10 @@ local function compose_biome(n, _height, _heat, rain)
         end
     -- tropical
     else
-        if height <= 0.32 and rain > 0.34 then
+        if water_r2 > 0 and (water_r1 > wr1l or water_r2 > wr2l or height <= 0.32) then
             return "coast"
+        elseif water_r2 > 0 then
+            return "savana"
         elseif (0.79 < height2 and height2 < 0.82) or 0.90 < height then
             return "mountain"
         elseif 0.70 < height2 and height2 < 0.72 then
@@ -758,16 +766,23 @@ function HeightmapBase:standard_map(_)
         local meta = node.meta
         meta.rainfall_template = "rainfall_view"
         meta.rainfall_id = tile_templates[meta.rainfall_template]["id"]
-        local height_nodes = neighbors(self.map, {i=i, r=4})
-        local water_ratio = get_water_ratio(height_nodes)
+        local height_nodes_r1 = neighbors(self.map, {i=i, r=1})
+        local water_ratio_r1 = get_water_ratio(height_nodes_r1)
+        meta.water_ratio_r1 = water_ratio_r1
+        local height_nodes_r2 = neighbors(self.map, {i=i, r=2})
+        local water_ratio_r2 = get_water_ratio(height_nodes_r2)
+        meta.water_ratio_r2 = water_ratio_r2
+        local height_nodes_r4 = neighbors(self.map, {i=i, r=4})
+        local water_ratio_r4 = get_water_ratio(height_nodes_r4)
+        meta.water_ratio_r4 = water_ratio_r4
         local v = precipitation(
-            meta.height_value, meta.heat_value, water_ratio)
+            meta.height_value, meta.heat_value, water_ratio_r4)
         meta.rainfall_value = v
         meta.rainfall_color = {floor((1 - v) * 255), 0, floor(v * 255)}
 
         node.template = compose_biome(
-            meta.noise_value, meta.height_value,
-            meta.heat_value, meta.rainfall_value)
+            meta.noise_value, meta.height_value, meta.heat_value,
+            meta.rainfall_value, water_ratio_r1, water_ratio_r2)
     end
     for i, node in ipairs(nodes) do
         if (node.template == "deep_water" or

@@ -1,3 +1,5 @@
+--[[Diamong-square algorithm-based map]]--
+
 local map_gen_surface = require("map_gen.mapsurface")
 local HeightmapBase = map_gen_surface.HeightmapBase
 local creator = require("map_gen.creator")
@@ -36,7 +38,7 @@ end
 function MapSurface01:create(header)
     HeightmapBase.create(self, header)  -- super
     self:diamond_square()
-    -- self:scale(2)
+    self:scale(2)
     self:set_base_feature()
 
     local map = self:standard_map()
