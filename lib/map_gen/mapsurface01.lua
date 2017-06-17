@@ -36,6 +36,8 @@ function MapSurface01:adjust_size(_w, _h)
 end
 
 function MapSurface01:create(header)
+    local t0 = time()
+    log:warn(self.class.name .. ":create => start")
     HeightmapBase.create(self, header)  -- super
     self:diamond_square()
     self:scale(2)
@@ -44,6 +46,7 @@ function MapSurface01:create(header)
     local map = self:standard_map()
 
     apply_tiling(map)
+    log:warn(self.class.name .. ":create => done", time() - t0 .. "s")
 
     return map
 end

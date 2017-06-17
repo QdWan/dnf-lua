@@ -44,7 +44,6 @@ entities.EntityBase = EntityBase
 -- ############
 
 local TileEntity = class('TileEntity', EntityBase)
-local first_run = {}
 
 function TileEntity:init(t)
     --[[Generic map entity, supposed to be inherited by specific ones.
@@ -55,10 +54,6 @@ function TileEntity:init(t)
     TileEntity.super.init(self, t) -- super
 
     for k, v in next, t, nil do
-        if not first_run[k] then
-            first_run[k] = v
-            log:warn("TileEntity:init", k, v)
-        end
         self[k] = v
     end
 

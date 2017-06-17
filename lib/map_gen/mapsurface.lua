@@ -735,6 +735,8 @@ function HeightmapBase:set_base_feature()
 end
 
 function HeightmapBase:standard_map(_)
+    local t0 = time()
+    log:warn(self.class.name .. ":standard_map => start")
     local map = self.map
     local w, h = map.w, map.h
 
@@ -791,8 +793,14 @@ function HeightmapBase:standard_map(_)
         end
     end
     self.views = {false, "height_", "heat_", "rainfall_"}
+    collectgarbage()
+    log:warn("nodes before std garbage count: " ..
+             collectgarbage('count') .. "kb")
 
-    return MapCreator.standard_map(self)  -- super
+    local map = MapCreator.standard_map(self)  -- super
+    log:warn(self.class.name .. ":standard_map => done", time() - t0 .. "s")
+
+    return map
 end
 
 

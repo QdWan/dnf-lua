@@ -174,23 +174,30 @@ function NodeGroup:init(t)
 end
 
 
+
 -- ############
---   Position class
+--[[ Position struct
+
+    Contain x and y coordinates.
+
+    Args:
+        x (number): position relative to the horizontal axis.
+        y (number): position relative to the vertical axis.
+]]--
 -- ############
 
-local Position = class("Position")
-map_containers.Position = Position
+ffi.cdef[[
+typedef struct {
+    uint8_t   x;
+    uint8_t   y;
+} position;
+]]
 
-function Position:init(x, y)
-    --[[Contain x and y coordinates.
-
-        Args:
-            x (number): position relative to the horizontal axis.
-            y (number): position relative to the vertical axis.
-        ]]--
-        self.x = x
-        self.y = y
-end
-
+ffi.metatype("position", {
+    __tostring = function(self)
+        return "Position(x=" .. self.x .. ", y=" .. self.y .. ")"
+    end
+})
+map_containers.Position = ffi.typeof('position')
 
 return map_containers

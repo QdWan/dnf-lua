@@ -1,4 +1,5 @@
 local utf8 = require("utf8")
+local time = time or require("time").time
 
 local util = {}
 

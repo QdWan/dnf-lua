@@ -1,10 +1,10 @@
 local creature = require("dnf.creature")
+local Populator = require("dnf.populator")
 local map_containers = require("dnf.map_containers")
 local map_gen = require("map_gen")
 
 
 local DATA_FILE = "save.zip"
-
 
 
 local World = class("World")
@@ -42,6 +42,8 @@ function World:create(t)
     }
     local creator = map_gen.creator.get(surface_header)
     local surface_map = creator:create(surface_header)
+    local populator = Populator(surface_map)
+    populator:populate()
     self.maps:add(surface_map)
     self.current_map = surface_map
 end

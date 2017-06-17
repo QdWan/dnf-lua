@@ -1,5 +1,8 @@
 require("rs_strict")
 
+declare("ffi")
+ffi = require("ffi")
+
 declare("time")
 time = require("time").time
 
