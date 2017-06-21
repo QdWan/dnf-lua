@@ -158,7 +158,7 @@ local NodeGroup = class("NodeGroup")
 map_containers.NodeGroup = NodeGroup
 
 function NodeGroup:init(t)
-    --[[Contain all the entities in a map position/node.
+    --[[Contain references to all the entities in a map position/node.
 
         Args:
             t (table): table containing the below keyword arguments.

@@ -1,4 +1,5 @@
-local util = require("util")
+local copy_depth = require("util.copy_depth")
+local merge_tables = require("util.merge_tables")
 local ODict = require("collections.odict")
 
 
@@ -99,7 +100,7 @@ end
 function Widget:copy_style()
     return {
         font_size = self.font_size,
-        color = util.copy_depth(self.color, 1),
+        color = copy_depth(self.color, 1),
         font_name = self.font_name,
         hover = self.hover,
         font_obj = self.font_obj
@@ -117,8 +118,8 @@ function Widget:get_args(t)
 
     local style, new_style
     if default_style ~= nil then
-        style = util.copy_depth(default_style, 2)
-        args = util.merge_tables(style, t)
+        style = copy_depth(default_style, 2)
+        args = merge_tables(style, t)
     else
         args = t
     end
@@ -128,7 +129,7 @@ function Widget:get_args(t)
         commands[cmd] = args.commands[cmd] or {}
     end
     args.commands = commands
-    args = util.merge_tables(GRID_DEFAULTS, args)
+    args = merge_tables(GRID_DEFAULTS, args)
 
     for k, v in pairs(args) do
         self[k] = v

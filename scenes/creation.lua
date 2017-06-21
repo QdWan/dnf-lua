@@ -4,7 +4,7 @@ local SceneCreation = class("SceneCreation", SceneBase)
 local creature = require("dnf.creature")
 local World = require("dnf.world")
 local dnf_data = require("data.core")
-local util = require("util")
+local trim_last = require("util.trim_last")
 local descriptions = require("descriptions")()
 
 local player, values, update_values, selected_row, description, rows,
@@ -31,7 +31,7 @@ local function change_name(event)
     elseif event.t then
             player.name = player.name .. event.t
     elseif event.key == "backspace" then
-            player.name = util.trim_last(player.name)
+            player.name = trim_last(player.name)
     elseif event.dy then
         creature.change_name(player)
     end

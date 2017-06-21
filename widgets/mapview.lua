@@ -1,5 +1,6 @@
 local Widget = require("widgets.base")
 local Stateful = require("stateful")
+local templates = require("templates")
 
 
 local MapView = class("MapView", Widget)
@@ -25,7 +26,7 @@ function MapView:updateMapSize()
         (self.w / (self.tileSize * self.zoomX))), self.map.w)
     self.vertical_tiles = math.min(math.ceil(
         (self.h / (self.tileSize * self.zoomY))), self.map.h)
-    log:warn(self.class.name, "updateMapSize",
+    log:info(self.class.name, "updateMapSize",
              "horizontal_tiles", self.horizontal_tiles,
              "vertical_tiles",   self.vertical_tiles)
 end
@@ -58,6 +59,8 @@ function MapView:updateTilesetBatch()
     local mapX = self.mapX
     local mapY = self.mapY
     local map = self.map
+    local map_w, map_h = map.w, map.h
+    local tiles = map.tiles
     local tileSize = self.tileSize
     local max_x = self.horizontal_tiles-1
     local max_y = self.vertical_tiles-1
@@ -75,10 +78,11 @@ function MapView:updateTilesetBatch()
 
     for x = 0, max_x do
         for y = 0, max_y do
-            local node = assert(map:get(x + mapX, y + mapY), string.format(
-                "invalid node index x %d, y %d", x + mapX, y + mapY))
+            local i = (((y + mapY) - 1) * map_w) + (x + mapX)
+            assert(i > 0 and i <= map_w * map_h, "invalid node")
+            local tile = tiles[i]
 
-            local quad, color, tile_debug = self:get_quad(node, meta)
+            local quad, color, tile_debug = self:get_tile_quad(tile, meta)
             tiles_batch:setColor(color)
 
             tiles_batch:add(quad, floor(x*tileSize), floor(y*tileSize))
@@ -188,7 +192,7 @@ end
 function MapView:scroll(dx, dy)
     dx = (1 / self.zoomX) * dx
     dy = (1 / self.zoomY) * dy
-    log:warn(self.class.name, "scroll dx, dy", dx, dy)
+    log:info(self.class.name, "scroll dx, dy", dx, dy)
     self:moveMap(dx, dy)
 end
 
@@ -217,99 +221,86 @@ function MapView:set_zoom(v)
     self:moveMap(0, 0)
 end
 
-function MapView:get_quad(node, meta)
+function MapView:get_tile_quad(tile)
     local resources = manager.resources
-    local map = self.map
-
-    local tile = node.tile
-
+    local template_enum = tile.template
+    local template = templates.enum.TileEntity[template_enum]
+    local template_name = template._key
     local color, tile_debug
+
     local tile_pos = tile.tile_pos
-    if tile.image == "ascii" then
-        if not tile_pos then
-            tile_pos = tile.id
-            tile.tile_pos = tile_pos
+    if tile_pos == 0 then
+        if template.image == "ascii" then
+            tile_pos = template.id
+        else
+            tile_pos = 1
         end
-        color = tile.color
-        if #color == 3 then color[#color + 1] = 255 end
+        tile.tile_pos = tile_pos
+    end
+
+    local tile_var =  tile.tile_var
+    if tile_var == 0 then
+        tile_var = math.random(
+            resources:get_position_variations(
+                "TileEntity", template_name, tile_pos))
+        tile.tile_var = tile_var
+    end
+
+    if template.image == "ascii" then
+        color = template.color
     else
+        color = {255, 255, 255}
         tile_debug = {
             text=tile_pos,
-            color=tile.label_color
+            color=template.label_color
         }
-        color = {255, 255, 255, 255}
     end
 
-    local quad = tile.quad
+    -- cache or load cached quad
+    template.cache = template.cache or {}
+    local quad_key = tile_pos .. "\0" .. tile_var
+    local quad = template[quad_key]
     if quad == nil then
-        local template = tile.template
-
-
-        local tile_var = tile.tile_var or math.random(
-            resources:get_position_variations(
-                "TileEntity", template, tile_pos))
-        tile.tile_var = tile.tile_var or tile_var
-
         local sprite = resources:tile(
-            "TileEntity", template, tile_pos, tile_var)
+            "TileEntity", template_name, tile_pos, tile_var)
         quad = sprite.quad
-        tile.quad = quad
+        template[quad_key] = quad
     end
 
-    return quad, color, tile_debug
+    return quad, color, tile_debug, template, quad_key
 end
 
-function MetaView:get_quad(node, meta)
+function MetaView:get_tile_quad(tile)
     local resources = manager.resources
     local map = self.map
-    local tiles_batch = self.tiles_batch
+    local color, tile_debug
+    local meta = tile.meta
 
-    local tile = node.tile.meta
-    assert(tile, "invalid tile", 1, function() return inspect(node.tile) end)
     local view = map.views[self.view + 1]
-
     local template_k = view .. "template"
-    local id_k = view .. "id"
     local color_k = view .. "color"
-    local quad_k = view .. "quad"
 
-    local quad = tile[quad_k]
+    local template_enum = meta[template_k]
+    local template = templates.enum.TileEntity[template_enum]
+    local tile_pos = template.id
+    local tile_var = 1
+
+    local color = meta[color_k]
+    color = {color.r, color.g, color.b}
+
+    -- cache or load cached quad
+    template.cache = template.cache or {}
+    local quad_key = tile_pos .. "\0" .. tile_var
+    local quad = template[quad_key]
     if quad == nil then
-        local template = tile[template_k]
-
-        local tile_pos = tile[id_k]
-
-        local tile_var = 1
-
-        log:info(view .. " meta tile: " .. inspect(tile))
         local sprite = resources:tile(
             "TileEntity", "_default", tile_pos, tile_var)
         quad = sprite.quad
-        tile[quad_k] = quad
-        assert(
-            quad, "invalid quad", 1,
-            function()
-                return inspect({
-                    template=template,
-                    tile_pos=tile_pos,
-                    tile_var=tile_var,
-                    sprite=sprite,
-                })
-            end)
+        template[quad_key] = quad
     end
 
 
-    local color = tile[color_k]
-    if #color == 3 then color[#color + 1] = 255 end
-
-    if meta or tile.image == "ascii" then
-        local c = tile[color_k]
-        tiles_batch:setColor(c[1], c[2], c[3], 255)
-    else
-        tiles_batch:setColor(255, 255, 255, 255)
-    end
-
-    return quad, color
+    return quad, color, tile_debug, template, quad_key
 end
 
 return MapView

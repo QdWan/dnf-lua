@@ -1,5 +1,4 @@
 local Widget = require("widgets.base")
-local util = require("util")
 
 
 local lg = love.graphics

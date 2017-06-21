@@ -3,19 +3,19 @@ local Rect = require('rect')
 
 
 single_test = not auto and true or false
-local SceneBase = require("scenes.test_base")
+local SceneTestBase = require("scenes.test_base")
 
 
-local SceneSplash = class("SceneSplash", SceneBase)
+local SceneButtonTest1 = class("SceneButtonTest1", SceneTestBase)
 
-function SceneSplash:init()
-    SceneBase.init(self) -- super
+function SceneButtonTest1:init()
+    SceneTestBase.init(self) -- super
     self:set_img()
     self.alpha = 0
     self.alpha_factor = 0.5
 end
 
-function SceneSplash:set_img()
+function SceneButtonTest1:set_img()
     self.frame = widgets.Frame({
         parent=self,
         rect=self.rect,
@@ -36,6 +36,6 @@ function SceneSplash:set_img()
     self.frame:grid()
 end
 
-return SceneSplash
+return SceneButtonTest1
 
 

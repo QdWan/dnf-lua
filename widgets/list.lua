@@ -1,7 +1,7 @@
 local Frame = require("widgets.frame")
 local Label = require("widgets.label")
 local inspect = require("inspect")
-local util = require("util")
+local merge_tables = require("util.merge_tables")
 
 
 local style = {
@@ -33,7 +33,7 @@ function List:insert(t)
         style.text = t
         style.parent = self
     else
-        style = util.merge_tables(self:copy_style(), t)
+        style = merge_tables(self:copy_style(), t)
         style.parent = self
     end
     style.sticky = self.align

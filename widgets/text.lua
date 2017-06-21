@@ -1,5 +1,5 @@
 local Style = require("style")
-local util = require("util")
+local split = require("util.split")
 
 local Widget = require("widgets.base")
 
@@ -122,12 +122,12 @@ function Text:parse_text()
 
     local default_style = Style.default_style
 
-    local lines = util.split(self.text, "\n")
+    local lines = split(self.text, "\n")
     local y = 0
     local wrap
     for line_n = 1, #lines do
         line = lines[line_n]
-        styles = util.split(line, "{style}")
+        styles = split(line, "{style}")
         local x = 0
         local text, styled_txt
         for style_n = 1, #styles do

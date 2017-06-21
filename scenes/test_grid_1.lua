@@ -1,15 +1,14 @@
 local widgets = require("widgets")
 
 
-local single_test = not auto and true or false
-local SceneBase = require("scenes.test_base")
-auto.single_test = single_test
+single_test = not auto and true or false
+local SceneTestBase = require("scenes.test_base")
 
 
-local SceneGridTest = class("SceneGridTest", SceneBase)
+local SceneGridTest1 = class("SceneGridTest1", SceneTestBase)
 
-function SceneGridTest:init()
-    SceneBase.init(self) -- super
+function SceneGridTest1:init()
+    SceneTestBase.init(self) -- super
 
     self.frame = widgets.Frame({
         parent=self,
@@ -64,4 +63,4 @@ function SceneGridTest:init()
     self.frame:grid()
 end
 
-return SceneGridTest
+return SceneGridTest1

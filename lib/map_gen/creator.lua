@@ -17,23 +17,23 @@
     - make the last room used as end and place down stairs.
 --]]
 
-
 local map_containers = require("dnf.map_containers")
 local entities = require("dnf.entities")
-
 local map_gen_base = require("map_gen.base")
+local Graph = map_gen_base.Graph
+local templates = require("templates")
+local tile_templates = templates.enum.TileEntity
 
 local max = math.max
 local min = math.min
 
-local Graph = map_gen_base.Graph
 
 
 local creator = {}
 
 local function get_creator(header)
     -- Utility method to create by mode/name.
-    return creator[header.creator]()
+    return require("map_gen." .. header.creator)
 end
 
 creator.get = get_creator
@@ -46,69 +46,37 @@ function MapCreator:create(cols, rows)
     self.map = Graph(cols, rows)
 end
 
-function MapCreator:standard_map(graph)
-    local graph = graph or self.map
-    local map = map_containers.Map{
-        header = self.header,
-        rooms = self.rooms,
-        halls = self.halls,
-        doors = self.doors,
-        w = graph.w,
-        h = graph.h,
-        tile_fx = {},
-        links = {},
-        _start = self.start_pos,
-        _end = self.end_pos,
-        nodes = graph.nodes,
-        views = self.views,
-    }
-    local TileEntity = entities.TileEntity
-    local NodeGroup = map_containers.NodeGroup
-    local nodes = map.nodes
-    for i, node in ipairs(nodes) do
-        local new_node = NodeGroup{
-            tile = TileEntity({
-                name = node.template,
-                color = node.color,
-                meta = node.meta,
-            })
-        }
-        new_node.neighbors = node.neighbors
-        nodes[i] = new_node
-    end
-    return map
-end
-
 creator.MapCreator = MapCreator
 -- ##########
+
 
 local function calculate_tiling(map, tile, i, fn)
     --[[Calculate the tile index of a node based on its neighbors.]]--
     local s = 0
-    local nodes = map.nodes
-    local neighbors = nodes[i].neighbors[1]
+    local tiles = map.tiles
+    local neighbors = assert(tile.neighbors)
 
     local north_index = neighbors.north
-    local north_tile = north_index and nodes[north_index].tile
-    if north_tile and tile.id ~= north_tile and fn(tile, north_tile) then
+    local north_tile = north_index > 0 and tiles[north_index]
+    if north_tile and north_tile ~= tile and fn(tile, north_tile) then
         s = s + 1
     end
 
     local west_index = neighbors.west
-    local west_tile = west_index and nodes[west_index].tile
-    if west_tile and tile.id ~= west_tile and fn(tile, west_tile) then
+    local west_tile = west_index > 0 and tiles[west_index]
+    if west_tile and west_tile ~= tile and fn(tile, west_tile) then
         s = s + 2
     end
 
     local east_index = neighbors.east
-    local east_tile = east_index and nodes[east_index].tile
-    if east_tile and tile.id ~= east_tile and fn(tile, east_tile) then
+    local east_tile = east_index > 0 and tiles[east_index]
+    if east_tile and east_tile ~= tile and fn(tile, east_tile) then
         s = s + 4
     end
 
     local south_index = neighbors.south
-    local south_tile = south_index and nodes[south_index].tile
-    if south_tile and tile.id ~= south_tile and fn(tile, south_tile) then
+    local south_tile = south_index > 0 and tiles[south_index]
+    if south_tile and south_tile ~= tile and fn(tile, south_tile) then
         s = s + 8
     end
 
@@ -131,8 +99,8 @@ local function calculate_tiling_8bit(map, tile, i, same)
     --[[Calculate the tile index of a node based on its neighbors.
 
     Cardinal directions and diagonals are considered.]]--
-    local nodes = map.nodes
-    local neighbors = nodes[i].neighbors[1]
+    local tiles = map.tiles
+    local neighbors = tiles[i].neighbors
 
     local directions = {
         northwest = {v = 2^0, condition = {"north", "west"}}, --   1-
@@ -147,7 +115,7 @@ local function calculate_tiling_8bit(map, tile, i, same)
 
     local function should_count(direction)
         local index = neighbors[direction]
-        local neighbor_tile = index and nodes[index].tile
+        local neighbor_tile = index ~= 0 and tiles[index]
         return not neighbor_tile or same(tile, neighbor_tile)
     end
 
@@ -170,7 +138,9 @@ local function calculate_tiling_8bit(map, tile, i, same)
 end
 
 local function calculate_shadow(node, neighbor)
-    return not neighbor.block_sight
+    local tile_templates = tile_templates
+    local template = tile_templates[neighbor.template]
+    return not template.block_sight
 end
 
 local tiling_compare = {}
@@ -180,32 +150,61 @@ function tiling_compare.same_template(node, neighbor)
 end
 
 function tiling_compare.same_id(node, neighbor)
-    return node.id == neighbor.id
+    local tile_templates = tile_templates
+    local template = tile_templates[node.template]
+    local n_template = tile_templates[neighbor.template]
+    return template.id == n_template.id
 end
 
 function tiling_compare.is_water(node, neighbor)
-    return string.find(neighbor.template, "water") and true or false
+    local tile_templates = tile_templates
+    local n_template = tile_templates[neighbor.template]
+    return n_template.is_water
 end
 
 local function apply_tiling(map)
     local tiling_compare = tiling_compare
-    for i, node in ipairs(map.nodes) do
-        local tile = node.tile
-        if tile.receive_shadow then
+    local tiles = map.tiles
+    local tile_templates = tile_templates
+    for i = 1, map.w * map.h do
+        local tile = map.tiles[i]
+        local template = tile_templates[tile.template]
+        if template.receive_shadow then
             tile.tile_pos_shadow = calculate_tiling(
                 map, tile, i, calculate_shadow)
         end
-        if tile.tiling == "8bit" then
+        if template.tiling == "8bit" then
             tile.tile_pos = calculate_tiling_8bit(
                 map, tile, i,
-                assert(tiling_compare[tile.compare_function], string.format(
-                    "invalid compare_function ('%s') on template '%s'", tile.compare_function, node.template)
-                ))
-
+                assert(tiling_compare[template.compare_function],
+                    string.format(
+                        "invalid compare_function ('%s') on template '%s'",
+                        template.compare_function, tile.template
+                    )
+                )
+            )
         end
     end
     return map
 end
 creator.apply_tiling = apply_tiling
+
+function creator.standard_map(graph, header, info)
+    info = info or {}
+    local map = map_containers.Map{
+        w = graph.w,
+        h = graph.h,
+        tiles = graph.nodes,
+        header = header,
+        rooms = info.rooms,
+        halls = info.halls,
+        doors = info.doors,
+        tile_fx = {},
+        links = {},
+        _start = info.start_pos,
+        _end = info.end_pos,
+    }
+    return map
+end
 
 return creator

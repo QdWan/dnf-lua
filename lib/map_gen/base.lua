@@ -1,28 +1,36 @@
 local PriorityQueue = require("collections.priority_queue")
 local shuffle = require("shuffle")
 local Rect = require("rect")
-local util = require("util")
+local ffi_struct = require("util.ffi_struct")
+local templates = require("templates")
+local TileConstants = templates.constants.EnumTileEntity
+local WALL = TileConstants.wall
+local FLOOR = TileConstants.floor
+local HALL = TileConstants.hall
 
 local COST = {
-    hall = 6,
-    floor = 64,
-    wall = 12
+    [HALL] = 6,
+    [FLOOR] = 64,
+    [WALL] = 12
 }
 
 local map_gen = {}
 
 
 local function heapsort(t, cmp)
-    local pq = PriorityQueue()
+    local pq = PriorityQueue({mode="highest_table"})
     for i = 1, #t do
         local node = t[i]
         local priority = cmp(node)
-        pq:put(node, priority)
+        pq:put({v=node, p=priority})
     end
     local sorted = {}
-    while not pq:empty() do
-        sorted[#sorted + 1] = pq:pop()
-    end
+    repeat
+        local v = pq:pop_safe()
+        if v then
+            sorted[#sorted + 1] = v.v
+        end
+    until v == nil
     return sorted
 end
 
@@ -42,8 +50,8 @@ end
 map_gen.heuristic2d = heuristic2d
 
 local function item_in_array(item, group)
-    for i = 1, #group do
-        if item == group[i] then
+    for _, cmp in ipairs(group) do
+        if item == cmp then
             return true
         end
     end
@@ -61,7 +69,7 @@ local function to_2d(i, w, h)
     if i == 0 or i > w * h then
         error(string.format("to_2d error: i = %d", i))
     end
-    return (((i - 1) % w) + 1), math.floor((i - 1) / w) + 1
+    return ((i - 1) % w) + 1, math.floor((i - 1) / w) + 1
 end
 
 local function print_graph(graph)
@@ -75,9 +83,9 @@ local function print_graph(graph)
         for x = 1, w do
             local node = graph:get(x, y)
             local c
-            if node.template == "wall" then
+            if node.template == WALL then
                 c = "#"
-            elseif node.template == "floor" then
+            elseif node.template == FLOOR then
                 c = "."
             else
                 c = "?"
@@ -102,13 +110,7 @@ local function neighbors(i, w, h, r, node)
 
     node.neighbors = node.neighbors or {}
 
-    local t = node.neighbors[r]
-    if t then
-        return t
-    else
-        t = {}
-        node.neighbors[r] = t
-    end
+    local t = node.neighbors
 
     -- north_neighbor
     local v = i - (w * r)
@@ -202,7 +204,7 @@ local Room = class("Room", Rect)
 map_gen.Room = Room
 
 function Room:random_pos(_map, templates, ignore)
-    local templates = templates or {"floor"}
+    local templates = templates or {FLOOR}
     local ignore = ignore or {}
     local tiles = shuffle(self:tiles(), true)
     for i = 1, #tiles do
@@ -233,23 +235,87 @@ end
 
 
 -- ##########
--- GraphNode class
-local GraphNode = class("GraphNode")
+-- NodeNeighbors struct
+local _NodeNeighbors = [[typedef struct {
+    uint16_t  north;
+    uint16_t  east;
+    uint16_t  south;
+    uint16_t  west;
+    uint16_t  northeast;
+    uint16_t  southeast;
+    uint16_t  southwest;
+    uint16_t  northwest;
+} NodeNeighbors;]]
+ffi_struct("NodeNeighbors", _NodeNeighbors)
+-- end of NodeNeighbors struct
+-- ##########
 
-function GraphNode:init(t)
-    t = t or {}
-    self.x = t.x or false
-    self.y = t.y or false
-    self.block = t.block or false
-    self.explored = t.explored or false
-    self.template = t.template or "wall"
-    self.cost = t.cost or COST[self.template]
-end
 
-function GraphNode:set_template(name)
-    self.template = name
-    self.cost = COST[name]
+-- ##########
+-- RGBColor struct
+local _RGBColor = [[typedef struct {
+    uint8_t   r;
+    uint8_t   g;
+    uint8_t   b;
+} RGBColor;]]
+ffi_struct("RGBColor", _RGBColor)
+-- end of RGBColor struct
+-- ##########
+
+
+-- ##########
+-- GraphNodeMeta struct
+local _GraphNodeMeta = [[typedef struct {
+    RGBColor heat_color;
+    uint8_t heat_template;
+    double heat_value;
+
+    RGBColor height_color;
+    uint8_t height_template;
+    double height_value;
+
+    RGBColor rainfall_color;
+    uint8_t rainfall_template;
+    double rainfall_value;
+
+    double noise_value;
+    double water_ratio_r1;
+    double water_ratio_r2;
+    double water_ratio_r4;
+    double forest_ratio_r4;
+} GraphNodeMeta;]]
+ffi_struct("GraphNodeMeta", _GraphNodeMeta)
+-- end of GraphNodeMeta struct
+-- ##########
+
+
+-- ##########
+-- GraphNode struct
+local _GraphNode = [[typedef struct {
+    uint16_t  x;
+    uint16_t  y;
+    uint16_t  cost;
+    bool  block;
+    bool  explored;
+    double value;
+    uint8_t template;
+    uint8_t tile_pos;
+    uint8_t tile_pos_shadow;
+    uint8_t tile_var;
+    NodeNeighbors neighbors;
+    GraphNodeMeta meta;
+} GraphNode;]]
+local GraphNode_mt, GraphNode_keys = ffi_struct(
+    "GraphNode", _GraphNode, false)
+GraphNode_mt.__index = {}
+local GraphNode_functions = GraphNode_mt.__index
+function GraphNode_functions.set_template(self, template)
+    self.template = template
+    self.cost = COST[template]
 end
+ffi.metatype("GraphNode", GraphNode_mt)
+local GraphNode = ffi.typeof('GraphNode')
+-- end of GraphNode struct
 -- ##########
 
 
@@ -267,37 +333,29 @@ function Graph:init(w, h, map_file)
     local random = love.math.random or math.random
     local to_2d = to_2d
 
-    self.nodes = {}
-    local nodes = self.nodes
+    self.nodes = ffi.new("GraphNode[?]", (w * h) + 1)
 
     local txt, block
-    local map = {}
     self.w = w
     self.h = h
 
     self:fill()
 end
 
-function Graph:create_node(x, y, i)
-    local w = self.w
-    local h = self.h
-    local r = 1
-    local node = GraphNode{
-        x = x, y = y,
-    }
-    neighbors(i, w, h, r, node)
-    return node
-end
-
 function Graph:fill()
     local t0 = time()
-    log:warn("Graph:fill: start")
     local w, h = self.w, self.h
+    log:warn("Graph:fill: start w " .. w .. ", h " .. h)
     local nodes = self.nodes
+    local floor = math.floor
+    local WALL, COST_WALL = WALL, COST[WALL]
+    local neighbors = neighbors
+
     for i  = 1, w * h do
-        -- WARNING: Graph:fill: done, 2.6598110933094
-        local x, y  = to_2d(i, w, h)
-        nodes[i] = self:create_node(x, y, i)
+        local node = nodes[i]
+        node.x, node.y = (((i - 1) % w) + 1), floor((i - 1) / w) + 1
+        node.template, node.cost = WALL, COST_WALL
+        neighbors(i, w, h, 1, node)
     end
     log:warn("Graph:fill: done", time() - t0)
 end
@@ -349,15 +407,15 @@ local function a_star_search(graph, start, goal, cost, neighbors)
     local w = graph.w
     local h = graph.h
     local heuristic = heuristic  -- heuristic(a, b, w, h)
-    local frontier = PriorityQueue()
+    local frontier = PriorityQueue({mode="lowest_table"})
     local came_from = {}
     local cost_so_far = {}
 
-    frontier:put(start, 0)
+    frontier:put({v=start, p=0})
     cost_so_far[start] = 0
 
     while not frontier:empty() do
-        local current = frontier:pop()
+        local current = frontier:pop().v
 
         if current == goal then
             break
@@ -365,13 +423,13 @@ local function a_star_search(graph, start, goal, cost, neighbors)
 
         local node_neighbors = neighbors and neighbors(current) or
                                nodes[current].neighbors[1]
-        for i, _next in ipairs(node_neighbors) do
-            local new_cost = cost_so_far[current] + cost(current, _next)
-            if cost_so_far[_next] == nil or new_cost < cost_so_far[_next] then
-                cost_so_far[_next] = new_cost
-                local priority = new_cost + heuristic(goal, _next, w, h)
-                frontier:put(_next, priority)
-                came_from[_next] = current
+        for i, nxt in ipairs(node_neighbors) do
+            local new_cost = cost_so_far[current] + cost(graph, current, nxt)
+            if cost_so_far[nxt] == nil or new_cost < cost_so_far[nxt] then
+                cost_so_far[nxt] = new_cost
+                local priority = new_cost + heuristic(goal, nxt, w, h)
+                frontier:put({v=nxt, p=priority})
+                came_from[nxt] = current
             end
         end
     end

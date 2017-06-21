@@ -1,118 +1,234 @@
---[[  Priority Queue implementation based on a binary heap.
+--[[ Priority queue implemented as a binary heap.
 
-Copyright (C) 2017 Lucas de Morais Siqueira <lucas.morais.siqueira@gmail.com>
+    heap.lua: Written by Cosmin Apreutesei. Public Domain.
+        https://github.com/luapower/heap
 
-License: zlib
-
-  This software is provided 'as-is', without any express or implied
-  warranty. In no event will the authors be held liable for any damages
-  arising from the use of this software.
-
-  Permission is granted to anyone to use this software for any purpose,
-  including commercial applications, and to alter it and redistribute it
-  freely, subject to the following restrictions:
-
-  1. The origin of this software must not be misrepresented; you must not
-     claim that you wrote the original software. If you use this software
-     in a product, an acknowledgement in the product documentation would be
-     appreciated but is not required.
-  2. Altered source versions must be plainly marked as such, and must not be
-     misrepresented as being the original software.
-  3. This notice may not be removed or altered from any source distribution.
+    * Modified by Lucas Siqueira
 ]]--
 
+local assert, error, floor = assert, error, math.floor
 
-local PriorityQueue = class("PriorityQueue")
+local MODULE = {}
 
-function PriorityQueue:init()
-    --[[  Initialization.
+local cmp = {
+    highest =       function(a, b) return a > b end,
+    highest_table = function(a, b) return a.p > b.p end,
+    lowest =        function(a, b) return a < b end,
+    lowest_table =  function(a, b) return a.p < b.p end
+}
 
-    Example:
-        PriorityQueue = require("priority_queue")
-        pq = PriorityQueue()
-    ]]--
-    self.heap = {}
-    self.current_size = 0
-end
+local function PriorityQueue(h)
+    h = h or {}
+    local t, n = h, #h
 
-function PriorityQueue:empty()
-    return self.current_size == 0
-end
+    h.cmp = h.cmp or cmp[h.mode or "highest"]
 
-function PriorityQueue:size()
-    return self.current_size
-end
-
-function PriorityQueue:swim()
-    -- Swim up on the tree and fix the order heap property.
-    local heap = self.heap
-    local floor = math.floor
-    local i = self.current_size
-
-    while floor(i * 0.5) > 0 do
-        local half = floor(i * 0.5)
-        if heap[i][2] < heap[half][2] then
-            heap[i], heap[half] = heap[half], heap[i]
-        end
-        i = half
+    local function add(v)
+        n=n+1
+        t[n]=v
     end
-end
 
-function PriorityQueue:put(v, p)
-    --[[ Put an item on the queue.
-
-    Args:
-        v: the item to be stored
-        p(number): the priority of the item
-    ]]--
-    --
-
-    self.heap[self.current_size + 1] = {v, p}
-    self.current_size = self.current_size + 1
-    self:swim()
-end
-
-function PriorityQueue:sink()
-    -- Sink down on the tree and fix the order heap property.
-    local size = self.current_size
-    local heap = self.heap
-    local i = 1
-
-    while (i * 2) <= size do
-        local mc = self:min_child(i)
-        if heap[i][2] > heap[mc][2] then
-            heap[i], heap[mc] = heap[mc], heap[i]
-        end
-        i = mc
+    local function rem()
+        t[n]=nil
+        n=n-1
     end
-end
 
-function PriorityQueue:min_child(i)
-    if (i * 2) + 1 > self.current_size then
-        return i * 2
-    else
-        if self.heap[i * 2][2] < self.heap[i * 2 + 1][2] then
-            return i * 2
+    local function moveup(child)
+        local parent = floor(child / 2)
+        while child > 1 and h.cmp(t[child], t[parent]) do
+            t[child], t[parent] = t[parent], t[child] -- swap
+            child = parent
+            parent = floor(child / 2)
+        end
+        return child
+    end
+
+    local function movedown(parent)
+        local last = n
+        local child = parent * 2
+        while child <= last do
+            if child + 1 <= last and h.cmp(t[child + 1], t[child]) then
+                child = child + 1 --sibling is smaller
+            end
+            if not h.cmp(t[child], t[parent]) then break end
+            t[child], t[parent] = t[parent], t[child] -- swap
+            parent = child
+            child = parent * 2
+        end
+        return parent
+    end
+
+    local function push(val)
+        add(val)
+        return moveup(n)
+    end
+
+    local function pop(i)
+        t[i], t[n] = t[n], t[i] -- swap
+        rem()
+        movedown(i)
+    end
+
+    local function rebalance(i)
+        if moveup(i) == i then
+            movedown(i)
+        end
+    end
+
+    local function get(i)
+        assert(i >= 1 and i <= n, 'invalid index')
+        return t[i]
+    end
+
+    function h:push(v)
+        assert(v ~= nil, 'invalid value')
+        push(v)
+    end
+    h.put = h.push
+
+    function h:pop(i)
+        assert(n > 0, 'buffer underflow')
+        local v = get(i or 1)
+        pop(i or 1)
+        return v
+    end
+
+    function h:pop_safe(i)
+        if n <1 then
+            return nil
         else
-            return i * 2 + 1
+            local v = get(i or 1)
+            pop(i or 1)
+            return v
         end
     end
-end
 
-function PriorityQueue:pop()
-    -- Remove and return the top priority item
-    local heap = self.heap
-    local retval = heap[1][1]
-    heap[1] = heap[self.current_size]
-    heap[self.current_size] = nil
-    self.current_size = self.current_size - 1
-    self:sink()
-    return retval
-end
+    function h:peek(i)
+        return get(i or 1)
+    end
 
-function PriorityQueue:get_top()
-    -- Return the top priority item without removing it
-    return self.heap[1][1]
-end
+    function h:replace(i, v)
+        assert(i >= 1 and i <= n, 'invalid index')
+        t[i] = v
+        rebalance(i)
+    end
 
-return PriorityQueue
+    function h:size()
+        return n
+    end
+
+    function h:empty()
+        return n == 0
+    end
+
+    return h
+end
+MODULE.PriorityQueue = PriorityQueue
+
+local function highest_table(h)
+    h = h or {}
+    local t, n = h, #h
+
+    local function add(v)
+        n=n+1
+        t[n]=v
+    end
+
+    local function rem()
+        t[n]=nil
+        n=n-1
+    end
+
+    local function moveup(child)
+        local parent = floor(child / 2)
+        while child > 1 and (t[child].p > t[parent].p) do
+            t[child], t[parent] = t[parent], t[child] -- swap
+            child = parent
+            parent = floor(child / 2)
+        end
+        return child
+    end
+
+    local function movedown(parent)
+        local last = n
+        local child = parent * 2
+        while child <= last do
+            if child + 1 <= last and (t[child + 1].p > t[child].p) then
+                child = child + 1 --sibling is smaller
+            end
+            if not (t[child].p > t[parent].p) then break end
+            t[child], t[parent] = t[parent], t[child] -- swap
+            parent = child
+            child = parent * 2
+        end
+        return parent
+    end
+
+    local function push(val)
+        add(val)
+        return moveup(n)
+    end
+
+    local function pop(i)
+        t[i], t[n] = t[n], t[i] -- swap
+        rem()
+        movedown(i)
+    end
+
+    local function rebalance(i)
+        if moveup(i) == i then
+            movedown(i)
+        end
+    end
+
+    local function get(i)
+        assert(i >= 1 and i <= n, 'invalid index')
+        return t[i]
+    end
+
+    function h:push(v)
+        assert(v ~= nil, 'invalid value')
+        push(v)
+    end
+    h.put = h.push
+
+    function h:pop(i)
+        assert(n > 0, 'buffer underflow')
+        local v = get(i or 1)
+        pop(i or 1)
+        return v
+    end
+
+    function h:pop_safe(i)
+        if n <1 then
+            return nil
+        else
+            local v = get(i or 1)
+            pop(i or 1)
+            return v
+        end
+    end
+
+    function h:peek(i)
+        return get(i or 1)
+    end
+
+    function h:replace(i, v)
+        assert(i >= 1 and i <= n, 'invalid index')
+        t[i] = v
+        rebalance(i)
+    end
+
+    function h:size()
+        return n
+    end
+
+    function h:empty()
+        return n == 0
+    end
+
+    return h
+end
+MODULE.PQHT = highest_table
+
+return MODULE

@@ -3,21 +3,20 @@ local time = require("time")
 local math_min = math.min
 
 
-local single_test = not auto and true or false
-local SceneBase = require("scenes.test_base")
-auto.single_test = single_test
+single_test = not auto and true or false
+local SceneTestBase = require("scenes.test_base")
 
 
-local SceneSplash = class("SceneSplash", SceneBase)
+local SceneImageTest2 = class("SceneImageTest2", SceneTestBase)
 
-function SceneSplash:init()
-    SceneBase.init(self) -- super
+function SceneImageTest2:init()
+    SceneTestBase.init(self) -- super
     self:set_img()
     self.alpha = 0
     self.alpha_factor = 0.5
 end
 
-function SceneSplash:set_img()
+function SceneImageTest2:set_img()
     self.frame = widgets.Frame({
         parent=self,
         rect=self.rect,
@@ -44,6 +43,6 @@ function SceneSplash:set_img()
     self.frame:grid()
 end
 
-return SceneSplash
+return SceneImageTest2
 
 

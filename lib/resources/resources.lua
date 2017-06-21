@@ -1,7 +1,6 @@
-local util = require("util")
-local key_concat = util.key_concat
-local tileset_templates = require("templates")
-local crc32 = require("LAPHLibs.crc32").CRC32
+local key_concat = require("util.key_concat")
+local templates_data = require("data.templates_data")
+local crc32 = require("crc32").CRC32
 local lg = love.graphics
 local lg_newImage = lg.newImage
 
@@ -38,7 +37,7 @@ function Resources:image(filename, abs)
     abs = abs or "resources/images/"
     local image = self.images[filename]
     if image == nil then
-        -- log:info("caching image:", filename)
+        log:info("caching image: " .. filename)
         image = lg_newImage(
             abs .. "/" .. filename
         )
@@ -87,7 +86,7 @@ local function load_tileset_files(sub, path, group)
             end
             pos = pos + pos_zero_start
             assert(pos > 0)
-            positions[name] = max(positions[name] or 0, pos)
+            positions[name] = max(positions[name] or 1, pos)
 
             local var_key = name .. "\0" .. pos
             local var_zero_start = var_zero_start_t[var_key]
@@ -98,7 +97,7 @@ local function load_tileset_files(sub, path, group)
             var = var + var_zero_start
             assert(var > 0)
             local var_k = name .. "\0" .. pos
-            variations[var_k] = max(positions[var_k] or 0, var)
+            variations[var_k] = max(positions[var_k] or 1, var)
 
             local info_map_k = name .. "\0" .. pos .. "\0" .. var
             local tile = {
@@ -219,7 +218,8 @@ local function load_cached_tileset_data(group)
 end
 
 local function load_tileset(group)
-    local sub = tileset_templates[group]._default._folder
+    assert(templates_data[group])
+    local sub = templates_data[group]._default._folder
     local base_path = "resources/images/tilesets/" .. sub
     local tileset = load_cached_tileset_data(group) or
                     load_tileset_files(sub, base_path, group)
@@ -241,11 +241,13 @@ function Resources:tileset(group)
 end
 
 function Resources:get_position_variations(group, name, pos)
-    local template = tileset_templates[group][name]
-    local image_name = template.image
+    local image_name = assert(
+        templates_data[group][name].image,
+        string.format("invalid template: %s, %s, %d", group, name, pos))
+
     local tileset = self:tileset(group)
     local var_k = image_name .. "\0" .. pos
-    return tileset.variations[var_k]
+    return assert(tileset.variations[var_k], "something is wrong with this tile ".. var_k .. " pos " .. pos, 1, function() log:info(inspect(tileset.variations, {depth=1})); return "" end)
 end
 
 function Resources:get_tile_variations(group, name)
@@ -261,7 +263,7 @@ function Resources:tile(group, name, pos, var)
     local tile = self.tiles[key]
     if tile == nil then
         local tileset = self:tileset(group)
-        local template = tileset_templates[group][name]
+        local template = templates_data[group][name]
         local info_map_k = template.image .. "\0" .. pos .. "\0" .. var
         local atlas, info_map = tileset.atlas, tileset.info_map
         tile = assert(info_map[info_map_k], "invalid tile " .. info_map_k,

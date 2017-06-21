@@ -2,30 +2,30 @@ local widgets = require("widgets")
 local Stateful = require("stateful")
 
 
-local single_test = not auto and true or false
-local SceneBase = require("scenes.test_base")
+single_test = not auto and true or false
+local SceneTestBase = require("scenes.test_base")
 auto.functions = {
     function(scene) scene:keypressed("tab") end,
     function(scene) scene:keypressed("tab") end
 }
-auto.single_test = single_test
 
 
-local SceneMap = class("SceneMap", SceneBase)
-SceneMap:include(Stateful)
 
-function SceneMap:init(param)
-    SceneMap.super.init(self)
+local SceneStatefulTest = class("SceneStatefulTest", SceneTestBase)
+SceneStatefulTest:include(Stateful)
+
+function SceneStatefulTest:init(param)
+    SceneStatefulTest.super.init(self)
     self.string = "Default state"
     self.anim = 3
     self:set_msg()
 end
 
-function SceneMap:get_msg()
+function SceneStatefulTest:get_msg()
     return self.string .. string.rep(".", self.anim)
 end
 
-function SceneMap:set_msg()
+function SceneStatefulTest:set_msg()
     self.frame = widgets.Frame({
         parent=self,
         -- bg_color={0, 0, 255, 255},
@@ -50,20 +50,20 @@ function SceneMap:set_msg()
     self.frame:grid()
 end
 
-function SceneMap:update(dt)
+function SceneStatefulTest:update(dt)
     self.anim = (self.anim + dt * 2) % 4
     self.msg.text = self:get_msg()
-    SceneMap.super.update(self, dt)
+    SceneStatefulTest.super.update(self, dt)
 end
 
-function SceneMap:keypressed(key, scancode, isrepeat)
+function SceneStatefulTest:keypressed(key, scancode, isrepeat)
     if key == 'tab' then
         self:gotoState('Abnormal')
     end
 end
 
 
-local Abnormal = SceneMap:addState('Abnormal')
+local Abnormal = SceneStatefulTest:addState('Abnormal')
 
 function Abnormal:get_msg()
     return 'Abnormal state' .. string.rep(".", self.anim)
@@ -78,4 +78,4 @@ end
 
 
 
-return SceneMap
+return SceneStatefulTest

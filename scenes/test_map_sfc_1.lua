@@ -6,9 +6,9 @@ single_test = not auto and true or false
 local SceneTestBase = require("scenes.test_base")
 
 
-local SceneMapSurface01 = class("SceneMapSurface01", SceneMap)
+local SceneMapSurfaceTest1 = class("SceneMapSurfaceTest1", SceneMap)
 
-function SceneMapSurface01:init()
+function SceneMapSurfaceTest1:init()
     world = world or World({
         header= map_containers.MapHeader{
         global_pos = map_containers.Position(0, 0),
@@ -20,11 +20,11 @@ function SceneMapSurface01:init()
     SceneMap.init(self) -- super
 end
 
-function SceneMapSurface01:update(dt)
+function SceneMapSurfaceTest1:update(dt)
     SceneMap.update(self, dt) -- super
     SceneTestBase.update(self, dt) -- super/test
 end
 
-return SceneMapSurface01
+return SceneMapSurfaceTest1
 
 

@@ -22,7 +22,7 @@ function love.conf(t)
     t.gammacorrect = false
 
     -- The window title (string)
-    t.window.title = "Untitled"
+    t.window.title = "Dungeons & Fiends v0.1"
 
     -- Filepath to an image to use as the window's icon (string)
     t.window.icon = nil

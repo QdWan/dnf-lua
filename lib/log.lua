@@ -1,5 +1,4 @@
-local util = require("util")
-local extend = util.extend_array
+local extend_array = require("util.extend_array")
 
 local OUTFILE = "log.log"
 local VERBOSITY_LEVEL = 1

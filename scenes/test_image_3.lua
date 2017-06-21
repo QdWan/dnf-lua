@@ -1,20 +1,19 @@
 local widgets = require("widgets")
 
 
-local single_test = not auto and true or false
-local SceneBase = require("scenes.test_base")
-auto.single_test = single_test
+single_test = not auto and true or false
+local SceneTestBase = require("scenes.test_base")
 
 
-local SceneSplash = class("SceneSplash", SceneBase)
+local SceneImageTest3 = class("SceneImageTest3", SceneTestBase)
 
-function SceneSplash:init()
-    SceneBase.init(self) -- super
+function SceneImageTest3:init()
+    SceneTestBase.init(self) -- super
     self.canvas = manager.resources:tileset("TileEntity").atlas
     self:set_img()
 end
 
-function SceneSplash:set_img()
+function SceneImageTest3:set_img()
     self.frame = widgets.Frame({
         parent=self,
         rect=self.rect,
@@ -31,6 +30,6 @@ function SceneSplash:set_img()
     self.frame:grid()
 end
 
-return SceneSplash
+return SceneImageTest3
 
 

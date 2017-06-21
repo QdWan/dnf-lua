@@ -218,10 +218,13 @@ local function prof_annotate(count1, samples)
                 end
             elseif v2 then
                 show = n+ann
+                local rel_file = string.find(file, "^[a-zA-Z]") and
+                                 "../" .. file or
+                                 file
                 out:write(
-                    "      |" .. string.rep("_", 54) ..
-                    "\n      |@@ " .. format(
-                        "Profile: %s:%d: @@\n      |\n", file, n))
+                    format(
+                    "Profile: %s:%d:", rel_file, n) ..
+                    "\n       " .. string.rep("_", 54) .. "\n")
             end
             if not show then
                 goto next

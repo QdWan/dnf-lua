@@ -1,5 +1,5 @@
 local Widget = require("widgets.base")
-local util = require("util")
+local copy_depth = require("util.copy_depth")
 
 
 local lg = love.graphics
@@ -45,7 +45,7 @@ function Label:draw()
     local coloredtext, text
     if self.coloredtext then
         if self.cursor_blink and self.blink_status < 40 and self.state == "hover" then
-            coloredtext = util.copy_depth(self.coloredtext, 2)
+            coloredtext = copy_depth(self.coloredtext, 2)
             coloredtext[#coloredtext +1] = self.color
             coloredtext[#coloredtext +1] = self.cursor_char
         else

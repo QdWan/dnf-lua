@@ -12,7 +12,7 @@ function Manager:init()
     manager = self
     self:set_event_triggers()
     self:set_event_observers()
-    self.scene = "splash_love"
+    self.scene = "test_base"
     self.time = time
     self.audio = AudioManager()
     self.jukebox = LuaJukeBox()
@@ -99,9 +99,11 @@ function Manager:get_initial_scene(args)
     local scene
     for i, arg in ipairs(args) do
         scene = string.match(arg, "%-%-scene=(.+)")
-        if scene then break end
+        if scene then
+            self.scene = scene
+            break
+        end
     end
-    self.scene = scene
 end
 
 
@@ -114,6 +116,8 @@ function Manager:set_scene(scene, args)
     if self.scene and self.scene.unload then
         local previous_scene = self.scene.class.name
         local g0 = collectgarbage('count')
+        log:warn("Manager.set_scene memory use before unloading: " ..
+                 g0 .. "kb")
         self.scene:unload()
         local g1 = collectgarbage('count')
         log:warn(string.format(
@@ -179,7 +183,10 @@ function Manager:run()
     local step = lt.step
 
     if lm then
-        lm.setRandomSeed(os.time())
+        local seed = 1497763837 -- os.time()
+        math.randomseed(seed)
+        lm.setRandomSeed(seed)
+        manager.seed = seed
     end
 
     -- one-time function, no need to set a dispatcher here

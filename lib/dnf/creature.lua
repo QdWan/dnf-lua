@@ -1,5 +1,11 @@
 local core = require("data.core")
-local util = require("util")
+local round = require("util.round")
+local split = require("util.split")
+local has_key = require("util.has_key")
+local copy_depth = require("util.copy_depth")
+local table_sum = require("util.table_sum")
+local choice = require("util.choice")
+local index = require("util.index")
 local dice = require("dnf.dice")
 local namegen = require("namegen")
 
@@ -96,7 +102,7 @@ local function unit_conversion(value, from, to, d)
     if lenght[from] ~= nil then
         to = to or 'm'
         d = d or 2
-        return util.round(value * lenght[from] / lenght[to], 2)
+        return round(value * lenght[from] / lenght[to], 2)
     end
 
     -- lenght in kilograms
@@ -109,7 +115,7 @@ local function unit_conversion(value, from, to, d)
     }
     if weight[from] ~= nil then
         to = to or 'kg'
-        return util.round(value * weight[from] / weight[to], 2)
+        return round(value * weight[from] / weight[to], 2)
     end
 
     error("invalid unit:", from)
@@ -121,7 +127,7 @@ local function height_weight(race, gender, modifiers)
 
     local hw_dict = core.hw_dict[race][gender]
 
-    local splitted = util.split(hw_dict[1], "'")
+    local splitted = split(hw_dict[1], "'")
     local h_feets, h_inches = splitted[1], splitted[2]
     print("rolls", hw_dict[3][1], "faces", hw_dict[3][2])
     local roll_result = dice.roll({
@@ -131,7 +137,7 @@ local function height_weight(race, gender, modifiers)
     local height_inches = tonumber(h_feets) * 12 + tonumber(h_inches) + roll_result
     local weight = (hw_dict[2] +
               (roll_result * hw_dict[4]))
-    local height_feet = util.round(height_inches / 12, 2)
+    local height_feet = round(height_inches / 12, 2)
     return height_feet, weight
 end
 
@@ -146,9 +152,9 @@ local function roll_attributes(verbose)
     racial adjustments) is 1 or lower, or if the highest score is 14 or
     lower.
     ]]--
+    local max, min, unpack = math.max, math.min, unpack
     local verbose = verbose or DEFAULTS.verbose
-    local table_sum = util.table_sum
-    local table_max = util.table_max
+    local table_sum = table_sum
 
     local rolls = 0
     local attributes = {0, 0, 0, 0, 0, 0}
@@ -177,20 +183,20 @@ local function roll_attributes(verbose)
         if verbose then
             print(inspect(attributes), string.format(
                 "min %d, max %d, avg %d",
-                util.table_min(attributes),
-                util.table_max(attributes),
-                util.table_sum(attributes) / #attributes
+                min(unpack(attributes)),
+                max(unpack(attributes)),
+                table_sum(attributes) / #attributes
             ))
             print(inspect(attribute_modifiers), string.format(
                 "min %d, max %d, avg %d, sum %d",
-                util.table_min(attribute_modifiers),
-                util.table_max(attribute_modifiers),
-                util.table_sum(attribute_modifiers) / #attribute_modifiers,
-                util.table_sum(attribute_modifiers)
+                min(unpack(attribute_modifiers)),
+                max(unpack(attribute_modifiers)),
+                table_sum(attribute_modifiers) / #attribute_modifiers,
+                table_sum(attribute_modifiers)
             ))
         end
     until table_sum(attribute_modifiers) > 0 and
-          table_max(attributes) > 13
+          max(unpack(attributes)) > 13
 
 
     return attributes
@@ -200,7 +206,7 @@ local Creature
 
 local function has_character_race(t)
     local race = t["race"]
-    return race and util.has_key(races, race) or false
+    return race and has_key(races, race) or false
 end
 
 local change_race, change_class, change_gender, change_height_weight,
@@ -246,9 +252,9 @@ end
 
 function change_race(creature, race)
     if race == nil then
-        creature.race = util.choice(races)
+        creature.race = choice(races)
     elseif type(race) == "number" then
-        local index = util.index(races, creature.race)
+        local index = index(races, creature.race)
         index = ((index + race - 1) % #races) + 1
         creature.race = races[index]
     else
@@ -275,11 +281,11 @@ function change_class(creature, class)
     local current_class
 
     if class == nil then
-        current_class = util.choice(classes)
+        current_class = choice(classes)
         creature.classes = {[current_class] = 1}
     elseif type(class) == "number" then
-        current_class = util.choice(creature.classes)
-        local index = util.index(classes, current_class)
+        current_class = choice(creature.classes)
+        local index = index(classes, current_class)
         index = ((index + class - 1) % #classes) + 1
         current_class = classes[index]
         creature.classes = {[current_class] = 1}
@@ -307,9 +313,9 @@ function change_gender(creature, gender)
     if creature.race == "changeling" then
         creature.race = "female"
     elseif gender == nil then
-        creature.gender = util.choice(core.genders)
+        creature.gender = choice(core.genders)
     elseif type(gender) == "number" then
-        local index = util.index(core.genders, creature.gender)
+        local index = index(core.genders, creature.gender)
         index = ((index + gender - 1) % #core.genders) + 1
         creature.gender = core.genders[index]
     else
@@ -329,13 +335,13 @@ function change_height_weight(creature)
 end
 
 function change_alignment(creature, alignment)
-    local alignments = class_alignments(util.choice(creature.classes))
+    local alignments = class_alignments(choice(creature.classes))
     -- print("alignments", inspect(alignments))
     if alignment == nil then
-        local class = util.choice(creature.classes)
-        creature.alignment = util.choice(alignments)
+        local class = choice(creature.classes)
+        creature.alignment = choice(alignments)
     elseif type(alignment) == "number" then
-        local index = util.index(alignments, creature.alignment) or 1
+        local index = index(alignments, creature.alignment) or 1
         index = ((index + alignment - 1) % #alignments) + 1
         creature.alignment = alignments[index]
     else
@@ -361,7 +367,7 @@ end
 function change_age(creature, age)
     local race = creature.race
     if age == nil then
-        local class = (creature.classes and util.choice(creature.classes)
+        local class = (creature.classes and choice(creature.classes)
                        or nil)
         creature.age, creature.max_age = get_age(race, class)
     else
@@ -441,7 +447,7 @@ local function set_atk(creature, atk)
         ['melee_esp'] =  {}
     }
 
-    local base_atk = util.copy_depth(atk, 2)
+    local base_atk = copy_depth(atk, 2)
     print("base_atk", inspect(base_atk))
     base_atk.melee = base_atk.melee or 0
 

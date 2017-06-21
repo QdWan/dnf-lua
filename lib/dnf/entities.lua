@@ -6,8 +6,9 @@ local entities = {}
 
 local function apply_template(entity)
     local keys = {}
-    local default_table = tile_templates[entity.class.name]._default
-    local template_table = tile_templates[entity.class.name][entity.template]
+    local group = tile_templates[entity.class.name]
+    local default_table = assert(group._default)
+    local template_table = assert(group[entity.template])
     for _, t in ipairs({template_table, default_table}) do
         for k, _ in pairs(t) do
             keys[k] = true

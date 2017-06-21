@@ -1,4 +1,4 @@
-local util = require("util")
+local table_sum = require("util.table_sum")
 
 local dice = {}
 
@@ -61,14 +61,14 @@ local function roll(t, verbose)
     local result, min_roll
     if mode == nil then
         -- standard mode
-        result = util.table_sum(roll_list)
+        result = table_sum(roll_list)
         if verbose then
             io.write(result)
             print()
         end
     elseif mode == 'discard_lowest' then
-        min_roll = util.table_min(roll_list)
-        result = util.table_sum(roll_list) - min_roll
+        min_roll = math.min(unpack(roll_list))
+        result = table_sum(roll_list) - min_roll
         if verbose then
             io.write(string.format("%d (discarding %d)", result, min_roll))
             print()

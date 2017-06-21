@@ -2,15 +2,13 @@ local map_containers = require("dnf.map_containers")
 local World = require("dnf.world")
 local SceneMap = require("scenes.map")
 
-
-local single_test = not auto and true or false
+single_test = not auto and true or false
 local SceneTestBase = require("scenes.test_base")
-auto.single_test = single_test
 
 
-local SceneMapSurface02 = class("SceneMapSurface02", SceneMap)
+local SceneMapSurfaceTest2 = class("SceneMapSurfaceTest2", SceneMap)
 
-function SceneMapSurface02:init()
+function SceneMapSurfaceTest2:init()
     world = world or World({
         header= map_containers.MapHeader{
         global_pos = map_containers.Position(0, 0),
@@ -22,11 +20,11 @@ function SceneMapSurface02:init()
     SceneMap.init(self) -- super
 end
 
-function SceneMapSurface02:update(dt)
+function SceneMapSurfaceTest2:update(dt)
     SceneMap.update(self, dt) -- super
     SceneTestBase.update(self, dt) -- super/test
 end
 
-return SceneMapSurface02
+return SceneMapSurfaceTest2
 
 

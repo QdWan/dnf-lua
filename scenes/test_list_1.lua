@@ -1,19 +1,18 @@
 local widgets = require("widgets")
 
 
-local single_test = not auto and true or false
-local SceneBase = require("scenes.test_base")
+single_test = not auto and true or false
+local SceneTestBase = require("scenes.test_base")
 auto.functions = {
     function(scene) scene:keypressed("tab") end,
     function(scene) scene:keypressed("tab") end
 }
-auto.single_test = single_test
 
 
-local SceneMainMenu = class("SceneMainMenu", SceneBase)
+local SceneListTest1 = class("SceneListTest1", SceneTestBase)
 
-function SceneMainMenu:init()
-    SceneBase.init(self) -- super
+function SceneListTest1:init()
+    SceneTestBase.init(self) -- super
     self.frame = widgets.Frame({
         parent=self,
         -- bg_color={0, 0, 255, 255},
@@ -66,4 +65,4 @@ function SceneMainMenu:init()
     self.frame:grid()
 end
 
-return SceneMainMenu
+return SceneListTest1

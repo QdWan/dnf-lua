@@ -1,20 +1,33 @@
-local map_gen_surface = require("map_gen.mapsurface")
-local HeightmapBase = map_gen_surface.HeightmapBase
+--[[
+TEST
+package.path = ";c:/luapower/?.lua;" .. package.path
 
+love = require("loveless")
 
-local MapSurface02 = class("MapSurface02", HeightmapBase)
+require("main")
+]]--
+--[[
+TEST
+]]--
+local map_gen_base = require("map_gen.base")
+local Graph = map_gen_base.Graph
+local map_sfc = require("map_gen.mapsurface")
+local creator = require("map_gen.creator")
 
-function MapSurface02:create(header)
-    HeightmapBase.create(self, header)  -- super
-    self:init_grid{v=0.09}
-    self:deposition()
+local function create(header)
+    local graph = Graph(129, 129)
+    map_sfc.init_grid(graph, {v=0.09})
+    map_sfc.deposition(graph)
+    map_sfc.apply_on_graph(graph, map_sfc.erupt, {k=0.2, name="erupt"})
+    map_sfc.smoothe(graph, {k=0.60})
+    map_sfc.set_base_feature(graph)
+    map_sfc.compose_biomes(graph)
 
-    self:erupt_grid{k=0.2}
+    local map = map_sfc.standard_map(graph, header)
+    creator.apply_tiling(map)
 
-    self:smoothe{times=1, k=0.60, mode=0}
-    self:set_base_feature()
-
-    return self:standard_map()
+    return map
 end
 
-return MapSurface02
+--create()
+return create

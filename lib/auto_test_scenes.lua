@@ -46,13 +46,16 @@ end
 function AutoTestScenes:next_scene(scene)
     local scene_to_call
     self.scene, scene_to_call = iter(self.scenes, self.scene)
-    if single_test or not scene_to_call then
-        love.event.quit()
+    if self.loop then
+        self.index = 0
+        scene_to_call = self.scenes[self.scene or 1]
+    elseif single_test or not scene_to_call then
+        return love.event.quit()
     else
         self.index = 0
         self.functions = {}
-        return events:trigger({'SET_SCENE'}, scene_to_call)
     end
+    return events:trigger({'SET_SCENE'}, scene_to_call)
 end
 
 function AutoTestScenes:enter(scene)

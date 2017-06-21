@@ -1,6 +1,5 @@
 local ODict = require("collections.odict")
-local util = require("util")
-local split = util.split
+local split = require("util.split")
 local LuaJukeBox = class("LuaJukeBox")
 
 local K = 2
