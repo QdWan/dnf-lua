@@ -12,7 +12,7 @@ function Manager:init()
     manager = self
     self:set_event_triggers()
     self:set_event_observers()
-    self.scene = "test_base"
+    self.scene = "test_map_sfc_1"
     self.time = time
     self.audio = AudioManager()
     self.jukebox = LuaJukeBox()

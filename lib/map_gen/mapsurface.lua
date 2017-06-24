@@ -1,36 +1,12 @@
 local log_base = require("util.log_base")
 local creator = require("map_gen.creator")
 local Graph = require("map_gen.base").Graph
+local decide = require("decide")
 
 local templates = require("templates")
 local tile_templates = templates.enum.TileEntity
-local TileConstants = templates.constants.EnumTileEntity
-local MOUNTAIN = TileConstants.mountain
-local HILL = TileConstants.hill
-local LAND = TileConstants.land
-local COAST = TileConstants.coast
-local HEAT_VIEW = TileConstants.heat_view
-local RAINFALL_VIEW = TileConstants.rainfall_view
-local ARCTIC_COAST = TileConstants.arctic_coast
-local ARCTIC_MOUNTAIN = TileConstants.arctic_mountain
-local ARCTIC_HILL = TileConstants.arctic_hill
-local ARCTIC_LAND = TileConstants.arctic_land
-local BOREAL_GRASSLAND = TileConstants.boreal_grassland
-local TEMPERATE_DESERT = TileConstants.temperate_desert
-local GRASSLAND = TileConstants.grassland
-local SUBTROPICAL_DESERT = TileConstants.subtropical_desert
-local SAVANA = TileConstants.savana
-local TROPICAL_DESERT = TileConstants.tropical_desert
-local WATER = TileConstants.water
-local SHALLOW_WATER = TileConstants.shallow_water
-local DEEP_WATER = TileConstants.deep_water
-local ARCTIC_SHALLOW_WATER = TileConstants.arctic_shallow_water
-local ARCTIC_DEEP_WATER = TileConstants.arctic_deep_water
-local BOREAL_FOREST = TileConstants.boreal_forest
-local WOODLAND = TileConstants.woodland
-local TEMPERATE_DECIDUOUS_FOREST = TileConstants.temperate_deciduous_forest
-local TEMPERATE_RAIN_FOREST = TileConstants.temperate_rain_forest
-local TROPICAL_RAIN_FOREST = TileConstants.tropical_rain_forest
+local tile_constants = templates.constants.EnumTileEntity
+
 local tile_groups  = templates.constants.groups
 local WATER_GROUP  = tile_groups.WATER_GROUP
 local FOREST_GROUP = tile_groups.FOREST_GROUP
@@ -115,6 +91,27 @@ local function midpoint(a, b)
     return math.ceil((b - a) / 2) + a
 end
 
+local function remove_dots(graph, node, list)
+    local undesired = {node}
+    local nodes = graph.nodes
+    local quantity = {}
+    local highest
+    for _, i in ipairs(list) do
+        local n = nodes[i]
+        local template = n.template
+        if template == node.template then
+            undesired[#undesired + 1] = n
+        end
+        quantity[template] = (quantity[template] or 0) + 1
+        if highest == nil or quantity[template] > quantity[highest] then
+            highest = template
+        end
+    end
+    for _, n in ipairs(undesired) do
+        n.template = highest
+    end
+end
+
 local function get_ratio(graph, list, table)
     local nodes = graph.nodes
     local count = 0
@@ -129,8 +126,8 @@ end
 
 local function precipitation(height, heat, water_ratio)
     return ((1 - height) * 0.25 +
-            heat * 0.4 +
-            water_ratio * 0.35)
+            heat * 0.45 +
+            water_ratio * 0.30)
 end
 
 local function undeepify_water(graph, i)
@@ -149,7 +146,8 @@ local function undeepify_water(graph, i)
     return template
 end
 
-local function get_biome_template(node, i)
+local function set_biome(node, i)
+    local tile_constants = tile_constants
     local meta = node.meta
     local n = meta.noise_value
     local _height = meta.height_value
@@ -158,14 +156,6 @@ local function get_biome_template(node, i)
     local water_r1 = meta.water_ratio_r1
     local water_r2 = meta.water_ratio_r2
 
-
-    if i == 37445 then
-        log:warn("COMPOSE_BIOME DEBUG")
-        log:warn(tostring(node))
-        log:warn(string.format(
-            "n %d, _height %d, _heat %d, rain %d, water_r1 %d, water_r2 %d, i %d",
-            n, _height, _heat, rain, water_r1, water_r2, i))
-    end
     local height = _height * 0.95 + n * 0.05
     local height2 = _height * 0.90 + n * 0.1
     local heat = _heat * 0.70 + (1 - rain) * 0.20 + n * 0.1
@@ -173,84 +163,92 @@ local function get_biome_template(node, i)
     local wr1l = 0 -- water ratio at radius 2 lower limit
     local wr2l = 0.5 -- water ratio at radius 2 lower limit
 
+    -- arctic
     if heat2 < 0.33 then
         if height <= 0.2 then
-            return ARCTIC_DEEP_WATER
+            node.template = tile_constants.ARCTIC_DEEP_WATER
         elseif height <= 0.27 then
-            return ARCTIC_SHALLOW_WATER
+            node.template = tile_constants.ARCTIC_SHALLOW_WATER
         elseif water_r1 > 0 and (water_r2 > wr2l or height <= 0.32) then
-            return ARCTIC_COAST
-        elseif 0.78 < height2 and height2 < 0.82 then
-            return ARCTIC_MOUNTAIN
-        elseif 0.70 < height2 and height2 < 0.72 then
-            return ARCTIC_HILL
-        else  -- arctic
-            return ARCTIC_LAND
+            node.template = tile_constants.ARCTIC_COAST
+        -- elseif 0.78 < height2 and height2 < 0.82 then
+        elseif 0.48 < height2 and height2 < 0.52 then
+            node.template = tile_constants.ARCTIC_MOUNTAIN
+        -- elseif 0.70 < height2 and height2 < 0.72 then
+        elseif 0.425 < height2 and height2 < 0.435 then
+            node.template = tile_constants.ARCTIC_HILL
+        else
+            node.template = tile_constants.ARCTIC_LAND
         end
-    end
-
-    if height <= 0.22 then
-        return DEEP_WATER
-    elseif height <= 0.27 then
-        return SHALLOW_WATER
-
     -- temperate
-    elseif heat2 < 0.52 then
-        if water_r2 > 0 and (water_r1 > wr1l or water_r2 > wr2l or height <= 0.31) then
-            return COAST
+    elseif heat2 < 0.55 then
+        if height <= 0.22 then
+            node.template = tile_constants.DEEP_WATER
+        elseif height <= 0.27 then
+            node.template = tile_constants.SHALLOW_WATER
+        elseif water_r2 > 0 and (water_r1 > wr1l or water_r2 > wr2l or
+                                 height <= 0.31) then
+            node.template = tile_constants.TEMPERATE_COAST
         elseif water_r2 > 0 then
-            return BOREAL_GRASSLAND
+            node.template = tile_constants.BOREAL_GRASSLAND
         elseif (0.79 < height2 and height2 < 0.82) or 0.95 < height then
-            return MOUNTAIN
+            node.template = tile_constants.TEMPERATE_MOUNTAIN
         elseif 0.70 < height2 and height2 < 0.72 then
-            return HILL
+            node.template = tile_constants.TEMPERATE_HILL
         elseif rain < 0.25 and (0.44 < height2 and height2 < 0.5) then
-            return TEMPERATE_DESERT
+            node.template = tile_constants.TEMPERATE_DESERT
         elseif rain < 0.29 then
-            return BOREAL_GRASSLAND
+            node.template = tile_constants.BOREAL_GRASSLAND
         else
-            return BOREAL_FOREST  -- conifer
+            node.template = tile_constants.BOREAL_FOREST
         end
-
-    -- subtropical/temperate
-    elseif heat2 < 0.77 then
-        if water_r2 > 0 and (water_r1 > wr1l or water_r2 > wr2l or height <= 0.31) then
-            return COAST
+    -- subtropical
+    elseif heat2 < 0.80 then
+        if height <= 0.22 then
+            node.template = tile_constants.DEEP_WATER
+        elseif height <= 0.27 then
+            node.template = tile_constants.SHALLOW_WATER
+        elseif water_r2 > 0 and (water_r1 > wr1l or water_r2 > wr2l or
+                                 height <= 0.31) then
+            node.template = tile_constants.COAST
         elseif water_r2 > 0 then
-            return GRASSLAND
+            node.template = tile_constants.GRASSLAND
         elseif (0.79 < height2 and height2 < 0.82) or 0.95 < height then
-            return MOUNTAIN
+            node.template = tile_constants.MOUNTAIN
         elseif 0.70 < height2 and height2 < 0.72 then
-            return HILL
+            node.template = tile_constants.HILL
         elseif rain < 0.32 and (0.44 < height2 and height2 < 0.5) then
-            return SUBTROPICAL_DESERT
+            node.template = tile_constants.SUBTROPICAL_DESERT
         elseif rain < 0.38 and (height2 < 0.39) then
-            return WOODLAND
+            node.template = tile_constants.WOODLAND
         elseif rain < 0.45 and (height2 < 0.45) then
-            return TEMPERATE_DECIDUOUS_FOREST
+            node.template = tile_constants.TEMPERATE_DECIDUOUS_FOREST
         elseif rain >= 0.45 or (0.55 < height2 and height2 < 0.6) then
-            return TEMPERATE_RAIN_FOREST
+            node.template = tile_constants.TEMPERATE_RAIN_FOREST
         else
-            return GRASSLAND
+            node.template = tile_constants.GRASSLAND
         end
-
     -- tropical
     else
-        if water_r2 > 0 and (water_r1 > wr1l or water_r2 > wr2l or height <= 0.32) then
-            return COAST
+        if height <= 0.22 then
+            node.template = tile_constants.DEEP_WATER
+        elseif height <= 0.27 then
+            node.template = tile_constants.SHALLOW_WATER
+        elseif water_r2 > 0 and (water_r1 > wr1l or water_r2 > wr2l or height <= 0.32) then
+            node.template = tile_constants.TROPICAL_COAST
         elseif water_r2 > 0 then
-            return SAVANA
+            node.template = tile_constants.SAVANA
         elseif (0.79 < height2 and height2 < 0.82) or 0.90 < height then
-            return MOUNTAIN
+            node.template = tile_constants.TROPICAL_MOUNTAIN
         elseif 0.70 < height2 and height2 < 0.72 then
-            return HILL
+            node.template = tile_constants.TROPICAL_HILL
         elseif rain >= 0.49 and ((0.35 < height2 and height2 < 0.44) or
                                height >= 0.55) then
-            return TROPICAL_RAIN_FOREST
+            node.template = tile_constants.TROPICAL_RAIN_FOREST
         elseif heat > 0.80 and (height2 > 0.76 or rain < 0.30) then
-            return TROPICAL_DESERT
+            node.template = tile_constants.TROPICAL_DESERT
         else
-            return SAVANA
+            node.template = tile_constants.SAVANA
         end
     end
 end
@@ -500,6 +498,7 @@ end
 MODULE.smoothe = smoothe
 
 function MODULE.set_base_feature(graph)
+    local tile_constants = tile_constants
     local t0 = time()
     log:warn("set_base_feature => start")
     local nodes = graph.nodes
@@ -507,12 +506,12 @@ function MODULE.set_base_feature(graph)
         local tile = nodes[i]
         local v = tile.value
 
-        if     v > 0.7  then tile.template = MOUNTAIN
-        elseif v > 0.6  then tile.template = HILL
-        elseif v > 0.4  then tile.template = LAND
-        elseif v > 0.28 then tile.template = COAST
-        elseif v > 0.2  then tile.template = SHALLOW_WATER
-        else                 tile.template = DEEP_WATER
+        if     v > 0.7  then tile.template = tile_constants.MOUNTAIN
+        elseif v > 0.6  then tile.template = tile_constants.HILL
+        elseif v > 0.4  then tile.template = tile_constants.LAND
+        elseif v > 0.28 then tile.template = tile_constants.COAST
+        elseif v > 0.2  then tile.template = tile_constants.SHALLOW_WATER
+        else                 tile.template = tile_constants.DEEP_WATER
         end
 
     end
@@ -800,6 +799,9 @@ end
 MODULE.diamond_square = diamond_square
 
 function MODULE.compose_biomes(graph)
+    local tile_constants = tile_constants
+    local tile_groups = tile_groups
+    local WATER_GROUP = tile_groups.WATER_GROUP
     local floor = math.floor
     local sin = math.sin
     local PI = math.pi
@@ -831,7 +833,7 @@ function MODULE.compose_biomes(graph)
 
         local heat_value = sin((y / h) * PI)
         meta.heat_value = heat_value
-        meta.heat_template = HEAT_VIEW
+        meta.heat_template = tile_constants.HEAT_VIEW
         meta.heat_color.r = floor(heat_value * 255)
         meta.heat_color.g = 0
         meta.heat_color.b = floor((1 - heat_value) * 255)
@@ -841,11 +843,12 @@ function MODULE.compose_biomes(graph)
     local t0 = time()
     log:warn("compose_biomes step 2 => start")
     local debug = false
+    local weight = decide.weight
     for i = 1, w * h do
         local node = nodes[i]
         local meta = node.meta
 
-        meta.rainfall_template = RAINFALL_VIEW
+        meta.rainfall_template = tile_constants.RAINFALL_VIEW
         local neighbors_r1 = neighbors(graph, i, 1)
         local neighbors_r2 = neighbors(graph, i, 2)
         local neighbors_r4 = neighbors(graph, i, 4)
@@ -862,44 +865,81 @@ function MODULE.compose_biomes(graph)
         local forest_ratio_r4 = get_ratio(graph, neighbors_r4, WATER_GROUP)
         meta.forest_ratio_r4 = forest_ratio_r4
 
-        local v = precipitation(
-            meta.height_value, meta.heat_value, water_ratio_r4)
-        meta.rainfall_value = v
-        meta.rainfall_color.r = floor((1 - v) * 255)
+        local precipitation = weight({
+            meta.height_value, 0.25,    meta.heat_value, 0.4,
+            water_ratio_r4, 0.35,       forest_ratio_r4, 0.1,
+                           })
+        meta.rainfall_value = precipitation
+        meta.rainfall_color.r = floor((1 - precipitation) * 255)
         meta.rainfall_color.g = 0
-        meta.rainfall_color.b = floor(v * 255)
+        meta.rainfall_color.b = floor(precipitation * 255)
 
-        node.template = get_biome_template(node, i)
+        set_biome(node, i)
     end
     log:warn("compose_biomes step 2 => done!", time() - t0)
 
     local t0 = time()
     log:warn("compose_biomes step 3 => start")
+
+    local DEEP_WATER = tile_constants.DEEP_WATER
+    local SHALLOW_WATER = tile_constants.SHALLOW_WATER
+    local ARCTIC_DEEP_WATER = tile_constants.ARCTIC_DEEP_WATER
+    local ARCTIC_SHALLOW_WATER = tile_constants.ARCTIC_SHALLOW_WATER
+    local FOREST_GROUP = tile_groups.FOREST_GROUP
+
+    for i = 1, w * h do
+        local node = nodes[i]
+        local neighbors_r1 = neighbors(graph, i, 1)
+        local common_ratio = get_ratio(graph, neighbors_r1,
+                                       {[node.template] = true})
+        -- remove single tiles
+        if common_ratio <= 2/8 then
+            -- log:info("removing island")
+            remove_dots(graph, node, neighbors_r1)
+        end
+    end
+    log:warn("compose_biomes step 3 => done!", time() - t0)
+
+    log:warn("compose_biomes step 4 => start")
+    for i = 1, w * h do
+        local node = nodes[i]
+        local neighbors_r1 = neighbors(graph, i, 1)
+        local common_ratio = get_ratio(graph, neighbors_r1,
+                                       {[node.template] = true})
+        -- remove single tiles
+        if common_ratio <= 2/8 then
+            -- log:info("removing island")
+            remove_dots(graph, node, neighbors_r1)
+        end
+    end
+    log:warn("compose_biomes step 4 => done!", time() - t0)
+
+    log:warn("compose_biomes step 5 => start")
     for i = 1, w * h do
         local node = nodes[i]
         local meta = node.meta
-        local template = node.template
-        if template == DEEP_WATER or template == ARCTIC_DEEP_WATER then
+
+        if WATER_GROUP[node.template] then
             local neighbors_r1 = neighbors(graph, i, 1)
-            local water_ratio_r1 = get_ratio(graph, neighbors_r1,
-                                             WATER_GROUP)
-            if water_ratio_r1 < 1 then
-                node.template = template == DEEP_WATER and SHALLOW_WATER or
-                                            ARCTIC_SHALLOW_WATER
+            local water_ratio_r1 = get_ratio(graph, neighbors_r1, WATER_GROUP)
+            -- remove deep water neighboring land tiles
+            if water_ratio_r1 < 1 and (
+                node.template == DEEP_WATER or
+                node.template == ARCTIC_DEEP_WATER
+            ) then
+                node.template = node.template == DEEP_WATER and
+                    SHALLOW_WATER or ARCTIC_SHALLOW_WATER
             end
-        --[[ no need to check for forests in water tiles as they are unfit for
-        cities
-        ]]--
-        elseif not WATER_GROUP[template] then
+        else -- not WATER_GROUP[template]
+            --[[ no need to check for forests in water tiles as they are unfit for cities]]--
             local neighbors_r4 = neighbors(graph, i, 4)
             local forest_ratio_r4 = get_ratio(graph, neighbors_r4,
                                               FOREST_GROUP)
             meta.forest_ratio_r4 = forest_ratio_r4
         end
-
-
     end
-    log:warn("compose_biomes step 3 => done!", time() - t0)
+    log:warn("compose_biomes step 5 => done!", time() - t0)
+
     log:warn("compose_biomes => done!", time() - ta)
 end
 

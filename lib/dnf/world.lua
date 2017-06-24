@@ -43,7 +43,7 @@ function World:create(t)
     local creator = map_gen_creator.get(surface_header)
     local surface_map = creator(surface_header)
 
-    populator.populate_surface(surface_map, surface_header)
+    -- populator.populate_surface(surface_map, surface_header)
 
     self.maps:add(surface_map)
     self.current_map = surface_map

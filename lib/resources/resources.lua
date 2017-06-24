@@ -1,5 +1,6 @@
 local key_concat = require("util.key_concat")
 local templates_data = require("data.templates_data")
+local rect_packer = require("rect_packer")
 local crc32 = require("crc32").CRC32
 local lg = love.graphics
 local lg_newImage = lg.newImage
@@ -54,7 +55,6 @@ function Resources:image_data(filename, abs)
 end
 
 local function load_tileset_files(sub, path, group)
-    local count = 0
     local tiles = {}
     local positions = {}
     local variations = {}
@@ -74,8 +74,7 @@ local function load_tileset_files(sub, path, group)
 
     for _, item in ipairs(love.filesystem.getDirectoryItems(path)) do
         local name, pos, var = item:match(png_pattern)
-        if name then count = count + 1
-            -- log:warn(item)
+        if name then
 
             pos, var = tonumber(pos), tonumber(var)
 
@@ -115,71 +114,53 @@ local function load_tileset_files(sub, path, group)
         end
     end
 
-    local crc = string.format("%08x", crc32(table.concat(id, "\0")))
+    local crc = assert(string.format("%08x", crc32(table.concat(id, "\0"))))
 
-    local sources = {sources=tiles, count=count, positions=positions,
-                     variations=variations, group=group, crc=crc}
-
-    bitser.dumpLoveFile("cache/" .. group .. "_" .. crc .. ".dat", sources)
-
-    return sources
+    return {sources=tiles, positions=positions, variations=variations,
+            group=group, crc=crc}
 end
 
 local function create_atlas_and_quads(tileset)
-    local group, count, crc = tileset.group, tileset.count, tileset.crc
+    local group, crc = tileset.group, tileset.crc
+    assert(group and crc)
     local info_map = {}
     tileset.info_map = info_map
-    local newQuad = love.graphics.newQuad
-    local col, row = 0, 0
-    local w, h, max_tiles_wide, atlas, atlas_data
-    local resources = manager.resources
+    local Quad = love.graphics.newQuad
+
+    local w, h
     local draw = love.graphics.draw
 
     local cache = tileset.atlas
+    local should_draw = not cache
     if not cache then
-        max_tiles_wide = math.floor(
-            lg.getSystemLimits().texturesize / 32)
-        w = math.min(max_tiles_wide, count)
-        h = math.ceil(count / w)
-        assert(h * 32 < lg.getSystemLimits().texturesize)
-        print("create_atlas width: %d, height: %d", w, h)
-        atlas_data = love.image.newImageData(w * 32, h * 32)
-        log:warn("creating canvas w, h, max_tiles_wide", w, h, max_tiles_wide)
+        w = lg.getSystemLimits().texturesize
+        h = rect_packer.img_packer(w, nil, tileset.sources)
+        assert(h <= w)
+        cache = love.graphics.newCanvas(w, h)
+        tileset.atlas = cache
+        love.graphics.setCanvas(cache)
+        log:warn("creating canvas width: " .. w, ", height: " .. h)
     else
-        w = cache:getWidth() / 32
-        h = cache:getHeight() / 32
-        max_tiles_wide = w
-        log:info("using cached canvas w, h, max_tiles_wide", w, h, max_tiles_wide)
+        w = cache:getWidth()
+        h = cache:getHeight()
+        log:warn("using cached canvas width: " .. w, ", height: " .. h)
     end
 
     for _, tile in ipairs(tileset.sources) do
         local tile_k = tile.key
-        local x, y = col * 32, row * 32
-
-        if not cache then
-            local tile_img_data = resources:image_data(tile.file)
-            atlas_data:paste(tile_img_data, x, y, 0, 0, 32, 32)
-        end
-
-        info_map[tile_k] = {
-            x=x, y=y, quad = newQuad(x, y, 32, 32, w * 32, h * 32)}
-        col = col + 1
-        if col >= max_tiles_wide then
-            col = 0
-            row = row + 1
+        local x, y = tile.x, tile.y
+        assert(tile.w and tile.h, "invalid tile", 1,
+               function() return inspect(tile) end)
+        info_map[tile_k] = {x=x, y=y, quad=Quad(x, y, tile.w, tile.h, w, h)}
+        if should_draw then
+            draw(tile.img, tile.x, tile.y)
+            tile.img = nil
         end
     end
-    if not cache then
-        assert(love.filesystem.createDirectory("cache"))
-        -- EXPORT THE TILESET TO SAVE TIME IN THE FUTURE
-        atlas_data:encode("png", "cache/" .. group .. "_" .. crc .. ".png")
-
-        atlas = lg_newImage(atlas_data)
-        tileset.atlas = atlas
-    end
+    return not should_draw
 end
 
-local function load_cached_tileset_image(tileset)
+local function load_tileset_atlas(tileset)
     local group, crc = tileset.group, tileset.crc
     local filename = group .. "_" .. crc .. ".png"
     local cache_path = "cache/" .. filename
@@ -205,7 +186,7 @@ local function load_cached_tileset_image(tileset)
     end
 end
 
-local function load_cached_tileset_data(group)
+local function load_tileset_data(group)
     local cache_path = "cache/"
     local dat_pattern = "^(" .. group .. ")_[a-z0-9]+%.dat$"
     for _, item in ipairs(love.filesystem.getDirectoryItems(cache_path)) do
@@ -219,13 +200,40 @@ end
 
 local function load_tileset(group)
     assert(templates_data[group])
+
     local sub = templates_data[group]._default._folder
     local base_path = "resources/images/tilesets/" .. sub
-    local tileset = load_cached_tileset_data(group) or
-                    load_tileset_files(sub, base_path, group)
-    load_cached_tileset_image(tileset)
+    local tileset
+
+    local cache_data = load_tileset_data(group)
+    if cache_data then
+        tileset = cache_data
+    else
+        tileset = load_tileset_files(sub, base_path, group)
+    end
+    local crc = tileset.crc
+
+    local had_cache_image = load_tileset_atlas(tileset)
     create_atlas_and_quads(tileset)
-    tileset.atlas:setFilter("nearest", "linear")
+
+    if not cache_data then
+        bitser.dumpLoveFile(
+            "cache/" .. group .. "_" .. tileset.crc .. ".dat",
+            {sources=tileset.sources, positions=tileset.positions,
+             variations=tileset.variations, group=group,
+             crc=crc}
+         )
+    end
+    if not had_cache_image then
+        assert(love.filesystem.createDirectory("cache"))
+        -- EXPORT THE TILESET TO SAVE TIME IN THE FUTURE
+        local atlas = tileset.atlas
+        local atlas_data = atlas:newImageData()
+        atlas_data:encode("png", "cache/" .. group .. "_" .. crc .. ".png")
+        love.graphics.setCanvas()
+        tileset.atlas = atlas
+    end
+
     return tileset
 end
 

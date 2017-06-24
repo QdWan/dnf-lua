@@ -217,5 +217,6 @@ local function decide(args)
     return sum_v / sum_w
 end
 MODULE.decide = decide
+MODULE.weight = decide
 
 return MODULE

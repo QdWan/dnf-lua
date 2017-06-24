@@ -16,8 +16,8 @@ local abs = math.abs
 TEST
 ]]--
 local templates = require("templates")
-local TileConstants = templates.constants.EnumTileEntity
-local CITY = TileConstants.city
+local tile_constants = templates.constants.EnumTileEntity
+local CITY = tile_constants.CITY
 --[[
 TEST
 ]]--
@@ -50,8 +50,8 @@ local function nearest_element(graph, i, list, default)
 
     local distance = HUGE
 
-    for _, other_I in ipairs(list) do
-        local x2 = (((other_I - 1) % w) + 1)
+    for _, other_i in ipairs(list) do
+        local x2 = (((other_i - 1) % w) + 1)
         local y2 = floor((other_i - 1) / w) + 1
         local dx = x2 - x1
         local dy = y2 - y1

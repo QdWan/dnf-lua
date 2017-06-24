@@ -22,7 +22,7 @@ end
 
 function SceneMapSurfaceTest1:update(dt)
     SceneMap.update(self, dt) -- super
-    SceneTestBase.update(self, dt) -- super/test
+    -- SceneTestBase.update(self, dt) -- super/test
 end
 
 return SceneMapSurfaceTest1

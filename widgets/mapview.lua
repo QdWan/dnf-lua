@@ -2,6 +2,8 @@ local Widget = require("widgets.base")
 local Stateful = require("stateful")
 local templates = require("templates")
 
+local TILE_SIZE = 64
+local CORNER_SIZE = 32
 
 local MapView = class("MapView", Widget)
 MapView:include(Stateful)
@@ -23,9 +25,9 @@ end
 
 function MapView:updateMapSize()
     self.horizontal_tiles = math.min(math.ceil(
-        (self.w / (self.tileSize * self.zoomX))), self.map.w)
+        (self.w / (TILE_SIZE * self.zoomX))), self.map.w)
     self.vertical_tiles = math.min(math.ceil(
-        (self.h / (self.tileSize * self.zoomY))), self.map.h)
+        (self.h / (TILE_SIZE * self.zoomY))), self.map.h)
     log:info(self.class.name, "updateMapSize",
              "horizontal_tiles", self.horizontal_tiles,
              "vertical_tiles",   self.vertical_tiles)
@@ -33,7 +35,8 @@ end
 
 function MapView:setupMapView()
     self.map = assert(world.current_map)
-    self.tileSize = 32
+    TILE_SIZE = 64
+    self.cornerSize = 32
 
     self.view = self.view or 0
     self.zoomX = self.zoomX or 0.5
@@ -55,22 +58,100 @@ function MapView:setupTileset()
     self.tiles_info = tileset.info_map
 end
 
+local function get_tile_quad(tile, block)
+    local resources = manager.resources
+    local template_enum = tile.template
+    local template = templates.enum.TileEntity[template_enum]
+    local template_name = template._key
+    local color, tile_debug
+
+    local tile_pos = block.pos
+    if tile_pos == 0 then
+        if template.image == "ascii" then
+            tile_pos = template.id
+        else
+            tile_pos = 1
+        end
+        block.pos = tile_pos
+    end
+
+    local tile_var =  block.var
+    if tile_var == 0 then
+        tile_var = math.random(
+            resources:get_position_variations(
+                "TileEntity", template_name, tile_pos))
+        block.var = tile_var
+    end
+
+    if template.image == "ascii" then
+        color = template.color
+    else
+        color = {255, 255, 255}
+        tile_debug = {
+            text=tile_pos,
+            color=template.label_color
+        }
+    end
+
+    -- cache or load cached quad
+    template.cache = template.cache or {}
+    local quad_key = tile_pos .. "\0" .. tile_var
+    local quad = template[quad_key]
+    if quad == nil then
+        local sprite = resources:tile(
+            "TileEntity", template_name, tile_pos, tile_var)
+        quad = sprite.quad
+        template[quad_key] = quad
+    end
+
+    return quad, color, tile_debug, template, quad_key
+end
+
+local function add_tile_to_batch(batch, tile, x, y, meta, debug_table)
+    local TILE_SIZE = TILE_SIZE
+    local floor = math.floor
+
+    for i, block in ipairs({tile.c0, tile.c1, tile.c2, tile.c3}) do
+        local dx = ((i - 1) % 2) * CORNER_SIZE
+        local dy = (floor((i - 1) / 2)) * CORNER_SIZE
+        if i == 1 then
+            assert(dx == 0 and dy == 0)
+        elseif i == 2 then
+            assert(dx == CORNER_SIZE and dy == 0)
+        elseif i == 3 then
+            assert(dx == 0 and dy == CORNER_SIZE)
+        else
+            assert(dx == CORNER_SIZE and dy == CORNER_SIZE)
+        end
+
+        local quad, color, tile_debug = get_tile_quad(tile, block)
+        batch:add(quad,
+            floor(x*TILE_SIZE) + dx,
+            floor(y*TILE_SIZE) + dy)
+        --[[
+        if tile_debug then
+            tile_debug.x, tile_debug.y = x*TILE_SIZE, y*TILE_SIZE
+            debug_table[#debug_table + 1] = tile_debug
+        end
+        ]]--
+    end
+
+end
+
 function MapView:updateTilesetBatch()
     local mapX = self.mapX
     local mapY = self.mapY
     local map = self.map
     local map_w, map_h = map.w, map.h
     local tiles = map.tiles
-    local tileSize = self.tileSize
     local max_x = self.horizontal_tiles-1
     local max_y = self.vertical_tiles-1
-    local lg = love.graphics
-    local resources = manager.resources
     self.tile_debug = {}
-    self.shadow_debug = {}
-    local floor = math.floor
     self.tiles_batch = lg.newSpriteBatch(
-        self.tiles_atlas, self.horizontal_tiles * self.vertical_tiles)
+        self.tiles_atlas,
+        (self.horizontal_tiles * 2) *
+        (self.vertical_tiles   * 2)
+    )
     local tiles_batch = self.tiles_batch
 
     local meta = self.view ~= 0
@@ -82,27 +163,7 @@ function MapView:updateTilesetBatch()
             assert(i > 0 and i <= map_w * map_h, "invalid node")
             local tile = tiles[i]
 
-            local quad, color, tile_debug = self:get_tile_quad(tile, meta)
-            tiles_batch:setColor(color)
-
-            tiles_batch:add(quad, floor(x*tileSize), floor(y*tileSize))
-
-            if tile_debug then
-                tile_debug.x, tile_debug.y = x*tileSize, y*tileSize
-                self.tile_debug[#self.tile_debug + 1] = tile_debug
-            end
-
-            local shadow = false and tile.receive_shadow
-            if shadow then
-                local shadow_sprite = resources:tile(
-                "TileEntity", shadow, tile.tile_pos_shadow + 1)
-                tiles_batch:add(
-                    shadow_sprite.quad, x*tileSize, y*tileSize)
-                self.shadow_debug[#self.shadow_debug + 1] = {
-                    text=tile.tile_pos_shadow,
-                    x=x*tileSize, y=y*tileSize
-                }
-            end
+            add_tile_to_batch(tiles_batch, tile, x, y, meta, self.tile_debug)
 
         end
     end
@@ -148,8 +209,8 @@ function MapView:draw()
     if self.zoomX < 1 then
         lg.draw(
             self.tiles_batch,
-            math.floor(-self.zoomX*(self.mapX%1)*self.tileSize),
-            math.floor(-self.zoomY*(self.mapY%1)*self.tileSize),
+            math.floor(-self.zoomX*(self.mapX%1)*TILE_SIZE),
+            math.floor(-self.zoomY*(self.mapY%1)*TILE_SIZE),
             0,
             self.zoomX,
             self.zoomY)
@@ -163,8 +224,8 @@ function MapView:draw()
 
             lg.draw(
                 self.tiles_batch,
-                math.floor(-self.zoomX*(self.mapX%1)*self.tileSize),
-                math.floor(-self.zoomY*(self.mapY%1)*self.tileSize),
+                math.floor(-self.zoomX*(self.mapX%1)*TILE_SIZE),
+                math.floor(-self.zoomY*(self.mapY%1)*TILE_SIZE),
                 0)
 
             if self.debug_tile_info then self:draw_debug_info(false) end
@@ -219,55 +280,6 @@ function MapView:set_zoom(v)
     self.mapX = old_center_x - (self.horizontal_tiles / 2)
     self.mapY = old_center_y - (self.vertical_tiles / 2)
     self:moveMap(0, 0)
-end
-
-function MapView:get_tile_quad(tile)
-    local resources = manager.resources
-    local template_enum = tile.template
-    local template = templates.enum.TileEntity[template_enum]
-    local template_name = template._key
-    local color, tile_debug
-
-    local tile_pos = tile.tile_pos
-    if tile_pos == 0 then
-        if template.image == "ascii" then
-            tile_pos = template.id
-        else
-            tile_pos = 1
-        end
-        tile.tile_pos = tile_pos
-    end
-
-    local tile_var =  tile.tile_var
-    if tile_var == 0 then
-        tile_var = math.random(
-            resources:get_position_variations(
-                "TileEntity", template_name, tile_pos))
-        tile.tile_var = tile_var
-    end
-
-    if template.image == "ascii" then
-        color = template.color
-    else
-        color = {255, 255, 255}
-        tile_debug = {
-            text=tile_pos,
-            color=template.label_color
-        }
-    end
-
-    -- cache or load cached quad
-    template.cache = template.cache or {}
-    local quad_key = tile_pos .. "\0" .. tile_var
-    local quad = template[quad_key]
-    if quad == nil then
-        local sprite = resources:tile(
-            "TileEntity", template_name, tile_pos, tile_var)
-        quad = sprite.quad
-        template[quad_key] = quad
-    end
-
-    return quad, color, tile_debug, template, quad_key
 end
 
 function MetaView:get_tile_quad(tile)

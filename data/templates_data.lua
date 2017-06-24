@@ -6,7 +6,6 @@ local effects = {} -- TODO
 
 templates.TileEntity = {
     ["_default"] = {
-        ["_index"] = 1,
         ["_folder"] = "tiles",
         ["block_mov"] = false,
         ["block_sight"] = false,
@@ -14,11 +13,9 @@ templates.TileEntity = {
         ["label_color"] = {255, 255, 255, 255},
     },
     ["shadow"] = {
-        ["_index"] = 2,
         ["image"] = "shadow",
     },
     ["floor"] = {
-        ["_index"] = 3,
         ["id"] = string.byte(".") + 1,
         ["color"] = {129, 106, 86},
         ["_rnd_gen_cost"] = 64,
@@ -26,7 +23,6 @@ templates.TileEntity = {
         ["receive_shadow"] = "shadow"
     },
     ["wall"] = {
-        ["_index"] = 4,
         ["id"] = string.byte("#") + 1,
         ["color"] = {161, 161, 161},
         ["_rnd_gen_cost"] = 8,
@@ -35,194 +31,250 @@ templates.TileEntity = {
         ["image"] = "wall_brick_dark_1",
     },
     ["hall"] = {
-        ["_index"] = 5,
         ["id"] = string.byte("/") + 1,
         ["color"] = {129, 106, 86},
         ["_rnd_gen_cost"] = 1,
     },
     ["water"] = {
-        ["_index"] = 6,
         ["id"] = string.byte("=") + 1,
         ["color"] = COLORS["blue"],
-        ["is_water"] = true,
     },
     ["land"] = {
-        ["_index"] = 7,
         ["id"] = string.byte(".") + 1,
         ["color"] = COLORS["darker_green"]
     },
 
 
     ["arctic_deep_water"] = {
-        ["_index"] = 8,
         ["id"] = string.byte("¬") + 1,
         ["color"] = COLORS["dark_sky"],
         ["image"] = "deep_water",
-        ["tiling"] = "8bit",
-        ["compare_function"] = "same_template",
-        ["is_water"] = true,
+        ["tiling"] = "4bit",
+        ["group0"] = "DEEP_WATER",
+        ["compare_function"] = "same_group0",
     },
     ["arctic_shallow_water"] = {
-        ["_index"] = 9,
         ["id"] = string.byte("~") + 1,
         ["color"] = COLORS["sky"],
         ["image"] = "arctic_shallow_water",
-        ["tiling"] = "8bit",
+        ["tiling"] = "4bit",
         ["compare_function"] = "is_water",
-        ["is_water"] = true,
     },
-    ["arctic_coast"] = {
-        ["_index"] = 10,
-        ["id"] = string.byte("c") + 1,
-        ["color"] = {248, 243, 223}
-        -- COLORS["lightest_amber"]  -- (255, 255, 255)
+    ["deep_water"] = {
+        ["id"] = string.byte("¬") + 1,
+        ["color"] = COLORS["darkest_blue"],
+        ["image"] = "deep_water",
+        ["tiling"] = "4bit",
+        ["group0"] = "DEEP_WATER",
+        ["compare_function"] = "same_group0",
+    },
+    ["shallow_water"] = {
+        ["id"] = string.byte("~") + 1,
+        ["color"] = COLORS["dark_blue"],
+        ["image"] = "shallow_water",
+        ["tiling"] = "4bit",
+        ["compare_function"] = "is_water",
     },
     ["arctic_mountain"] = {
-        ["_index"] = 11,
         ["id"] = string.byte("O") + 1,
-        ["color"] = {245, 245, 245}  -- (255, 255, 255)
+        ["color"] = {245, 245, 245},
+        ["image"] = "arctic_mountain",
+        ["tiling"] = "4bit",
+        ["group0"] = "MOUNTAIN_GROUP",
+        ["compare_function"] = "same_group0",
     },
     ["arctic_hill"] = {
-        ["_index"] = 12,
         ["id"] = string.byte("^") + 1,
-        ["color"] = {245, 245, 245}  -- (255, 255, 255)
+        ["color"] = {245, 245, 245},
+        ["image"] = "arctic_hill",
+        ["tiling"] = "4bit",
+        ["group0"] = "HILL_GROUP",
+        ["compare_function"] = "same_group0",
+    },
+    ["temperate_mountain"] = {
+        ["id"] = string.byte("O") + 1,
+        ["color"] = COLORS["light_chartreuse"],
+        ["image"] = "mountain",
+        ["tiling"] = "4bit",
+        ["group0"] = "MOUNTAIN_GROUP",
+        ["compare_function"] = "same_group0",
+    },
+    ["temperate_hill"] = {
+        ["id"] = string.byte("^") + 1,
+        ["color"] = COLORS["dark_chartreuse"],
+        ["image"] = "temperate_hill",
+        ["tiling"] = "4bit",
+        ["group0"] = "HILL_GROUP",
+        ["compare_function"] = "same_group0",
+    },
+    ["mountain"] = {
+        ["id"] = string.byte("O") + 1,
+        ["color"] = COLORS["light_chartreuse"],
+        ["image"] = "mountain",
+        ["tiling"] = "4bit",
+        ["group0"] = "MOUNTAIN_GROUP",
+        ["compare_function"] = "same_group0",
+    },
+    ["hill"] = {
+        ["id"] = string.byte("^") + 1,
+        ["color"] = COLORS["dark_chartreuse"],
+        ["image"] = "temperate_hill",
+        ["tiling"] = "4bit",
+        ["group0"] = "HILL_GROUP",
+        ["compare_function"] = "same_group0",
+    },
+    ["tropical_hill"] = {
+        ["id"] = string.byte("^") + 1,
+        ["color"] = COLORS["dark_chartreuse"],
+        ["image"] = "tropical_hill",
+        ["tiling"] = "4bit",
+        ["group0"] = "HILL_GROUP",
+        ["compare_function"] = "same_group0",
+    },
+    ["tropical_mountain"] = {
+        ["id"] = string.byte("O") + 1,
+        ["color"] = COLORS["light_chartreuse"],
+        ["image"] = "mountain",
+        ["tiling"] = "4bit",
+        ["group0"] = "MOUNTAIN_GROUP",
+        ["compare_function"] = "same_group0",
+    },
+
+    ["temperate_desert"] = {
+        ["id"] = string.byte(",") + 1,
+        ["color"] = {240, 220, 7},
+        ["image"] = "temperate_desert",
+        ["tiling"] = "4bit",
+        ["group0"] = "BARELAND_GROUP",
+        ["compare_function"] = "same_group0",
+    },
+    ["subtropical_desert"] = {
+        ["id"] = string.byte(",") + 1,
+        ["color"] = {250, 150, 24},
+        ["image"] = "subtropical_desert",
+        ["tiling"] = "4bit",
+        ["group0"] = "BARELAND_GROUP",
+        ["compare_function"] = "same_group0",
+    },
+    ["tropical_desert"] = {
+        ["id"] = string.byte(",") + 1,
+        ["color"] = {255, 65, 12},
+        ["image"] = "tropical_desert",
+        ["tiling"] = "4bit",
+        ["group0"] = "BARELAND_GROUP",
+        ["compare_function"] = "same_group0",
+    },
+
+    ["arctic_coast"] = {
+        ["id"] = string.byte("c") + 1,
+        ["color"] = {248, 243, 223},
+        ["image"] = "arctic_land",
+        ["tiling"] = "4bit",
+        ["group0"] = "ARCTIC_LAND",
+        ["compare_function"] = "same_group0",
     },
     ["arctic_land"] = {
-        ["_index"] = 13,
         ["id"] = string.byte(",") + 1,
         ["color"] = {248, 248, 255},  -- (255, 255, 255)
         ["label_color"] = {60, 30, 200, 255},
         ["image"] = "arctic_land",
-        ["tiling"] = "8bit",
-        ["compare_function"] = "same_template",
+        ["tiling"] = "4bit",
+        ["group0"] = "ARCTIC_LAND",
+        ["compare_function"] = "same_group0",
     },
-
-    ["deep_water"] = {
-        ["_index"] = 14,
-        ["id"] = string.byte("¬") + 1,
-        ["color"] = COLORS["darkest_blue"],
-        ["image"] = "deep_water",
-        ["tiling"] = "8bit",
-        ["compare_function"] = "same_template",
-        ["is_water"] = true,
-    },
-    ["shallow_water"] = {
-        ["_index"] = 15,
-        ["id"] = string.byte("~") + 1,
-        ["color"] = COLORS["dark_blue"],
-        ["image"] = "shallow_water",
-        ["tiling"] = "8bit",
-        ["compare_function"] = "is_water",
-        ["is_water"] = true,
-    },
-    ["coast"] = {
-        ["_index"] = 16,
-        ["id"] = string.byte("c") + 1,
+    ["temperate_coast"] = {
+        ["id"] = string.byte(".") + 1,
         ["color"] = COLORS["darker_amber"],
-    },
-    ["mountain"] = {
-        ["_index"] = 17,
-        ["id"] = string.byte("O") + 1,
-        ["color"] = COLORS["light_chartreuse"],
-        ["image"] = "mountain",
-        ["tiling"] = "8bit",
-        ["compare_function"] = "same_template",
-    },
-    ["hill"] = {
-        ["_index"] = 18,
-        ["id"] = string.byte("^") + 1,
-        ["color"] = COLORS["dark_chartreuse"],
-    },
-
-    ["temperate_desert"] = {
-        ["_index"] = 19,
-        ["id"] = string.byte(",") + 1,
-        ["color"] = {240, 220, 7},
-        ["image"] = "temperate_desert",
-        ["tiling"] = "8bit",
-        ["compare_function"] = "same_id",
-    },
-    ["subtropical_desert"] = {
-        ["_index"] = 20,
-        ["id"] = string.byte(",") + 1,
-        ["color"] = {250, 150, 24},
-        ["image"] = "subtropical_desert",
-        ["tiling"] = "8bit",
-        ["compare_function"] = "same_id",
-    },
-    ["tropical_desert"] = {
-        ["_index"] = 21,
-        ["id"] = string.byte(",") + 1,
-        ["color"] = {255, 65, 12},
-        ["image"] = "tropical_desert",
-        ["tiling"] = "8bit",
-        ["compare_function"] = "same_id",
+        ["image"] = "boreal_grassland",
+        ["tiling"] = "4bit",
+        ["group0"] = "GRASSLAND_GROUP",
+        ["compare_function"] = "same_group0",
     },
     ["boreal_grassland"] = {
-        ["_index"] = 22,
         ["id"] = string.byte(".") + 1,
         ["color"] = COLORS["dark_sea"],
         ["image"] = "boreal_grassland",
-        ["tiling"] = "8bit",
-        ["compare_function"] = "same_id",
+        ["tiling"] = "4bit",
+        ["group0"] = "GRASSLAND_GROUP",
+        ["compare_function"] = "same_group0",
+    },
+    ["coast"] = {
+        ["id"] = string.byte(".") + 1,
+        ["color"] = COLORS["darker_amber"],
+        ["image"] = "grassland",
+        ["tiling"] = "4bit",
+        ["group0"] = "GRASSLAND_GROUP",
+        ["compare_function"] = "same_group0",
     },
     ["grassland"] = {
-        ["_index"] = 23,
         ["id"] = string.byte(".") + 1,
         ["color"] = COLORS["darker_green"],
         ["image"] = "grassland",
-        ["tiling"] = "8bit",
-        ["compare_function"] = "same_id",
+        ["tiling"] = "4bit",
+        ["group0"] = "GRASSLAND_GROUP",
+        ["compare_function"] = "same_group0",
+    },
+    ["tropical_coast"] = {
+        ["id"] = string.byte(".") + 1,
+        ["color"] = COLORS["darker_amber"],
+        ["image"] = "savana",
+        ["tiling"] = "4bit",
+        ["group0"] = "BARELAND_GROUP",
+        ["compare_function"] = "same_group0",
     },
     ["savana"] = {
-        ["_index"] = 24,
         ["id"] = string.byte(",") + 1,
         ["color"] = COLORS["darker_yellow"],  -- (153, 219, 33)
         ["image"] = "savana",
-        ["tiling"] = "8bit",
-        ["compare_function"] = "same_id",
+        ["tiling"] = "4bit",
+        ["group0"] = "BARELAND_GROUP",
+        ["compare_function"] = "same_group0",
     },
 
     ["boreal_forest"] = {
-        ["_index"] = 25,
         ["id"] = string.byte("T") + 1,
         ["color"] = COLORS["dark_orange"],  -- (5, 100, 33)
         ["image"] = "boreal_forest",
-        ["tiling"] = "8bit",
+        ["tiling"] = "4bit",
         ["compare_function"] = "same_template"
     },
     ["woodland"] = {
-        ["_index"] = 26,
         ["id"] = string.byte("T") + 1,
-        ["color"] = COLORS["dark_turquoise"]  -- (0, 255, 255)
+        ["color"] = COLORS["dark_turquoise"],
+        ["image"] = "woodland",
+        ["tiling"] = "4bit",
+        ["compare_function"] = "same_template",
     },
     ["temperate_deciduous_forest"] = {
-        ["_index"] = 27,
         ["id"] = string.byte("T") + 1,
-        ["color"] = COLORS["dark_chartreuse"]  -- (47, 186, 74)
+        ["color"] = COLORS["dark_chartreuse"],
+        ["image"] = "temperate_deciduous_forest",
+        ["tiling"] = "4bit",
+        ["compare_function"] = "same_template",
     },
     ["temperate_rain_forest"] = {
-        ["_index"] = 28,
         ["id"] = string.byte("T") + 1,
-        ["color"] = COLORS["dark_green"]  -- (7, 250, 160)
+        ["color"] = COLORS["dark_green"],
+        ["image"] = "temperate_rain_forest",
+        ["tiling"] = "4bit",
+        ["compare_function"] = "same_template",
     },
     ["tropical_rain_forest"] = {
-        ["_index"] = 29,
         ["id"] = string.byte("T") + 1,
-        ["color"] = COLORS["darker_green"]  -- (8, 250, 50)
+        ["color"] = COLORS["darker_green"],
+        ["image"] = "tropical_rain_forest",
+        ["tiling"] = "4bit",
+        ["compare_function"] = "same_template",
     },
 
 
     ["heat_view"] = {
-        ["_index"] = 30,
         ["id"] = string.byte("$") + 1
     },
     ["rainfall_view"] = {
-        ["_index"] = 31,
         ["id"] = string.byte("~") + 1
     },
     ["city"] = {
-        ["_index"] = 32,
         ["id"] = 179,
         ["image"] = "city",
     },

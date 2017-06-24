@@ -3,10 +3,10 @@ local shuffle = require("shuffle")
 local Rect = require("rect")
 local ffi_struct = require("util.ffi_struct")
 local templates = require("templates")
-local TileConstants = templates.constants.EnumTileEntity
-local WALL = TileConstants.wall
-local FLOOR = TileConstants.floor
-local HALL = TileConstants.hall
+local tile_constants = templates.constants.EnumTileEntity
+local WALL = tile_constants.WALL
+local FLOOR = tile_constants.FLOOR
+local HALL = tile_constants.HALL
 
 local COST = {
     [HALL] = 6,
@@ -290,6 +290,16 @@ ffi_struct("GraphNodeMeta", _GraphNodeMeta)
 
 
 -- ##########
+-- NodeCorner struct
+local _NodeCorner = [[typedef struct {
+    uint8_t   pos;
+    uint8_t   var;
+} NodeCorner;]]
+ffi_struct("NodeCorner", _NodeCorner)
+-- end of NodeCorner struct
+-- ##########
+
+-- ##########
 -- GraphNode struct
 local _GraphNode = [[typedef struct {
     uint16_t  x;
@@ -304,6 +314,10 @@ local _GraphNode = [[typedef struct {
     uint8_t tile_var;
     NodeNeighbors neighbors;
     GraphNodeMeta meta;
+    NodeCorner c0;  // topleft
+    NodeCorner c1;  // topright
+    NodeCorner c2;  // bottomleft
+    NodeCorner c3;  // bottomright
 } GraphNode;]]
 local GraphNode_mt, GraphNode_keys = ffi_struct(
     "GraphNode", _GraphNode, false)
