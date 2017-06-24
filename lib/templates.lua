@@ -11,7 +11,8 @@ local cdef_tail = "\n  } EnumTileEntity;"
 local templates = {
     data = templates_data,
     enum = {
-        TileEntity = {},
+        TileEntity    = {},
+        FeatureEntity = {},
     },
     constants = {
         TileEntity = {},
@@ -22,6 +23,11 @@ templates.constants.groups = {}
 
 local TileEntity_group = templates.enum.TileEntity
 local tile_default = templates.data.TileEntity._default
+
+local index = 0
+for k, v in pairs(templates.data.FeatureEntity) do
+    v._key = k
+end
 
 local index = 0
 for k, v in pairs(templates.data.TileEntity) do

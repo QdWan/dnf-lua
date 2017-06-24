@@ -54,7 +54,7 @@ function Resources:image_data(filename, abs)
     return love.image.newImageData(abs .. "/" .. filename)
 end
 
-local function load_tileset_files(sub, path, group)
+local function load_tileset_files(sub, path)
     local tiles = {}
     local positions = {}
     local variations = {}
@@ -117,12 +117,12 @@ local function load_tileset_files(sub, path, group)
     local crc = assert(string.format("%08x", crc32(table.concat(id, "\0"))))
 
     return {sources=tiles, positions=positions, variations=variations,
-            group=group, crc=crc}
+            crc=crc}
 end
 
 local function create_atlas_and_quads(tileset)
-    local group, crc = tileset.group, tileset.crc
-    assert(group and crc)
+    local crc = tileset.crc
+    assert(crc)
     local info_map = {}
     tileset.info_map = info_map
     local Quad = love.graphics.newQuad
@@ -136,14 +136,15 @@ local function create_atlas_and_quads(tileset)
         w = lg.getSystemLimits().texturesize
         h = rect_packer.img_packer(w, nil, tileset.sources)
         assert(h <= w)
+        log:warn("canvas size", w, h)
         cache = love.graphics.newCanvas(w, h)
         tileset.atlas = cache
         love.graphics.setCanvas(cache)
-        log:warn("creating canvas width: " .. w, ", height: " .. h)
+        log:warn("creating canvas width: " .. w .. ", height: " .. h)
     else
         w = cache:getWidth()
         h = cache:getHeight()
-        log:warn("using cached canvas width: " .. w, ", height: " .. h)
+        log:warn("using cached canvas width: " .. w .. ", height: " .. h)
     end
 
     for _, tile in ipairs(tileset.sources) do
@@ -160,18 +161,18 @@ local function create_atlas_and_quads(tileset)
     return not should_draw
 end
 
-local function load_tileset_atlas(tileset)
-    local group, crc = tileset.group, tileset.crc
-    local filename = group .. "_" .. crc .. ".png"
+local function load_tileset_atlas(tileset, group_key)
+    local crc = tileset.crc
+    local filename = group_key .. "_" .. crc .. ".png"
     local cache_path = "cache/" .. filename
     local cache = love.filesystem.exists(cache_path) and
                   manager.resources:image(filename, "cache/")
 
-    local png_pattern = "^(" .. group .. ")_[a-z0-9]+%.png$"
+    local png_match_pattern = "^(" .. group_key .. ")_[a-z0-9]+%.png$"
 
     for _, item in ipairs(love.filesystem.getDirectoryItems("cache/")) do
-        local other_group = string.match(item, png_pattern)
-        if item ~= filename and other_group and other_group == group then
+        local other_group = string.match(item, png_match_pattern)
+        if item ~= filename and group_key == other_group then
             love.filesystem.remove(item)
             log:warn("removing outdated tileset: " .. item)
         end
@@ -186,50 +187,60 @@ local function load_tileset_atlas(tileset)
     end
 end
 
-local function load_tileset_data(group)
+local function load_tileset_data(group_key)
     local cache_path = "cache/"
-    local dat_pattern = "^(" .. group .. ")_[a-z0-9]+%.dat$"
+    local dat_pattern = "^" .. group_key .. "_[a-z0-9]+%.dat$"
     for _, item in ipairs(love.filesystem.getDirectoryItems(cache_path)) do
         if string.find(item, dat_pattern) then
             log:warn("recovering tileset data:  cache/" .. item)
             return bitser.loadLoveFile("cache/" .. item)
         end
     end
-    log:warn("couldn't find data for tileset: " .. group)
 end
 
 local function load_tileset(group)
-    assert(templates_data[group])
+    local tileset, group_key
+    if group == "TileEntity" or group == "FeatureEntity" then
+        group_key = "tile_feature"
+    else
+        group_key = group
+    end
+    log:warn("logading tileset", group, group_key)
 
-    local sub = templates_data[group]._default._folder
-    local base_path = "resources/images/tilesets/" .. sub
-    local tileset
-
-    local cache_data = load_tileset_data(group)
+    local cache_data = load_tileset_data(group_key)
     if cache_data then
         tileset = cache_data
+        -- log:info("loading tileset data", inspect(cache_data))
     else
-        tileset = load_tileset_files(sub, base_path, group)
+        log:warn("couldn't find data for tileset: " .. group_key)
+        assert(templates_data[group])
+        local sub = templates_data[group]._default._folder
+        local base_path = "resources/images/tilesets/" .. sub
+        tileset = load_tileset_files(sub, base_path)
     end
-    local crc = tileset.crc
+    local crc = assert(tileset.crc)
 
-    local had_cache_image = load_tileset_atlas(tileset)
+    local had_cache_image = load_tileset_atlas(tileset, group_key)
     create_atlas_and_quads(tileset)
 
     if not cache_data then
+        --[[
+        ]]--
+        cache_data = {sources=tileset.sources, positions=tileset.positions,
+             variations=tileset.variations, crc=crc}
         bitser.dumpLoveFile(
-            "cache/" .. group .. "_" .. tileset.crc .. ".dat",
-            {sources=tileset.sources, positions=tileset.positions,
-             variations=tileset.variations, group=group,
-             crc=crc}
-         )
+            "cache/" .. group_key .. "_" .. crc .. ".dat", cache_data)
+        -- log:info("saving tileset data", inspect(cache_data))
     end
     if not had_cache_image then
         assert(love.filesystem.createDirectory("cache"))
         -- EXPORT THE TILESET TO SAVE TIME IN THE FUTURE
         local atlas = tileset.atlas
+        --[[
+        ]]--
         local atlas_data = atlas:newImageData()
-        atlas_data:encode("png", "cache/" .. group .. "_" .. crc .. ".png")
+        atlas_data:encode("png",
+                          "cache/" .. group_key .. "_" .. crc .. ".png")
         love.graphics.setCanvas()
         tileset.atlas = atlas
     end
@@ -249,9 +260,11 @@ function Resources:tileset(group)
 end
 
 function Resources:get_position_variations(group, name, pos)
-    local image_name = assert(
-        templates_data[group][name].image,
-        string.format("invalid template: %s, %s, %d", group, name, pos))
+    local feedback = string.format("invalid template: %s, %s, %d",
+                                   group, name, pos)
+    local data_group = assert(templates_data[group], feedback)
+    local template = assert(templates_data[group][name], feedback)
+    local image_name = assert(template.image, feedback)
 
     local tileset = self:tileset(group)
     local var_k = image_name .. "\0" .. pos

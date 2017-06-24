@@ -1,7 +1,7 @@
 local SceneBase = require("scenes.base")
 local widgets = require("widgets")
 local SceneCreation = class("SceneCreation", SceneBase)
-local creature = require("dnf.creature")
+local creature = require("dnf.entities.creature")
 local World = require("dnf.world")
 local dnf_data = require("data.core")
 local trim_last = require("util.trim_last")

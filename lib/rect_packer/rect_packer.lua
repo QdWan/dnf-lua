@@ -148,7 +148,8 @@ local function img_packer(w, h, sources)
     for _, r in ipairs(sources) do
         local max_y = r.y + r.h
         dyn_h = dyn_h ~= nil and math.max(dyn_h, max_y) or dyn_h
-        -- log:info(r)
+        -- log:info(inspect(r))
+        -- assert(r.w and r.h)
     end
     if dyn_h then
         -- log:info("h size of the bin: " .. dyn_h)

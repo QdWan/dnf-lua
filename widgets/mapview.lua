@@ -58,12 +58,11 @@ function MapView:setupTileset()
     self.tiles_info = tileset.info_map
 end
 
-local function get_tile_quad(tile, block)
+local function get_quad(tile, block, template, group)
     local resources = manager.resources
-    local template_enum = tile.template
-    local template = templates.enum.TileEntity[template_enum]
-    local template_name = template._key
     local color, tile_debug
+
+    local template_name = assert(template._key)
 
     local tile_pos = block.pos
     if tile_pos == 0 then
@@ -78,8 +77,7 @@ local function get_tile_quad(tile, block)
     local tile_var =  block.var
     if tile_var == 0 then
         tile_var = math.random(
-            resources:get_position_variations(
-                "TileEntity", template_name, tile_pos))
+            resources:get_position_variations(group, template_name, tile_pos))
         block.var = tile_var
     end
 
@@ -99,7 +97,7 @@ local function get_tile_quad(tile, block)
     local quad = template[quad_key]
     if quad == nil then
         local sprite = resources:tile(
-            "TileEntity", template_name, tile_pos, tile_var)
+            group, template_name, tile_pos, tile_var)
         quad = sprite.quad
         template[quad_key] = quad
     end
@@ -107,9 +105,29 @@ local function get_tile_quad(tile, block)
     return quad, color, tile_debug, template, quad_key
 end
 
+local function add_feature_to_batch(batch, features, x, y)
+    local floor = math.floor
+    local dx, dy = TILE_SIZE / 4, TILE_SIZE / 4
+    local dx, dy = 0, 0
+
+    for _, feature in ipairs(features) do
+        local template = getmetatable(feature.data)
+        if template.tiling == "4bit" then
+            do end
+        else
+            local quad, color, tile_debug = get_quad(
+                feature, feature, template, "FeatureEntity")
+            batch:add(quad, floor(x*TILE_SIZE) + dx, floor(y*TILE_SIZE) + dy)
+        end
+    end
+end
+
 local function add_tile_to_batch(batch, tile, x, y, meta, debug_table)
     local TILE_SIZE = TILE_SIZE
     local floor = math.floor
+    local template_enum = tile.template
+    local template = templates.enum.TileEntity[template_enum]
+    local template_name = template._key
 
     for i, block in ipairs({tile.c0, tile.c1, tile.c2, tile.c3}) do
         local dx = ((i - 1) % 2) * CORNER_SIZE
@@ -124,18 +142,10 @@ local function add_tile_to_batch(batch, tile, x, y, meta, debug_table)
             assert(dx == CORNER_SIZE and dy == CORNER_SIZE)
         end
 
-        local quad, color, tile_debug = get_tile_quad(tile, block)
-        batch:add(quad,
-            floor(x*TILE_SIZE) + dx,
-            floor(y*TILE_SIZE) + dy)
-        --[[
-        if tile_debug then
-            tile_debug.x, tile_debug.y = x*TILE_SIZE, y*TILE_SIZE
-            debug_table[#debug_table + 1] = tile_debug
-        end
-        ]]--
+        local quad, color, tile_debug = get_quad(
+            tile, block, template, "TileEntity")
+        batch:add(quad, floor(x*TILE_SIZE) + dx, floor(y*TILE_SIZE) + dy)
     end
-
 end
 
 function MapView:updateTilesetBatch()
@@ -144,13 +154,14 @@ function MapView:updateTilesetBatch()
     local map = self.map
     local map_w, map_h = map.w, map.h
     local tiles = map.tiles
+    local features = map.features
     local max_x = self.horizontal_tiles-1
     local max_y = self.vertical_tiles-1
     self.tile_debug = {}
     self.tiles_batch = lg.newSpriteBatch(
         self.tiles_atlas,
-        (self.horizontal_tiles * 2) *
-        (self.vertical_tiles   * 2)
+        ((self.horizontal_tiles * 2) * (self.vertical_tiles   * 2)) +
+        (self.horizontal_tiles * self.vertical_tiles)  -- features
     )
     local tiles_batch = self.tiles_batch
 
@@ -164,6 +175,9 @@ function MapView:updateTilesetBatch()
             local tile = tiles[i]
 
             add_tile_to_batch(tiles_batch, tile, x, y, meta, self.tile_debug)
+            if features[i] and #features[i] ~= 0 then
+                add_feature_to_batch(tiles_batch, features[i], x, y)
+            end
 
         end
     end

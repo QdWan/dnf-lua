@@ -1,7 +1,7 @@
 local SceneBase = require("scenes.base")
 local widgets = require("widgets")
 local World = require("dnf.world")
-local creature = require("dnf.creature")
+local creature = require("dnf.entities.creature")
 --p=aF2
 local NewGame = class("NewGame", SceneBase)
 

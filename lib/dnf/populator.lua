@@ -5,22 +5,13 @@ local templates = require("templates")
 local tile_groups = templates.constants.groups
 local WATER_GROUP  = tile_groups.WATER_GROUP
 local MOUNTAIN_GROUP  = tile_groups.MOUNTAIN_GROUP
+local FeatureEntity = require("dnf.entities.feature")
 
 local floor = math.floor
 local HUGE = math.huge
 local min = math.min
 local max = math.max
 local abs = math.abs
-
---[[
-TEST
-]]--
-local templates = require("templates")
-local tile_constants = templates.constants.EnumTileEntity
-local CITY = tile_constants.CITY
---[[
-TEST
-]]--
 
 local MODULE = {}
 
@@ -65,7 +56,7 @@ end
 
 function MODULE.populate_surface(graph, header)
     local graph = graph
-    local nodes = graph.tiles
+    local tiles = graph.tiles
     local cities = {}
     local citiness = PriorityQueue({mode = "highest_table"})
     local city_limit = floor(((graph.w * graph.h)^(1/2))/5)
@@ -90,8 +81,8 @@ function MODULE.populate_surface(graph, header)
         local distance_contrib = decide.HGLB(distance_ratio)
 
         if not previous_info then
-            local node = nodes[i]
-            local meta = node.meta
+            local tile = tiles[i]
+            local meta = tile.meta
 
             local height_contrib = decide.LGHB(meta.height_value)
             local height_weight = 0.2
@@ -112,7 +103,7 @@ function MODULE.populate_surface(graph, header)
             local water_r4_weight = 0.15
 
             local forest_contrib = decide.MGEB(meta.forest_ratio_r4)
-            local forest_weight = 1
+            local forest_weight = 0.5
 
             local random_factor = meta.noise_value
             local random_weight = 1
@@ -161,13 +152,18 @@ function MODULE.populate_surface(graph, header)
     -- INITIALIZE THE QUEUE
     local rnd = shuffle_range(1, graph.w * graph.h)
     for _, i in ipairs(rnd) do
-        local node = nodes[i]
-        local template = node.template
-        if WATER_GROUP[template] or MOUNTAIN_GROUP[template] then
-            do end;
-        else
-            local priority, info, extra = get_citiness_factor(i)
-            citiness:put({v=i, p=priority, info=info, extra=extra})
+        local x = ((i - 1) % graph.w) + 1
+        local y = math.floor((i - 1) / graph.w) + 1
+        -- avoid borders
+        if x > 2 and y > 2 and x < graph.w - 1 and y < graph.h - 1 then
+            local tile = tiles[i]
+            local template = tile.template
+            if WATER_GROUP[template] or MOUNTAIN_GROUP[template] then
+                do end;
+            else
+                local priority, info, extra = get_citiness_factor(i)
+                citiness:put({v=i, p=priority, info=info, extra=extra})
+            end
         end
     end
 
@@ -209,8 +205,16 @@ function MODULE.populate_surface(graph, header)
                     nearest_city or -1
 
             ) .. "\n    <<" .. table.concat(queue_data.info, "; ") .. ">>")
-            nodes[i].template = CITY
-            nodes[i].tile_pos = 7
+
+            local features = graph.features[i]
+            if features == nil then
+                graph.features[i] = {}
+                features = graph.features[i]
+            end
+
+            local feature = FeatureEntity("city")
+            feature.pos = 7
+            features[#features + 1] = feature
             update_citiness_queue()
         else
             log:info("queue update (no city round")

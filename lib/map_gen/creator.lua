@@ -18,7 +18,6 @@
 --]]
 
 local map_containers = require("dnf.map_containers")
-local entities = require("dnf.entities")
 local map_gen_base = require("map_gen.base")
 local Graph = map_gen_base.Graph
 local templates = require("templates")
@@ -187,7 +186,7 @@ local function calculate_tiling_8bit(map, tile, i, same)
     return conversion_8bit[sum] + 1
 end
 
-local function calculate_shadow(node, neighbor)
+local function calculate_shadow(tile, neighbor)
     local tile_templates = tile_templates
     local template = tile_templates[neighbor.template]
     return not template.block_sight
@@ -195,27 +194,27 @@ end
 
 local tiling_compare = {}
 
-function tiling_compare.same_template(node, neighbor)
-    return node.template == neighbor.template
+function tiling_compare.same_template(tile, neighbor)
+    return tile.template == neighbor.template
 end
 
-function tiling_compare.same_group0(node, neighbor)
+function tiling_compare.same_group0(tile, neighbor)
     local tile_templates = tile_templates
     local tile_groups  = tile_groups
-    local template_data = tile_templates[node.template]
+    local template_data = tile_templates[tile.template]
     local group0_k = template_data.group0
     local group0 = tile_groups[group0_k]
     return group0[neighbor.template]
 end
 
-function tiling_compare.same_id(node, neighbor)
+function tiling_compare.same_id(tile, neighbor)
     local tile_templates = tile_templates
-    local template = tile_templates[node.template]
+    local template = tile_templates[tile.template]
     local n_template = tile_templates[neighbor.template]
     return template.id == n_template.id
 end
 
-function tiling_compare.is_water(node, neighbor)
+function tiling_compare.is_water(tile, neighbor)
     return WATER_GROUP[neighbor.template]
 end
 
@@ -267,7 +266,10 @@ function creator.standard_map(graph, header, info)
     local map = map_containers.Map{
         w = graph.w,
         h = graph.h,
-        tiles = graph.nodes,
+        tiles = graph.tiles,
+        features = graph.features,
+        creatures = graph.creatures,
+        items = graph.items,
         header = header,
         rooms = info.rooms,
         halls = info.halls,

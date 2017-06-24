@@ -1,7 +1,7 @@
 local PriorityQueue = require("collections.priority_queue")
 local shuffle = require("shuffle")
 local Rect = require("rect")
-local ffi_struct = require("util.ffi_struct")
+local TileEntity = require("dnf.entities.tile")
 local templates = require("templates")
 local tile_constants = templates.constants.EnumTileEntity
 local WALL = tile_constants.WALL
@@ -20,9 +20,9 @@ local map_gen = {}
 local function heapsort(t, cmp)
     local pq = PriorityQueue({mode="highest_table"})
     for i = 1, #t do
-        local node = t[i]
-        local priority = cmp(node)
-        pq:put({v=node, p=priority})
+        local tile = t[i]
+        local priority = cmp(tile)
+        pq:put({v=tile, p=priority})
     end
     local sorted = {}
     repeat
@@ -75,17 +75,18 @@ end
 local function print_graph(graph)
     local w = graph.w
     local h = graph.h
+    local tiles = graph.tiles
     local to_1d = to_1d
     local to_2d = to_2d
-    local nodes = graph.nodes
 
     for y = 1, h do
         for x = 1, w do
-            local node = graph:get(x, y)
+            local i = (y -1) * graph.w + x
+            local tile = tiles[i]
             local c
-            if node.template == WALL then
+            if tile.template == WALL then
                 c = "#"
-            elseif node.template == FLOOR then
+            elseif tile.template == FLOOR then
                 c = "."
             else
                 c = "?"
@@ -105,12 +106,12 @@ local function southeast_neighbor(i, w, h, r) error("deprecated") end
 local function southwest_neighbor(i, w, h, r) error("deprecated") end
 local function northwest_neighbor(i, w, h, r) error("deprecated") end
 
-local function neighbors(i, w, h, r, node)
+local function neighbors(i, w, h, r, tile)
     r = r or 1
 
-    node.neighbors = node.neighbors or {}
+    tile.neighbors = tile.neighbors or {}
 
-    local t = node.neighbors
+    local t = tile.neighbors
 
     -- north_neighbor
     local v = i - (w * r)
@@ -235,105 +236,6 @@ end
 
 
 -- ##########
--- NodeNeighbors struct
-local _NodeNeighbors = [[typedef struct {
-    uint16_t  north;
-    uint16_t  east;
-    uint16_t  south;
-    uint16_t  west;
-    uint16_t  northeast;
-    uint16_t  southeast;
-    uint16_t  southwest;
-    uint16_t  northwest;
-} NodeNeighbors;]]
-ffi_struct("NodeNeighbors", _NodeNeighbors)
--- end of NodeNeighbors struct
--- ##########
-
-
--- ##########
--- RGBColor struct
-local _RGBColor = [[typedef struct {
-    uint8_t   r;
-    uint8_t   g;
-    uint8_t   b;
-} RGBColor;]]
-ffi_struct("RGBColor", _RGBColor)
--- end of RGBColor struct
--- ##########
-
-
--- ##########
--- GraphNodeMeta struct
-local _GraphNodeMeta = [[typedef struct {
-    RGBColor heat_color;
-    uint8_t heat_template;
-    double heat_value;
-
-    RGBColor height_color;
-    uint8_t height_template;
-    double height_value;
-
-    RGBColor rainfall_color;
-    uint8_t rainfall_template;
-    double rainfall_value;
-
-    double noise_value;
-    double water_ratio_r1;
-    double water_ratio_r2;
-    double water_ratio_r4;
-    double forest_ratio_r4;
-} GraphNodeMeta;]]
-ffi_struct("GraphNodeMeta", _GraphNodeMeta)
--- end of GraphNodeMeta struct
--- ##########
-
-
--- ##########
--- NodeCorner struct
-local _NodeCorner = [[typedef struct {
-    uint8_t   pos;
-    uint8_t   var;
-} NodeCorner;]]
-ffi_struct("NodeCorner", _NodeCorner)
--- end of NodeCorner struct
--- ##########
-
--- ##########
--- GraphNode struct
-local _GraphNode = [[typedef struct {
-    uint16_t  x;
-    uint16_t  y;
-    uint16_t  cost;
-    bool  block;
-    bool  explored;
-    double value;
-    uint8_t template;
-    uint8_t tile_pos;
-    uint8_t tile_pos_shadow;
-    uint8_t tile_var;
-    NodeNeighbors neighbors;
-    GraphNodeMeta meta;
-    NodeCorner c0;  // topleft
-    NodeCorner c1;  // topright
-    NodeCorner c2;  // bottomleft
-    NodeCorner c3;  // bottomright
-} GraphNode;]]
-local GraphNode_mt, GraphNode_keys = ffi_struct(
-    "GraphNode", _GraphNode, false)
-GraphNode_mt.__index = {}
-local GraphNode_functions = GraphNode_mt.__index
-function GraphNode_functions.set_template(self, template)
-    self.template = template
-    self.cost = COST[template]
-end
-ffi.metatype("GraphNode", GraphNode_mt)
-local GraphNode = ffi.typeof('GraphNode')
--- end of GraphNode struct
--- ##########
-
-
--- ##########
 -- Graph class
 local Graph = class("Graph")
 map_gen.Graph = Graph
@@ -344,10 +246,10 @@ function Graph:neighbors_at_radius(r)        error("deprecated") end
 function Graph:neighbor_functions()          error("deprecated") end
 
 function Graph:init(w, h, map_file)
-    local random = love.math.random or math.random
-    local to_2d = to_2d
-
-    self.nodes = ffi.new("GraphNode[?]", (w * h) + 1)
+    self.tiles = ffi.new("TileEntity[?]", (w * h) + 1)
+    self.features = {}
+    self.creatures = {}
+    self.items = {}
 
     local txt, block
     self.w = w
@@ -360,16 +262,16 @@ function Graph:fill()
     local t0 = time()
     local w, h = self.w, self.h
     log:warn("Graph:fill: start w " .. w .. ", h " .. h)
-    local nodes = self.nodes
+    local tiles = self.tiles
     local floor = math.floor
     local WALL, COST_WALL = WALL, COST[WALL]
     local neighbors = neighbors
 
     for i  = 1, w * h do
-        local node = nodes[i]
-        node.x, node.y = (((i - 1) % w) + 1), floor((i - 1) / w) + 1
-        node.template, node.cost = WALL, COST_WALL
-        neighbors(i, w, h, 1, node)
+        local tile = tiles[i]
+        tile.x, tile.y = (((i - 1) % w) + 1), floor((i - 1) / w) + 1
+        tile.template, tile.cost = WALL, COST_WALL
+        neighbors(i, w, h, 1, tile)
     end
     log:warn("Graph:fill: done", time() - t0)
 end
@@ -379,20 +281,20 @@ function Graph:get(x, y)
     -- If only x is passed it's considered to be a sequential, 1d coordinate.
     local i = y and to_1d(x, y, self.w, self.h) or x
     -- print(string.format("x %d, y %d --> i %d", x, y, i))
-    return self.nodes[i]
+    return self.tiles[i]
 end
 
 function Graph:random_passables(n)
     local n = n or 1
     local random = love.math.random or math.random
-    local nodes = self.nodes
-    local nodes_lenght = #nodes
+    local tiles = self.tiles
+    local tiles_lenght = #tiles
     local count = 0
     local rnd_n = {}
     local result = {}
     while count < n do
-        local r = random(1, nodes_lenght)
-        if rnd_n[r] == nil and not nodes[r].block then
+        local r = random(1, tiles_lenght)
+        if rnd_n[r] == nil and not tiles[r].block then
             rnd_n[r] = r
             result[#result + 1] = r
             count = count + 1
@@ -417,7 +319,7 @@ local function reconstruct_path(came_from, start, goal)
 end
 
 local function a_star_search(graph, start, goal, cost, neighbors)
-    local nodes = graph.nodes
+    local tiles = graph.tiles
     local w = graph.w
     local h = graph.h
     local heuristic = heuristic  -- heuristic(a, b, w, h)
@@ -435,9 +337,9 @@ local function a_star_search(graph, start, goal, cost, neighbors)
             break
         end
 
-        local node_neighbors = neighbors and neighbors(current) or
-                               nodes[current].neighbors[1]
-        for i, nxt in ipairs(node_neighbors) do
+        local tile_neighbors = neighbors and neighbors(current) or
+                               tiles[current].neighbors[1]
+        for i, nxt in ipairs(tile_neighbors) do
             local new_cost = cost_so_far[current] + cost(graph, current, nxt)
             if cost_so_far[nxt] == nil or new_cost < cost_so_far[nxt] then
                 cost_so_far[nxt] = new_cost

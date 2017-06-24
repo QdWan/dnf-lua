@@ -26,4 +26,4 @@ for i = 1, 3 do
 end
 log.verbosity_level = 1
 collectgarbage()
-log:warn(collectgarbage('count'))
+log:warn(collectgarbage('count') .. "kb")

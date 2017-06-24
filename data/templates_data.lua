@@ -6,7 +6,7 @@ local effects = {} -- TODO
 
 templates.TileEntity = {
     ["_default"] = {
-        ["_folder"] = "tiles",
+        ["_folder"] = "tile_feature",
         ["block_mov"] = false,
         ["block_sight"] = false,
         ["image"] = "ascii",
@@ -274,18 +274,20 @@ templates.TileEntity = {
     ["rainfall_view"] = {
         ["id"] = string.byte("~") + 1
     },
-    ["city"] = {
-        ["id"] = 179,
-        ["image"] = "city",
-    },
 }
 
 templates.FeatureEntity = {
     ["_default"] = {
+        ["_folder"] = "tile_feature",
         ["color"] = COLORS["gray"],
         ["block_mov"] = false,
         ["block_sight"] = false
     },
+    ["city"] = {
+        ["id"] = 179,
+        ["image"] = "city",
+    },
+
     ["stair_up"] = {
         ["id"] = string.byte("<") + 1
     },
