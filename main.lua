@@ -1,3 +1,7 @@
+love.filesystem.setRequirePath(
+    "?.lua;?/init.lua;?/?.lua;lib/?.lua;lib/?/init.lua;lib/?/?.lua;")
+package.path = "?.lua;?/init.lua;?/?.lua;lib/?.lua;lib/?/init.lua;lib/?/?.lua;"
+
 require("rs_strict")
 
 declare("ffi")
